@@ -1,0 +1,16 @@
+{
+  "name": "mon-projet-fullstack",
+  "private": true,
+  "scripts": {
+    "start:server": "cd back && npm install && npm run start",
+    "start:client": "cd front && npm install && npm run build && npm start",
+    "start": "concurrently \"npm run start:server\" \"npm run start:client\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.10"
+  },
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "ISC"
+}
