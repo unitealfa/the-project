@@ -1,7 +1,7 @@
 // front/src/pages/CompaniesList.tsx
 
 import React, { useEffect, useState } from 'react';
-import LogoutButton from '../components/LogoutButton';
+import Header from '../components/Header';
 
 interface Company {
   _id: string;
@@ -33,47 +33,52 @@ export default function CompaniesList() {
 
   if (error) {
     return (
-      <div style={{ padding: '1rem' }}>
-        <p style={{ color: 'red' }}>{error}</p>
-        <LogoutButton />
-      </div>
+      <>
+        <Header />
+        <div style={{ padding: '1rem' }}>
+          <p style={{ color: 'red' }}>{error}</p>
+        </div>
+      </>
     );
   }
 
   return (
-    <div style={{ padding: '1rem', fontFamily: 'Arial, sans-serif' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ margin: 0 }}>Liste des entreprises</h1>
-        <LogoutButton />
-      </div>
-      <table style={{ width: '100%', marginTop: '1rem', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            <th style={{ borderBottom: '1px solid #ccc', textAlign: 'left', padding: '0.5rem' }}>
-              Société
-            </th>
-            <th style={{ borderBottom: '1px solid #ccc', textAlign: 'left', padding: '0.5rem' }}>
-              Admin
-            </th>
-            <th style={{ borderBottom: '1px solid #ccc', textAlign: 'left', padding: '0.5rem' }}>
-              Email Admin
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {list.map(c => (
-            <tr key={c._id}>
-              <td style={{ padding: '0.5rem 0' }}>{c.nom_company}</td>
-              <td style={{ padding: '0.5rem 0' }}>
-                {c.admin ? `${c.admin.nom} ${c.admin.prenom}` : '—'}
-              </td>
-              <td style={{ padding: '0.5rem 0' }}>
-                {c.admin?.email ?? '—'}
-              </td>
+    <>
+      <Header />
+      <div style={{ padding: '1rem', fontFamily: 'Arial, sans-serif' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h1 style={{ margin: 0 }}>Liste des entreprises</h1>
+        </div>
+
+        <table style={{ width: '100%', marginTop: '1rem', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={{ borderBottom: '1px solid #ccc', textAlign: 'left', padding: '0.5rem' }}>
+                Société
+              </th>
+              <th style={{ borderBottom: '1px solid #ccc', textAlign: 'left', padding: '0.5rem' }}>
+                Admin
+              </th>
+              <th style={{ borderBottom: '1px solid #ccc', textAlign: 'left', padding: '0.5rem' }}>
+                Email Admin
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {list.map(c => (
+              <tr key={c._id}>
+                <td style={{ padding: '0.5rem 0' }}>{c.nom_company}</td>
+                <td style={{ padding: '0.5rem 0' }}>
+                  {c.admin ? `${c.admin.nom} ${c.admin.prenom}` : '—'}
+                </td>
+                <td style={{ padding: '0.5rem 0' }}>
+                  {c.admin?.email ?? '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

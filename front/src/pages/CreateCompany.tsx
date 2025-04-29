@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
 
 interface Adresse {
   rue: string;
@@ -56,7 +57,6 @@ export default function CreateCompany() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token') || '';
-      console.log('→ Envoi POST /companies avec token:', token);
       const res = await fetch(`${apiBase}/companies`, {
         method: 'POST',
         headers: {
@@ -65,7 +65,6 @@ export default function CreateCompany() {
         },
         body: JSON.stringify({ companyData, adminData }),
       });
-      console.log('← Réponse status:', res.status);
 
       if (res.status === 401) {
         throw new Error('Non autorisé – vérifiez votre authentification');
@@ -75,7 +74,6 @@ export default function CreateCompany() {
         throw new Error(err.message || 'Erreur création');
       }
 
-      // en cas de succès, retour au dashboard SuperAdmin
       navigate('/dashboard/super');
     } catch (err: any) {
       setError(err.message);
@@ -83,208 +81,213 @@ export default function CreateCompany() {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: 600, margin: '2rem auto' }}>
-      <h2>Créer une nouvelle entreprise</h2>
+    <>
+      <Header />
+      <form onSubmit={handleSubmit} style={{ maxWidth: 600, margin: '2rem auto' }}>
+        <h2>Créer une nouvelle entreprise</h2>
 
-      <fieldset>
-        <legend>Info Société</legend>
-        <div>
-          <label>Nom :</label>
-          <input
-            name="nom_company"
-            value={companyData.nom_company}
-            onChange={e =>
-              setCompanyData({ ...companyData, nom_company: e.target.value })
-            }
-            required
-          />
-        </div>
-        <div>
-          <label>Gérant :</label>
-          <input
-            name="gerant_company"
-            value={companyData.gerant_company}
-            onChange={e =>
-              setCompanyData({ ...companyData, gerant_company: e.target.value })
-            }
-            required
-          />
-        </div>
-        <div>
-          <label>Téléphone :</label>
-          <input
-            name="telephone"
-            value={companyData.contact.telephone}
-            onChange={e =>
-              setCompanyData({
-                ...companyData,
-                contact: {
-                  ...companyData.contact,
-                  telephone: e.target.value,
-                },
-              })
-            }
-            required
-          />
-        </div>
-        <div>
-          <label>Email Société :</label>
-          <input
-            type="email"
-            name="email"
-            value={companyData.contact.email}
-            onChange={e =>
-              setCompanyData({
-                ...companyData,
-                contact: { ...companyData.contact, email: e.target.value },
-              })
-            }
-            required
-          />
-        </div>
+        <fieldset>
+          <legend>Info Société</legend>
+          <div>
+            <label>Nom :</label>
+            <input
+              name="nom_company"
+              value={companyData.nom_company}
+              onChange={e =>
+                setCompanyData({ ...companyData, nom_company: e.target.value })
+              }
+              required
+            />
+          </div>
+          <div>
+            <label>Gérant :</label>
+            <input
+              name="gerant_company"
+              value={companyData.gerant_company}
+              onChange={e =>
+                setCompanyData({ ...companyData, gerant_company: e.target.value })
+              }
+              required
+            />
+          </div>
+          <div>
+            <label>Téléphone :</label>
+            <input
+              name="telephone"
+              value={companyData.contact.telephone}
+              onChange={e =>
+                setCompanyData({
+                  ...companyData,
+                  contact: {
+                    ...companyData.contact,
+                    telephone: e.target.value,
+                  },
+                })
+              }
+              required
+            />
+          </div>
+          <div>
+            <label>Email Société :</label>
+            <input
+              type="email"
+              name="email"
+              value={companyData.contact.email}
+              onChange={e =>
+                setCompanyData({
+                  ...companyData,
+                  contact: { ...companyData.contact, email: e.target.value },
+                })
+              }
+              required
+            />
+          </div>
 
-        <fieldset style={{ marginTop: '1rem' }}>
-          <legend>Adresse</legend>
-          <div>
-            <label>Rue :</label>
-            <input
-              name="rue"
-              value={companyData.contact.adresse.rue}
-              onChange={e =>
-                setCompanyData({
-                  ...companyData,
-                  contact: {
-                    ...companyData.contact,
-                    adresse: {
-                      ...companyData.contact.adresse,
-                      rue: e.target.value,
+          <fieldset style={{ marginTop: '1rem' }}>
+            <legend>Adresse</legend>
+            <div>
+              <label>Rue :</label>
+              <input
+                name="rue"
+                value={companyData.contact.adresse.rue}
+                onChange={e =>
+                  setCompanyData({
+                    ...companyData,
+                    contact: {
+                      ...companyData.contact,
+                      adresse: {
+                        ...companyData.contact.adresse,
+                        rue: e.target.value,
+                      },
                     },
-                  },
-                })
+                  })
+                }
+                required
+              />
+            </div>
+            <div>
+              <label>Ville :</label>
+              <input
+                name="ville"
+                value={companyData.contact.adresse.ville}
+                onChange={e =>
+                  setCompanyData({
+                    ...companyData,
+                    contact: {
+                      ...companyData.contact,
+                      adresse: {
+                        ...companyData.contact.adresse,
+                        ville: e.target.value,
+                      },
+                    },
+                  })
+                }
+                required
+              />
+            </div>
+            <div>
+              <label>Code postal :</label>
+              <input
+                name="code_postal"
+                value={companyData.contact.adresse.code_postal}
+                onChange={e =>
+                  setCompanyData({
+                    ...companyData,
+                    contact: {
+                      ...companyData.contact,
+                      adresse: {
+                        ...companyData.contact.adresse,
+                        code_postal: e.target.value,
+                      },
+                    },
+                  })
+                }
+                required
+              />
+            </div>
+            <div>
+              <label>Pays :</label>
+              <input
+                name="pays"
+                value={companyData.contact.adresse.pays}
+                onChange={e =>
+                  setCompanyData({
+                    ...companyData,
+                    contact: {
+                      ...companyData.contact,
+                      adresse: {
+                        ...companyData.contact.adresse,
+                        pays: e.target.value,
+                      },
+                    },
+                  })
+                }
+                required
+              />
+            </div>
+          </fieldset>
+        </fieldset>
+
+        <fieldset style={{ marginTop: '2rem' }}>
+          <legend>Compte Admin</legend>
+          <div>
+            <label>Nom :</label>
+            <input
+              name="nom"
+              value={adminData.nom}
+              onChange={e => setAdminData({ ...adminData, nom: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <label>Prénom :</label>
+            <input
+              name="prenom"
+              value={adminData.prenom}
+              onChange={e =>
+                setAdminData({ ...adminData, prenom: e.target.value })
               }
               required
             />
           </div>
           <div>
-            <label>Ville :</label>
+            <label>Email :</label>
             <input
-              name="ville"
-              value={companyData.contact.adresse.ville}
+              type="email"
+              name="email"
+              value={adminData.email}
+              onChange={e => setAdminData({ ...adminData, email: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <label>Mot de passe :</label>
+            <input
+              type="password"
+              name="password"
+              value={adminData.password}
               onChange={e =>
-                setCompanyData({
-                  ...companyData,
-                  contact: {
-                    ...companyData.contact,
-                    adresse: {
-                      ...companyData.contact.adresse,
-                      ville: e.target.value,
-                    },
-                  },
-                })
+                setAdminData({ ...adminData, password: e.target.value })
               }
               required
             />
           </div>
           <div>
-            <label>Code postal :</label>
+            <label>Tél. Admin :</label>
             <input
-              name="code_postal"
-              value={companyData.contact.adresse.code_postal}
-              onChange={e =>
-                setCompanyData({
-                  ...companyData,
-                  contact: {
-                    ...companyData.contact,
-                    adresse: {
-                      ...companyData.contact.adresse,
-                      code_postal: e.target.value,
-                    },
-                  },
-                })
-              }
-              required
-            />
-          </div>
-          <div>
-            <label>Pays :</label>
-            <input
-              name="pays"
-              value={companyData.contact.adresse.pays}
-              onChange={e =>
-                setCompanyData({
-                  ...companyData,
-                  contact: {
-                    ...companyData.contact,
-                    adresse: {
-                      ...companyData.contact.adresse,
-                      pays: e.target.value,
-                    },
-                  },
-                })
-              }
+              name="num"
+              value={adminData.num}
+              onChange={e => setAdminData({ ...adminData, num: e.target.value })}
               required
             />
           </div>
         </fieldset>
-      </fieldset>
 
-      <fieldset style={{ marginTop: '2rem' }}>
-        <legend>Compte Admin</legend>
-        <div>
-          <label>Nom :</label>
-          <input
-            name="nom"
-            value={adminData.nom}
-            onChange={e => setAdminData({ ...adminData, nom: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label>Prénom :</label>
-          <input
-            name="prenom"
-            value={adminData.prenom}
-            onChange={e => setAdminData({ ...adminData, prenom: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label>Email :</label>
-          <input
-            type="email"
-            name="email"
-            value={adminData.email}
-            onChange={e => setAdminData({ ...adminData, email: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label>Mot de passe :</label>
-          <input
-            type="password"
-            name="password"
-            value={adminData.password}
-            onChange={e =>
-              setAdminData({ ...adminData, password: e.target.value })
-            }
-            required
-          />
-        </div>
-        <div>
-          <label>Tél. Admin :</label>
-          <input
-            name="num"
-            value={adminData.num}
-            onChange={e => setAdminData({ ...adminData, num: e.target.value })}
-            required
-          />
-        </div>
-      </fieldset>
-
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <button type="submit" style={{ marginTop: '1rem' }}>
-        Créer l’entreprise et son Admin
-      </button>
-    </form>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+        <button type="submit" style={{ marginTop: '1rem' }}>
+          Créer l’entreprise et son Admin
+        </button>
+      </form>
+    </>
   );
 }

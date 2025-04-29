@@ -1,21 +1,19 @@
-// front/src/App.tsx
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import Login              from './pages/Login';
 import CreateCompany      from './pages/CreateCompany';
 import CompaniesList      from './pages/CompaniesList';
+import CreateDepot        from './pages/CreateDepot';
+import DepotsList         from './pages/DepotsList';
 import RequireAuth        from './components/RequireAuth';
 import RoleBasedDashboard from './components/RoleBasedDashboard';
 
 function App() {
   return (
     <Routes>
-      {/* Page de login */}
       <Route path="/" element={<Login />} />
 
-      {/* Créer une entreprise + Admin (Super Admin only) */}
       <Route
         path="/create-company"
         element={
@@ -25,7 +23,6 @@ function App() {
         }
       />
 
-      {/* Lister toutes les entreprises (Super Admin only) */}
       <Route
         path="/companies"
         element={
@@ -35,7 +32,24 @@ function App() {
         }
       />
 
-      {/* Dashboard générique, choisi d’après le rôle */}
+      <Route
+        path="/create-depot"
+        element={
+          <RequireAuth allowedRoles={['Admin']}>
+            <CreateDepot />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/depots"
+        element={
+          <RequireAuth allowedRoles={['Admin']}>
+            <DepotsList />
+          </RequireAuth>
+        }
+      />
+
       <Route
         path="/dashboard"
         element={
@@ -45,7 +59,6 @@ function App() {
         }
       />
 
-      {/* Tout le reste redirige vers login */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

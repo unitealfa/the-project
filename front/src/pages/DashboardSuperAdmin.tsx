@@ -1,8 +1,6 @@
-// front/src/pages/DashboardSuperAdmin.tsx
-
-import React, { useEffect, useState } from "react";
-import { Link, useNavigate }           from "react-router-dom";
-import LogoutButton                     from "../components/LogoutButton";
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate }           from 'react-router-dom';
+import Header                          from '../components/Header';
 
 interface User {
   id: string;
@@ -16,9 +14,9 @@ export default function DashboardSuperAdmin() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const raw = localStorage.getItem("user");
+    const raw = localStorage.getItem('user');
     if (!raw) {
-      navigate("/", { replace: true });
+      navigate('/', { replace: true });
       return;
     }
     setUser(JSON.parse(raw));
@@ -27,54 +25,41 @@ export default function DashboardSuperAdmin() {
   if (!user) return <p>Chargement…</p>;
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "Arial, sans-serif" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <h1 style={{ fontSize: "2rem", fontWeight: "bold", margin: 0 }}>
-          Bienvenue {user.nom} {user.prenom}
-        </h1>
-        <LogoutButton />
+    <>
+      <Header />
+      <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h1 style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
+            Bienvenue {user.nom} {user.prenom}
+          </h1>
+        </div>
+
+        <p style={{ marginTop: '0.5rem', fontSize: '1.1rem' }}>
+          Votre rôle est : <strong>{user.role}</strong>
+        </p>
+
+        <section style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <Link to="/create-company" style={{
+              padding: '0.75rem 1.25rem',
+              backgroundColor: '#4f46e5',
+              color: '#fff',
+              borderRadius: '0.5rem',
+              textDecoration: 'none',
+              fontWeight: '500',
+              textAlign: 'center'
+            }}>
+            ➕ Créer une nouvelle entreprise
+          </Link>
+          <Link to="/companies" style={{
+              padding: '0.5rem 1rem',
+              color: '#4f46e5',
+              textDecoration: 'none',
+              fontWeight: '500'
+            }}>
+            • Voir toutes les entreprises
+          </Link>
+        </section>
       </div>
-
-      <p style={{ marginTop: "0.5rem", fontSize: "1.1rem" }}>
-        Votre rôle est : <strong>{user.role}</strong>
-      </p>
-
-      <section style={{ marginTop: "2rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-        <Link
-          to="/create-company"
-          style={{
-            display: "inline-block",
-            padding: "0.75rem 1.25rem",
-            backgroundColor: "#4f46e5",
-            color: "#fff",
-            borderRadius: "0.5rem",
-            textDecoration: "none",
-            fontWeight: "500",
-            textAlign: "center",
-          }}
-        >
-          ➕ Créer une nouvelle entreprise
-        </Link>
-
-        <Link
-          to="/companies"
-          style={{
-            display: "inline-block",
-            padding: "0.5rem 1rem",
-            color: "#4f46e5",
-            textDecoration: "none",
-            fontWeight: "500",
-          }}
-        >
-          • Voir toutes les entreprises
-        </Link>
-      </section>
-    </div>
+    </>
   );
 }

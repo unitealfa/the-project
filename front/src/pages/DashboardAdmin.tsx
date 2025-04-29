@@ -1,8 +1,6 @@
-// front/src/pages/DashboardAdmin.tsx
-
 import React, { useEffect, useState } from 'react';
-import { useNavigate }                  from 'react-router-dom';
-import LogoutButton                      from '../components/LogoutButton';
+import { useNavigate, Link }          from 'react-router-dom';
+import Header                          from '../components/Header';
 
 interface User {
   id: string;
@@ -42,8 +40,7 @@ export default function DashboardAdmin() {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error(`Erreur ${res.status}`);
-        const c: Company = await res.json();
-        setCompany(c);
+        setCompany(await res.json());
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -55,36 +52,47 @@ export default function DashboardAdmin() {
   if (loading) return <p style={{ padding: '1rem' }}>Chargement…</p>;
   if (error) {
     return (
-      <div style={{ padding: '1rem' }}>
-        <p style={{ color: 'red' }}>{error}</p>
-        <LogoutButton />
-      </div>
+      <>
+        <Header />
+        <div style={{ padding: '1rem' }}>
+          <p style={{ color: 'red' }}>{error}</p>
+        </div>
+      </>
     );
   }
   if (!user || !company) return null;
 
   return (
-    <div style={{ padding: '1rem', fontFamily: 'Arial, sans-serif' }}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <h1 style={{ margin: 0 }}>
-          Tableau de bord – Admin de {company.nom_company}
-        </h1>
-        <LogoutButton />
+    <>
+      <Header />
+      <div style={{ padding: '1rem', fontFamily: 'Arial, sans-serif' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h1 style={{ margin: 0 }}>Tableau de bord – Admin de {company.nom_company}</h1>
+        </div>
+
+        <section style={{ marginTop: '1.5rem' }}>
+          <p><strong>Bienvenue</strong> {user.nom} {user.prenom}</p>
+          <p><strong>Rôle :</strong> {user.role}</p>
+        </section>
+
+        <section style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <Link to="/create-depot" style={{
+              padding: '0.75rem 1.25rem',
+              backgroundColor: '#4f46e5', color: '#fff',
+              borderRadius: '0.5rem', textDecoration: 'none', fontWeight: '500', textAlign: 'center'
+            }}>
+            ➕ Nouveau dépôt
+          </Link>
+          <Link to="/depots" style={{
+              padding: '0.5rem 1rem',
+              color: '#4f46e5',
+              textDecoration: 'none',
+              fontWeight: '500'
+            }}>
+            • Voir mes dépôts
+          </Link>
+        </section>
       </div>
-      <section style={{ marginTop: '1.5rem' }}>
-        <p>
-          <strong>Bienvenue</strong> {user.nom} {user.prenom}
-        </p>
-        <p>
-          <strong>Rôle :</strong> {user.role}
-        </p>
-      </section>
-    </div>
+    </>
   );
 }
