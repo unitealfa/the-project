@@ -54,4 +54,25 @@ export class CompanyService {
     }
     return company;
   }
+
+  async findAll(): Promise<
+    Array<Company & { admin: { nom: string; prenom: string; email: string } | null }>
+  > {
+    const companies = await this.companyModel.find().lean();
+    const result = await Promise.all(
+      companies.map(async (c) => {
+        const admin = await this.userModel
+          .findOne({ company: c._id, role: 'Admin' })
+          .lean()
+          .select('nom prenom email');
+        return {
+          ...c,
+          admin: admin
+            ? { nom: admin.nom, prenom: admin.prenom, email: admin.email }
+            : null,
+        };
+      }),
+    );
+    return result;
+  }
 }

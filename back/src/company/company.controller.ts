@@ -10,12 +10,12 @@ import {
   Logger,
   BadRequestException,
 } from '@nestjs/common';
-import { CompanyService }      from './company.service';
-import { CreateCompanyDto }    from './dto/create-company.dto';
-import { CreateAdminDto }      from './dto/create-admin.dto';
-import { JwtAuthGuard }        from '../auth/jwt-auth.guard';
-import { RolesGuard }          from '../auth/roles.guard';
-import { Roles }               from '../auth/roles.decorator';
+import { CompanyService }   from './company.service';
+import { CreateCompanyDto } from './dto/create-company.dto';
+import { CreateAdminDto }   from './dto/create-admin.dto';
+import { JwtAuthGuard }     from '../auth/jwt-auth.guard';
+import { RolesGuard }       from '../auth/roles.guard';
+import { Roles }            from '../auth/roles.decorator';
 
 @Controller('companies')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -24,7 +24,10 @@ export class CompanyController {
 
   constructor(private readonly svc: CompanyService) {}
 
-  /** Création d’une nouvelle company + admin — uniquement Super Admin */
+  /**
+   * Création d’une nouvelle company + son Admin
+   * Accessible uniquement aux Super Admin
+   */
   @Roles('Super Admin')
   @Post()
   async create(
@@ -38,18 +41,35 @@ export class CompanyController {
       return await this.svc.createWithAdmin(companyData, adminData);
     } catch (err: any) {
       this.logger.error('Erreur createWithAdmin', err.stack || err.message);
+      // En cas de DTO invalide ou conflit 400
       if (err.status === 400 || err instanceof BadRequestException) {
         throw new BadRequestException(err.message);
       }
+      // Propagation des autres erreurs (409, 500, etc.)
       throw err;
     }
   }
 
-  /** Récupérer une company par son ID — Super Admin ET Admin */
+  /**
+   * Récupérer la liste de toutes les sociétés
+   * avec le nom et l’email de leur Admin
+   * Accessible uniquement aux Super Admin
+   */
+  @Roles('Super Admin')
+  @Get()
+  async findAll() {
+    this.logger.log('Récupération de toutes les companies');
+    return this.svc.findAll();
+  }
+
+  /**
+   * Récupérer une société par son ID
+   * Accessible aux Super Admin et aux Admins
+   */
   @Roles('Super Admin', 'Admin')
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    this.logger.log(`findOne company id=${id}`);
+    this.logger.log(`Récupération de la company id=${id}`);
     return this.svc.findOne(id);
   }
 }
