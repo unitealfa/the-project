@@ -39,17 +39,7 @@ export default function DashboardSuperAdmin() {
         </p>
 
         <section style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <Link to="/create-company" style={{
-              padding: '0.75rem 1.25rem',
-              backgroundColor: '#4f46e5',
-              color: '#fff',
-              borderRadius: '0.5rem',
-              textDecoration: 'none',
-              fontWeight: '500',
-              textAlign: 'center'
-            }}>
-            ➕ Créer une nouvelle entreprise
-          </Link>
+
           <Link to="/companies" style={{
               padding: '0.5rem 1rem',
               color: '#4f46e5',
