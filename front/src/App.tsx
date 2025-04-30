@@ -1,17 +1,22 @@
+// front/src/App.tsx
+
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
-import Login                 from "./pages/Login";
-import CreateCompany         from "./pages/CreateCompany";
-import CompaniesList         from "./pages/CompaniesList";
-import CompanyDetail         from "./pages/CompanyDetail";
-import CompanyEdit           from "./pages/CompanyEdit";
-import CreateDepot           from "./pages/CreateDepot";
-import DepotsList            from "./pages/DepotsList";
-import DepotDetail           from "./pages/DepotDetail";
-import DepotEdit             from "./pages/DepotEdit";
-import RequireAuth           from "./components/RequireAuth";
-import RoleBasedDashboard    from "./components/RoleBasedDashboard";
+import Login from "./pages/Login";
+import CreateCompany from "./pages/CreateCompany";
+import CompaniesList from "./pages/CompaniesList";
+import CompanyDetail from "./pages/CompanyDetail";
+import CompanyEdit from "./pages/CompanyEdit";
+import CreateDepot from "./pages/CreateDepot";
+import DepotsList from "./pages/DepotsList";
+import DepotDetail from "./pages/DepotDetail";
+import DepotEdit from "./pages/DepotEdit";
+import RequireAuth from "./components/RequireAuth";
+import RoleBasedDashboard from "./components/RoleBasedDashboard";
+import Teams from "./pages/Teams";
+import TeamManage from './pages/TeamManage'; 
+
 
 function App() {
   return (
@@ -83,6 +88,22 @@ function App() {
         element={
           <RequireAuth allowedRoles={["Admin"]}>
             <DepotEdit />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/teams"
+        element={
+          <RequireAuth allowedRoles={["Admin"]}>
+            <Teams />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/teams/:depotId"
+        element={
+          <RequireAuth allowedRoles={["Admin"]}>
+            <TeamManage /> {/* le composant qui affiche les 3 cards */}
           </RequireAuth>
         }
       />
