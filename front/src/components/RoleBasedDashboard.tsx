@@ -1,25 +1,55 @@
-// front/src/components/RoleBasedDashboard.tsx
-
 import React from 'react';
+
+/* back-office */
 import DashboardSuperAdmin from '../pages/DashboardSuperAdmin';
 import DashboardAdmin      from '../pages/DashboardAdmin';
-// importez ici vos futurs dashboards, par exemple DashboardEditor, DashboardViewer, etc.
 
+/* équipe Livraison */
+import DashboardAdminVentes from '../pages/DashboardAdminVentes';
+import DashboardLivreur     from '../pages/DashboardLivreur';
+import DashboardChauffeur   from '../pages/DashboardChauffeur';
+
+/* équipe Pré-vente */
+import DashboardSuperviseurVentes from '../pages/DashboardSuperviseurVentes';
+import DashboardPreVendeur        from '../pages/DashboardPreVendeur';
+
+/* équipe Entrepôt */
+import DashboardGestionStock   from '../pages/DashboardGestionStock';
+import DashboardControleur     from '../pages/DashboardControleur';
+import DashboardManutentionnaire from '../pages/DashboardManutentionnaire';
+
+/* clé (fonction OU rôle) → composant */
 const mapping: Record<string, React.FC> = {
-  'Super Admin': DashboardSuperAdmin,
-  'Admin':       DashboardAdmin,
-  // 'Editor': DashboardEditor,
-  // 'Viewer': DashboardViewer,
+  /* back-office */
+  'Super Admin'               : DashboardSuperAdmin,
+  'Admin'                     : DashboardAdmin,
+
+  /* livraison */
+  'Administrateur des ventes' : DashboardAdminVentes,
+  'Livreur'                   : DashboardLivreur,
+  'Chauffeur'                 : DashboardChauffeur,
+
+  /* pré-vente */
+  'Superviseur des ventes'    : DashboardSuperviseurVentes,
+  'Pré vendeur'               : DashboardPreVendeur,
+
+  /* entrepôt */
+  'Gestionnaire de stock'     : DashboardGestionStock,
+  'Contrôleur'                : DashboardControleur,
+  'Manutentionnaire'          : DashboardManutentionnaire,
 };
 
 export default function RoleBasedDashboard() {
   const raw = localStorage.getItem('user');
-  if (!raw) return null;  // on ne devrait jamais arriver ici sans RequireAuth
-  const { role } = JSON.parse(raw) as { role: string };
+  if (!raw) return null;                       // sécurité
+  const { fonction, role } = JSON.parse(raw) as {
+    fonction?: string; role:string;
+  };
 
-  const Component = mapping[role];
-  if (!Component) {
-    return <p style={{ padding: '1rem' }}>Rôle inconnu : {role}</p>;
-  }
-  return <Component />;
+  const key = fonction ?? role;
+  const Dash = mapping[key];
+
+  return Dash
+    ? <Dash/>
+    : <p style={{padding:'1rem'}}>Rôle non reconnu : <code>{key}</code></p>;
 }

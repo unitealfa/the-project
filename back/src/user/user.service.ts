@@ -1,43 +1,43 @@
-// back/src/user/user.service.ts
+import {
+  Injectable, UnauthorizedException, NotFoundException,
+} from '@nestjs/common';
+import { InjectModel }  from '@nestjs/mongoose';
+import { Model }        from 'mongoose';
+import * as bcrypt      from 'bcrypt';
+import { JwtService }   from '@nestjs/jwt';
 
-import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
-import { InjectModel }                         from '@nestjs/mongoose';
-import { Model }                               from 'mongoose';
-import { JwtService }                          from '@nestjs/jwt';
-import * as bcrypt                             from 'bcrypt';
-import { User }                                from './schemas/user.schema';
+import { User, UserDocument } from './schemas/user.schema';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectModel(User.name) private readonly userModel: Model<User>,
-    private readonly jwtService: JwtService,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    private readonly jwt:    JwtService,
   ) {}
 
-  async validateUser(email: string, password: string) {
-    const user = await this.userModel.findOne({ email });
-    if (!user) throw new NotFoundException('Utilisateur non trouvé.');
+  /** Cherche l’utilisateur + jointure société + hash password */
+  async findByEmailWithCompany(email: string) {
+    const doc = await this.userModel
+      .findOne({ email })
+      .select('+password')          // le hash est masqué par défaut
+      .populate('company')          // Company complet (nom_company, …)
+      .exec();                      // <-- on garde un *document*
+    if (!doc) throw new NotFoundException('Utilisateur introuvable');
+    return doc;                     // type : UserDocument
+  }
 
-    const match = user.password.startsWith('$2')
-      ? await bcrypt.compare(password, user.password)
-      : password === user.password;
-    if (!match) throw new UnauthorizedException('Mot de passe incorrect.');
+  /** Vérifie le mot de passe puis signe un JWT (pas d’expiration) */
+  async checkPasswordAndSignJwt(
+    doc: UserDocument,
+    plain: string,
+  ): Promise<string> {
+    const ok = await bcrypt.compare(plain, doc.password);
+    if (!ok) throw new UnauthorizedException('Mot de passe invalide');
 
-    const payload = { id: user._id.toString(), email: user.email, role: user.role };
-    const token   = this.jwtService.sign(payload);
-
-    // ← on inclut maintenant company et num
-    return {
-      token,
-      user: {
-        id:      user._id,
-        nom:     user.nom,
-        prenom:  user.prenom,
-        email:   user.email,
-        role:    user.role,
-        company: user.company?.toString() ?? null,
-        num:     user.num,
-      },
-    };
+    return this.jwt.sign({
+      id   : doc._id,
+      email: doc.email,
+      role : doc.role,
+    });
   }
 }
