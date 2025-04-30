@@ -3,34 +3,34 @@ import {
   Controller, Get, Post, Delete,
   Param, Body, Req, Query,
   UseGuards, Logger, BadRequestException,
-} from '@nestjs/common'
-
-import { JwtAuthGuard }    from '../auth/jwt-auth.guard'
-import { RolesGuard }      from '../auth/roles.guard'
-import { Roles }           from '../auth/roles.decorator'
-
-import { TeamService }     from './team.service'
-import { CreateMemberDto } from './dto/create-member.dto'
+} from '@nestjs/common';
+import { JwtAuthGuard }    from '../auth/jwt-auth.guard';
+import { RolesGuard }      from '../auth/roles.guard';
+import { Roles }           from '../auth/roles.decorator';
+import { TeamService }     from './team.service';
+import { CreateMemberDto } from './dto/create-member.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('teams')
 export class TeamController {
-  private readonly logger = new Logger(TeamController.name)
+  private readonly logger = new Logger(TeamController.name);
 
-  constructor (private readonly svc: TeamService) {}
+  constructor(private readonly svc: TeamService) {}
 
-  /* ───────── LISTE ─────────────────────────────────────────── */
+  /* ─────── LISTE (✱ ajout du query ?role=) ─────── */
   @Roles('Admin')
   @Get(':depotId')
-  async list (
+  async list(
     @Param('depotId') depotId: string,
-    @Req()            req: any,
-    @Query('role')    role?: 'livraison'|'prevente'|'entrepot',
+    @Req()            req    : any,
+    @Query('role')    role?  : 'livraison'|'prevente'|'entrepot',
   ) {
-    this.logger.log(`Admin ${req.user.id} - list depot ${depotId}`)
-    const data = await this.svc.listByDepot(depotId, req.user.id)
-    return role ? (data as any)[role] ?? [] : data
+    this.logger.log(
+      `Admin ${req.user.id} liste ${role ?? 'ALL'} pour dépôt ${depotId}`,
+    );
+    return this.svc.listByDepot(depotId, req.user.id, role);
   }
+
 
   /* ───────── AJOUT ─────────────────────────────────────────── */
   @Roles('Admin')
