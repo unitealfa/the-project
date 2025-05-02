@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { useParams }                      from 'react-router-dom'
-import Header                             from '../components/Header'
+import { useParams } from 'react-router-dom'
+import Header from '../components/Header'
 
 interface Depot {
   _id: string
@@ -18,6 +18,10 @@ interface Depot {
     code_postal: string
     pays: string
   }
+  coordonnees?: {
+    latitude: number
+    longitude: number
+  } | null
   date_creation: string
 }
 
@@ -65,17 +69,28 @@ export default function DepotDetail() {
         <p><strong>Nom :</strong> {depot.nom_depot}</p>
         <p><strong>Type :</strong> {depot.type_depot}</p>
         <p><strong>Capacité :</strong> {depot.capacite}</p>
+
         <fieldset style={{ marginTop: '1rem' }}>
           <legend>Contact</legend>
           <p><strong>Responsable :</strong> {depot.contact.responsable}</p>
           <p><strong>Tél :</strong> {depot.contact.telephone}</p>
           <p><strong>Email :</strong> {depot.contact.email}</p>
         </fieldset>
+
         <fieldset style={{ marginTop: '1rem' }}>
           <legend>Adresse</legend>
           <p>{depot.adresse.rue}, {depot.adresse.ville}</p>
           <p>{depot.adresse.code_postal} – {depot.adresse.pays}</p>
         </fieldset>
+
+        {depot.coordonnees && (
+          <fieldset style={{ marginTop: '1rem' }}>
+            <legend>Coordonnées</legend>
+            <p><strong>Latitude :</strong> {depot.coordonnees.latitude}</p>
+            <p><strong>Longitude :</strong> {depot.coordonnees.longitude}</p>
+          </fieldset>
+        )}
+
         <p style={{ marginTop: '1rem' }}>
           <em>Créé le {new Date(depot.date_creation).toLocaleDateString()}</em>
         </p>

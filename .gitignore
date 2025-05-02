@@ -1,15 +1,14 @@
 # Node modules
 node_modules/
-
-
 /front/node_modules
-
-
-
-
-
-
-
-
-
 node_modules/.vite/
+
+# Vite / TS
+dist/
+*.log
+*.tsbuildinfo
+
+# Environnement
+.env*
+.vscode/
+.idea/

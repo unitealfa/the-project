@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate }       from 'react-router-dom'
-import Header                            from '../components/Header'
+import { useParams, useNavigate } from 'react-router-dom'
+import Header from '../components/Header'
 
 interface Adresse { rue: string; ville: string; code_postal: string; pays: string }
 interface Contact { responsable: string; telephone: string; email: string }
+interface Coordonnees { latitude: number; longitude: number }
+
 interface DepotDto {
   nom_depot: string
   type_depot: string
   capacite: number
   contact: Contact
   adresse: Adresse
+  coordonnees?: Coordonnees | null
 }
 
 export default function DepotEdit() {
@@ -21,6 +24,7 @@ export default function DepotEdit() {
     capacite: 0,
     contact: { responsable: '', telephone: '', email: '' },
     adresse: { rue: '', ville: '', code_postal: '', pays: '' },
+    coordonnees: { latitude: 0, longitude: 0 },
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -35,7 +39,12 @@ export default function DepotEdit() {
         if (!r.ok) throw new Error(`Erreur ${r.status}`)
         return r.json()
       })
-      .then((data: DepotDto) => setDto(data))
+      .then((data: DepotDto) => {
+        setDto({
+          ...data,
+          coordonnees: data.coordonnees || { latitude: 0, longitude: 0 },
+        })
+      })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }, [apiBase, id, token])
@@ -185,6 +194,45 @@ export default function DepotEdit() {
             />
           </div>
         </fieldset>
+
+        <fieldset style={{ marginTop: '1rem' }}>
+          <legend>Coordonnées</legend>
+          <div>
+            <label>Latitude</label>
+            <input
+              type="number"
+              value={dto.coordonnees?.latitude ?? ''}
+              onChange={e =>
+                setDto({
+                  ...dto,
+                  coordonnees: {
+                    ...dto.coordonnees!,
+                    latitude: parseFloat(e.target.value),
+                  },
+                })
+              }
+            />
+          </div>
+          <div>
+            <label>Longitude</label>
+            <input
+              type="number"
+              value={dto.coordonnees?.longitude ?? ''}
+              onChange={e =>
+                setDto({
+                  ...dto,
+                  coordonnees: {
+                    ...dto.coordonnees!,
+                    longitude: parseFloat(e.target.value),
+                  },
+                })
+              }
+            />
+          </div>
+        </fieldset>
+
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+
         <button type="submit" style={{ marginTop: '1rem' }}>
           Enregistrer
         </button>

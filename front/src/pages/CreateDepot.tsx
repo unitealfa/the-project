@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate }      from 'react-router-dom';
-import Header               from '../components/Header';
+import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
 
 interface CreateDepotDto {
   nom_depot: string;
@@ -17,6 +17,10 @@ interface CreateDepotDto {
     code_postal: string;
     pays: string;
   };
+  coordonnees?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 export default function CreateDepot() {
@@ -28,6 +32,7 @@ export default function CreateDepot() {
     capacite: 0,
     contact: { responsable: '', telephone: '', email: '' },
     adresse: { rue: '', ville: '', code_postal: '', pays: '' },
+    coordonnees: { latitude: 0, longitude: 0 },
   });
   const [error, setError] = useState('');
 
@@ -159,6 +164,42 @@ export default function CreateDepot() {
                 setDto({ ...dto, adresse: { ...dto.adresse, pays: e.target.value } })
               }
               required
+            />
+          </div>
+        </fieldset>
+
+        <fieldset style={{ marginTop: '1rem' }}>
+          <legend>Coordonnées (optionnel)</legend>
+          <div>
+            <label>Latitude</label>
+            <input
+              type="number"
+              value={dto.coordonnees?.latitude || 0}
+              onChange={e =>
+                setDto({
+                  ...dto,
+                  coordonnees: {
+                    ...dto.coordonnees!,
+                    latitude: parseFloat(e.target.value),
+                  },
+                })
+              }
+            />
+          </div>
+          <div>
+            <label>Longitude</label>
+            <input
+              type="number"
+              value={dto.coordonnees?.longitude || 0}
+              onChange={e =>
+                setDto({
+                  ...dto,
+                  coordonnees: {
+                    ...dto.coordonnees!,
+                    longitude: parseFloat(e.target.value),
+                  },
+                })
+              }
             />
           </div>
         </fieldset>
