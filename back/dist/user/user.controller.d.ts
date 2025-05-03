@@ -1,7 +1,9 @@
-import { UserService } from "./user.service";
+import { UserService } from './user.service';
+import { AuthService } from '../auth/auth.service';
 export declare class UserController {
     private readonly userSvc;
-    constructor(userSvc: UserService);
+    private readonly authSvc;
+    constructor(userSvc: UserService, authSvc: AuthService);
     login({ email, password }: {
         email: string;
         password: string;

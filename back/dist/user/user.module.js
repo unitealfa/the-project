@@ -9,11 +9,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserModule = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
-const config_1 = require("@nestjs/config");
-const jwt_1 = require("@nestjs/jwt");
 const user_controller_1 = require("./user.controller");
 const user_service_1 = require("./user.service");
 const user_schema_1 = require("./schemas/user.schema");
+const auth_module_1 = require("../auth/auth.module");
 let UserModule = class UserModule {
 };
 exports.UserModule = UserModule;
@@ -21,14 +20,7 @@ exports.UserModule = UserModule = __decorate([
     (0, common_1.Module)({
         imports: [
             mongoose_1.MongooseModule.forFeature([{ name: user_schema_1.User.name, schema: user_schema_1.UserSchema }]),
-            jwt_1.JwtModule.registerAsync({
-                imports: [config_1.ConfigModule],
-                inject: [config_1.ConfigService],
-                useFactory: (cs) => ({
-                    secret: cs.get('JWT_SECRET'),
-                    signOptions: { expiresIn: '1h' },
-                }),
-            }),
+            auth_module_1.AuthModule,
         ],
         controllers: [user_controller_1.UserController],
         providers: [user_service_1.UserService],

@@ -15,17 +15,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
 const common_1 = require("@nestjs/common");
 const user_service_1 = require("./user.service");
+const auth_service_1 = require("../auth/auth.service");
 let UserController = class UserController {
-    constructor(userSvc) {
+    constructor(userSvc, authSvc) {
         this.userSvc = userSvc;
+        this.authSvc = authSvc;
     }
     async login({ email, password }) {
         var _a, _b, _c, _d, _e;
-        const doc = await this.userSvc.findByEmailWithCompany(email);
-        const token = await this.userSvc.checkPasswordAndSignJwt(doc, password);
+        const doc = await this.authSvc.validateUser(email, password);
+        const { access_token } = await this.authSvc.login(doc);
         const obj = doc.toObject();
         return {
-            token,
+            token: access_token,
             user: {
                 id: obj._id.toString(),
                 nom: obj.nom,
@@ -43,14 +45,15 @@ let UserController = class UserController {
 };
 exports.UserController = UserController;
 __decorate([
-    (0, common_1.Post)("login"),
+    (0, common_1.Post)('login'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "login", null);
 exports.UserController = UserController = __decorate([
-    (0, common_1.Controller)("user"),
-    __metadata("design:paramtypes", [user_service_1.UserService])
+    (0, common_1.Controller)('user'),
+    __metadata("design:paramtypes", [user_service_1.UserService,
+        auth_service_1.AuthService])
 ], UserController);
 //# sourceMappingURL=user.controller.js.map
