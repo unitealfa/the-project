@@ -1,7 +1,9 @@
-declare class ContactDto {
-    responsable: string;
-    telephone: string;
+declare class ResponsableDto {
+    nom: string;
+    prenom: string;
     email: string;
+    password: string;
+    num: string;
 }
 declare class AdresseDto {
     rue: string;
@@ -17,8 +19,8 @@ export declare class CreateDepotDto {
     nom_depot: string;
     type_depot: string;
     capacite: number;
-    contact: ContactDto;
     adresse: AdresseDto;
     coordonnees?: CoordonneesDto;
+    responsable: ResponsableDto;
 }
 export {};

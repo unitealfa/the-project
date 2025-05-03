@@ -68,13 +68,30 @@ let TeamService = class TeamService {
         this.depotModel = depotModel;
         this.userModel = userModel;
     }
-    async listByDepot(depotId, adminId, role) {
-        await this.guardDepot(depotId, adminId);
+    async listByDepot(depotId, userId, role) {
+        var _a;
+        const user = await this.userModel.findById(userId).lean();
+        if (!user)
+            throw new common_1.NotFoundException('Utilisateur introuvable');
         const oid = new mongoose_2.Types.ObjectId(depotId);
         const fetch = (r) => this.userModel
             .find({ depot: oid, role: r })
             .select('-password')
             .lean();
+        if (user.role === 'responsable depot') {
+            if (((_a = user.depot) === null || _a === void 0 ? void 0 : _a.toString()) !== depotId)
+                throw new common_1.ForbiddenException('Ce dépôt ne vous appartient pas');
+            const [livraison, prevente, entrepot] = await Promise.all([
+                fetch('livraison'),
+                fetch('prevente'),
+                fetch('entrepot'),
+            ]);
+            if (role) {
+                return { [role]: role === 'livraison' ? livraison : role === 'prevente' ? prevente : entrepot };
+            }
+            return { livraison, prevente, entrepot };
+        }
+        await this.guardDepot(depotId, userId);
         if (role) {
             const arr = await fetch(role);
             return { [role]: arr };
@@ -86,8 +103,8 @@ let TeamService = class TeamService {
         ]);
         return { livraison, prevente, entrepot };
     }
-    async addMember(depotId, dto, adminId) {
-        const depot = await this.guardDepot(depotId, adminId);
+    async addMember(depotId, dto, userId) {
+        const depot = await this.guardDepot(depotId, userId);
         if (await this.userModel.exists({ email: dto.email }))
             throw new common_1.ConflictException('Email déjà utilisé');
         const hashed = await bcrypt.hash(dto.password, 10);
@@ -114,14 +131,28 @@ let TeamService = class TeamService {
         await this.userModel.deleteOne({ _id: memberId });
         return { deleted: true };
     }
-    async guardDepot(depotId, adminId) {
-        const admin = await this.userModel.findById(adminId).lean();
-        if (!(admin === null || admin === void 0 ? void 0 : admin.company))
-            throw new common_1.ForbiddenException('Pas de société associée');
-        const depot = await this.depotModel.findById(depotId).lean();
-        if (!depot || depot.company_id.toString() !== admin.company.toString())
-            throw new common_1.ForbiddenException('Accès refusé');
-        return depot;
+    async guardDepot(depotId, userId) {
+        const user = await this.userModel.findById(userId).lean();
+        if (!user)
+            throw new common_1.ForbiddenException('Utilisateur non trouvé');
+        if (user.role === 'Admin') {
+            if (!user.company)
+                throw new common_1.ForbiddenException('Pas de société associée');
+            const depot = await this.depotModel.findById(depotId).lean();
+            if (!depot || depot.company_id.toString() !== user.company.toString())
+                throw new common_1.ForbiddenException('Accès refusé');
+            return depot;
+        }
+        if (user.role === 'responsable depot') {
+            const depot = await this.depotModel.findOne({
+                _id: depotId,
+                responsable_id: user._id,
+            }).lean();
+            if (!depot)
+                throw new common_1.ForbiddenException('Accès refusé');
+            return depot;
+        }
+        throw new common_1.ForbiddenException('Rôle non autorisé');
     }
 };
 exports.TeamService = TeamService;

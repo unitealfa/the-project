@@ -12,23 +12,33 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateDepotDto = void 0;
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
-class ContactDto {
+class ResponsableDto {
 }
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], ContactDto.prototype, "responsable", void 0);
+], ResponsableDto.prototype, "nom", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], ContactDto.prototype, "telephone", void 0);
+], ResponsableDto.prototype, "prenom", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], ContactDto.prototype, "email", void 0);
+], ResponsableDto.prototype, "email", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(2),
+    __metadata("design:type", String)
+], ResponsableDto.prototype, "password", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], ResponsableDto.prototype, "num", void 0);
 class AdresseDto {
 }
 __decorate([
@@ -81,11 +91,6 @@ __decorate([
 ], CreateDepotDto.prototype, "capacite", void 0);
 __decorate([
     (0, class_validator_1.ValidateNested)(),
-    (0, class_transformer_1.Type)(() => ContactDto),
-    __metadata("design:type", ContactDto)
-], CreateDepotDto.prototype, "contact", void 0);
-__decorate([
-    (0, class_validator_1.ValidateNested)(),
     (0, class_transformer_1.Type)(() => AdresseDto),
     __metadata("design:type", AdresseDto)
 ], CreateDepotDto.prototype, "adresse", void 0);
@@ -95,4 +100,9 @@ __decorate([
     (0, class_transformer_1.Type)(() => CoordonneesDto),
     __metadata("design:type", CoordonneesDto)
 ], CreateDepotDto.prototype, "coordonnees", void 0);
+__decorate([
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => ResponsableDto),
+    __metadata("design:type", ResponsableDto)
+], CreateDepotDto.prototype, "responsable", void 0);
 //# sourceMappingURL=create-depot.dto.js.map

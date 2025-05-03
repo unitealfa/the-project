@@ -3,6 +3,7 @@ import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: false })
 export class Depot {
+  /* Infos de base */
   @Prop({ required: true }) nom_depot: string;
 
   @Prop({ type: Types.ObjectId, ref: 'Company', required: true })
@@ -11,27 +12,9 @@ export class Depot {
   @Prop({ required: true }) type_depot: string;
   @Prop({ required: true }) capacite: number;
 
+  /* Adresse */
   @Prop({
-    type: {
-      responsable: String,
-      telephone: String,
-      email: String,
-    },
-    required: true,
-  })
-  contact: {
-    responsable: string;
-    telephone: string;
-    email: string;
-  };
-
-  @Prop({
-    type: {
-      rue: String,
-      ville: String,
-      code_postal: String,
-      pays: String,
-    },
+    type: { rue: String, ville: String, code_postal: String, pays: String },
     required: true,
   })
   adresse: {
@@ -41,13 +24,18 @@ export class Depot {
     pays: string;
   };
 
+  /* Coordonnées */
   @Prop({
     type: { latitude: Number, longitude: Number },
-    required: false,
     default: null,
   })
-  coordonnees?: { latitude: number; longitude: number };
+  coordonnees?: { latitude: number; longitude: number } | null;
 
+  /* Responsable du dépôt */
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  responsable_id: Types.ObjectId;
+
+  /* Date de création */
   @Prop({ type: Date, default: () => new Date() })
   date_creation: Date;
 }

@@ -17,11 +17,13 @@ let RolesGuard = class RolesGuard {
         this.reflector = reflector;
     }
     canActivate(ctx) {
-        const requiredRoles = this.reflector.get('roles', ctx.getHandler());
-        if (!requiredRoles)
+        const required = this.reflector.get('roles', ctx.getHandler());
+        if (!required)
             return true;
         const { user } = ctx.switchToHttp().getRequest();
-        return requiredRoles.includes(user.role);
+        console.log('🛡️ rôle reçu du JWT :', user === null || user === void 0 ? void 0 : user.role);
+        console.log('🔐 rôles attendus pour la route :', required);
+        return required.includes(user.role);
     }
 };
 exports.RolesGuard = RolesGuard;

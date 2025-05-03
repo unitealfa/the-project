@@ -1,26 +1,23 @@
-// front/src/pages/DeliveryTeam.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Header          from '../components/Header';
-import { apiFetch }    from '../utils/api';   // utilitaire avec gestion du token & 401
+import { apiFetch }    from '../utils/api';
 
-/* ───────── Types ─────────────────────────────────────────────── */
 interface Member {
   _id: string;
   nom: string;
   prenom: string;
-  fonction?: string;           // ex. “Livreur” ou “Chauffeur”
+  fonction?: string;
 }
 
 interface Depot {
   _id: string;
   nom_depot: string;
 }
-/* ─────────────────────────────────────────────────────────────── */
 
 export default function DeliveryTeam () {
   const { depotId = '' } = useParams<{ depotId: string }>();
-  const location         = useLocation();      // déclenche un re-fetch au retour
+  const location         = useLocation();
   const nav              = useNavigate();
 
   const [members, setMembers] = useState<Member[]>([]);
@@ -28,7 +25,8 @@ export default function DeliveryTeam () {
   const [loading, setLoading] = useState(true);
   const [error  , setError]   = useState('');
 
-  /* ───────── charge dépôt + équipe “livraison” ───────── */
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
   useEffect(() => {
     let cancel = false;
 
@@ -36,15 +34,15 @@ export default function DeliveryTeam () {
       setLoading(true);
       try {
         const [depRes, teamRes] = await Promise.all([
-          apiFetch(`/depots/${depotId}`),              // nom du dépôt
-          apiFetch(`/teams/${depotId}?role=livraison`) // membres livraison
+          apiFetch(`/depots/${depotId}`),
+          apiFetch(`/teams/${depotId}?role=livraison`)
         ]);
 
-        if (cancel) return;             // composant déjà démonté ?
+        if (cancel) return;
 
         setDepot(await depRes.json());
 
-        const payload = await teamRes.json();          // peut être tableau OU { livraison:[] }
+        const payload = await teamRes.json();
         setMembers(Array.isArray(payload) ? payload : (payload.livraison ?? []));
 
       } catch {
@@ -56,32 +54,31 @@ export default function DeliveryTeam () {
 
     return () => { cancel = true; };
   }, [depotId, location.key]);
-  /* ────────────────────────────────────────────────────── */
 
   return (
     <>
       <Header />
       <div style={{ padding:'1rem', fontFamily:'Arial, sans-serif' }}>
-
-        {/* Titre + bouton d’ajout */}
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <h1 style={{ margin:0 }}>
             Équipe Livraison {depot ? `du dépôt « ${depot.nom_depot} »` : ''}
           </h1>
 
-          <button
-            onClick={() => nav(`/teams/${depotId}/livraison/add`)}
-            style={{
-              padding:'.5rem 1rem',
-              background:'#4f46e5',
-              color:'#fff',
-              border:'none',
-              borderRadius:8,
-              cursor:'pointer',
-            }}
-          >
-            + Ajouter un membre
-          </button>
+          {user.role === 'responsable depot' && (
+            <button
+              onClick={() => nav(`/teams/${depotId}/livraison/add`)}
+              style={{
+                padding:'.5rem 1rem',
+                background:'#4f46e5',
+                color:'#fff',
+                border:'none',
+                borderRadius:8,
+                cursor:'pointer',
+              }}
+            >
+              + Ajouter un membre
+            </button>
+          )}
         </div>
 
         {error   && <p style={{ color:'red', marginTop:'1rem' }}>{error}</p>}
@@ -119,7 +116,6 @@ export default function DeliveryTeam () {
             </tbody>
           </table>
         )}
-
       </div>
     </>
   );

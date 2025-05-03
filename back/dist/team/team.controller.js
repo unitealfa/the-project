@@ -25,13 +25,21 @@ let TeamController = TeamController_1 = class TeamController {
         this.svc = svc;
         this.logger = new common_1.Logger(TeamController_1.name);
     }
+    async getMyTeam(req) {
+        const depotId = req.user.depot;
+        if (!depotId) {
+            throw new common_1.ForbiddenException('Aucun dépôt assigné');
+        }
+        this.logger.log(`Responsable ${req.user.id} consulte son équipe`);
+        return this.svc.listByDepot(depotId, req.user.id);
+    }
     async list(depotId, req, role) {
-        this.logger.log(`Admin ${req.user.id} liste ${role !== null && role !== void 0 ? role : 'ALL'} pour dépôt ${depotId}`);
+        this.logger.log(`${req.user.role} ${req.user.id} liste ${role !== null && role !== void 0 ? role : 'ALL'} pour dépôt ${depotId}`);
         return this.svc.listByDepot(depotId, req.user.id, role);
     }
     async addMember(depotId, dto, req) {
         try {
-            this.logger.log(`Admin ${req.user.id} - add member to ${depotId}`);
+            this.logger.log(`${req.user.role} ${req.user.id} - add member to ${depotId}`);
             return await this.svc.addMember(depotId, dto, req.user.id);
         }
         catch (e) {
@@ -47,7 +55,15 @@ let TeamController = TeamController_1 = class TeamController {
 };
 exports.TeamController = TeamController;
 __decorate([
-    (0, roles_decorator_1.Roles)('Admin'),
+    (0, roles_decorator_1.Roles)('responsable depot'),
+    (0, common_1.Get)('mine'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], TeamController.prototype, "getMyTeam", null);
+__decorate([
+    (0, roles_decorator_1.Roles)('Admin', 'responsable depot'),
     (0, common_1.Get)(':depotId'),
     __param(0, (0, common_1.Param)('depotId')),
     __param(1, (0, common_1.Req)()),
@@ -57,7 +73,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], TeamController.prototype, "list", null);
 __decorate([
-    (0, roles_decorator_1.Roles)('Admin'),
+    (0, roles_decorator_1.Roles)('Admin', 'responsable depot'),
     (0, common_1.Post)(':depotId/members'),
     __param(0, (0, common_1.Param)('depotId')),
     __param(1, (0, common_1.Body)()),

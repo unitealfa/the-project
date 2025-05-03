@@ -4,6 +4,24 @@ export declare class TeamController {
     private readonly svc;
     private readonly logger;
     constructor(svc: TeamService);
+    getMyTeam(req: any): Promise<{
+        [x: string]: (import("mongoose").FlattenMaps<import("../user/schemas/user.schema").UserDocument> & {
+            _id: import("mongoose").Types.ObjectId;
+        })[];
+        livraison?: undefined;
+        prevente?: undefined;
+        entrepot?: undefined;
+    } | {
+        livraison: (import("mongoose").FlattenMaps<import("../user/schemas/user.schema").UserDocument> & {
+            _id: import("mongoose").Types.ObjectId;
+        })[];
+        prevente: (import("mongoose").FlattenMaps<import("../user/schemas/user.schema").UserDocument> & {
+            _id: import("mongoose").Types.ObjectId;
+        })[];
+        entrepot: (import("mongoose").FlattenMaps<import("../user/schemas/user.schema").UserDocument> & {
+            _id: import("mongoose").Types.ObjectId;
+        })[];
+    }>;
     list(depotId: string, req: any, role?: 'livraison' | 'prevente' | 'entrepot'): Promise<{
         [role]: (import("mongoose").FlattenMaps<import("../user/schemas/user.schema").UserDocument> & {
             _id: import("mongoose").Types.ObjectId;

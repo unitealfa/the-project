@@ -6,7 +6,7 @@ export declare class TeamService {
     private readonly depotModel;
     private readonly userModel;
     constructor(depotModel: Model<DepotDocument>, userModel: Model<UserDocument>);
-    listByDepot(depotId: string, adminId: string, role?: 'livraison' | 'prevente' | 'entrepot'): Promise<{
+    listByDepot(depotId: string, userId: string, role?: 'livraison' | 'prevente' | 'entrepot'): Promise<{
         [role]: (import("mongoose").FlattenMaps<UserDocument> & {
             _id: Types.ObjectId;
         })[];
@@ -24,7 +24,7 @@ export declare class TeamService {
             _id: Types.ObjectId;
         })[];
     }>;
-    addMember(depotId: string, dto: CreateMemberDto, adminId: string): Promise<{
+    addMember(depotId: string, dto: CreateMemberDto, userId: string): Promise<{
         nom: string;
         prenom: string;
         email: string;

@@ -1,4 +1,4 @@
-import { UserService } from './user.service';
+import { UserService } from "./user.service";
 export declare class UserController {
     private readonly userSvc;
     constructor(userSvc: UserService);
@@ -17,6 +17,7 @@ export declare class UserController {
             company: any;
             companyName: any;
             num: any;
+            depot: any;
         };
     }>;
 }

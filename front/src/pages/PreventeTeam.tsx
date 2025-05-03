@@ -16,33 +16,38 @@ export default function PreventeTeam() {
   const [loading,setLoading] = useState(true);
   const [error,setError] = useState('');
 
-  /* chargement //////////////////////////////////////////////////// */
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
         const r = await apiFetch(`/teams/${depotId}?role=prevente`);
-        const data = await r.json();         // { prevente:[...] }
-        setList(data.prevente);
-      } catch { setError('Impossible de charger l’équipe'); }
-      finally { setLoading(false); }
+        const data = await r.json();
+        setList(Array.isArray(data.prevente) ? data.prevente : data);
+      } catch {
+        setError('Impossible de charger l’équipe');
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, [depotId, location.key]);
 
-  /* UI //////////////////////////////////////////////////////////// */
   return (
     <>
       <Header/>
       <div style={{padding:'1rem',fontFamily:'Arial, sans-serif'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <h1 style={{margin:0}}>Équipe Pré-vente</h1>
-          <button
-            onClick={()=>nav(`/teams/${depotId}/prevente/add`)}
-            style={{padding:'.5rem 1rem',background:'#4f46e5',color:'#fff',
-                    border:'none',borderRadius:8,cursor:'pointer'}}>
-            + Ajouter un membre
-          </button>
+          {user.role === 'responsable depot' && (
+            <button
+              onClick={()=>nav(`/teams/${depotId}/prevente/add`)}
+              style={{padding:'.5rem 1rem',background:'#4f46e5',color:'#fff',
+                      border:'none',borderRadius:8,cursor:'pointer'}}>
+              + Ajouter un membre
+            </button>
+          )}
         </div>
 
         {error && <p style={{color:'red'}}>{error}</p>}

@@ -11,24 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CompanySchema = exports.Company = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
-class Adresse {
-}
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], Adresse.prototype, "rue", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], Adresse.prototype, "ville", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], Adresse.prototype, "code_postal", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], Adresse.prototype, "pays", void 0);
 let Company = class Company {
 };
 exports.Company = Company;
@@ -37,15 +19,19 @@ __decorate([
     __metadata("design:type", String)
 ], Company.prototype, "nom_company", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
-], Company.prototype, "gerant_company", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Adresse, required: true }),
-    __metadata("design:type", Adresse)
-], Company.prototype, "contact", void 0);
+    (0, mongoose_1.Prop)({
+        type: {
+            rue: String,
+            ville: String,
+            code_postal: String,
+            pays: String,
+        },
+        required: true,
+    }),
+    __metadata("design:type", Object)
+], Company.prototype, "adresse", void 0);
 exports.Company = Company = __decorate([
-    (0, mongoose_1.Schema)({ timestamps: true })
+    (0, mongoose_1.Schema)({ timestamps: false })
 ], Company);
 exports.CompanySchema = mongoose_1.SchemaFactory.createForClass(Company);
 //# sourceMappingURL=company.schema.js.map

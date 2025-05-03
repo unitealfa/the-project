@@ -20,7 +20,7 @@ let UserController = class UserController {
         this.userSvc = userSvc;
     }
     async login({ email, password }) {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e;
         const doc = await this.userSvc.findByEmailWithCompany(email);
         const token = await this.userSvc.checkPasswordAndSignJwt(doc, password);
         const obj = doc.toObject();
@@ -36,20 +36,21 @@ let UserController = class UserController {
                 company: (_b = (_a = obj.company) === null || _a === void 0 ? void 0 : _a._id) !== null && _b !== void 0 ? _b : null,
                 companyName: (_d = (_c = obj.company) === null || _c === void 0 ? void 0 : _c.nom_company) !== null && _d !== void 0 ? _d : null,
                 num: obj.num,
+                depot: (_e = obj.depot) !== null && _e !== void 0 ? _e : null,
             },
         };
     }
 };
 exports.UserController = UserController;
 __decorate([
-    (0, common_1.Post)('login'),
+    (0, common_1.Post)("login"),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "login", null);
 exports.UserController = UserController = __decorate([
-    (0, common_1.Controller)('user'),
+    (0, common_1.Controller)("user"),
     __metadata("design:paramtypes", [user_service_1.UserService])
 ], UserController);
 //# sourceMappingURL=user.controller.js.map

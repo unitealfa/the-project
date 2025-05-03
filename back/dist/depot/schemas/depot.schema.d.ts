@@ -4,11 +4,6 @@ export declare class Depot {
     company_id: Types.ObjectId;
     type_depot: string;
     capacite: number;
-    contact: {
-        responsable: string;
-        telephone: string;
-        email: string;
-    };
     adresse: {
         rue: string;
         ville: string;
@@ -18,7 +13,8 @@ export declare class Depot {
     coordonnees?: {
         latitude: number;
         longitude: number;
-    };
+    } | null;
+    responsable_id: Types.ObjectId;
     date_creation: Date;
 }
 export type DepotDocument = Depot & Document;

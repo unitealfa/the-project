@@ -60,7 +60,7 @@ let UserService = class UserService {
     async findByEmailWithCompany(email) {
         const doc = await this.userModel
             .findOne({ email })
-            .select('+password')
+            .select('+password +depot')
             .populate('company')
             .exec();
         if (!doc)
@@ -75,6 +75,7 @@ let UserService = class UserService {
             id: doc._id,
             email: doc.email,
             role: doc.role,
+            depot: doc.depot || null,
         });
     }
 };

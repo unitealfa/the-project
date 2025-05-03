@@ -9,9 +9,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CompanyModule = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
-const company_controller_1 = require("./company.controller");
-const company_service_1 = require("./company.service");
 const company_schema_1 = require("./schemas/company.schema");
+const company_service_1 = require("./company.service");
+const company_controller_1 = require("./company.controller");
 const user_schema_1 = require("../user/schemas/user.schema");
 let CompanyModule = class CompanyModule {
 };
@@ -24,8 +24,8 @@ exports.CompanyModule = CompanyModule = __decorate([
                 { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
             ]),
         ],
-        controllers: [company_controller_1.CompanyController],
         providers: [company_service_1.CompanyService],
+        controllers: [company_controller_1.CompanyController],
     })
 ], CompanyModule);
 //# sourceMappingURL=company.module.js.map

@@ -12,11 +12,11 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { JwtAuthGuard }    from '../auth/jwt-auth.guard';
-import { RolesGuard }      from '../auth/roles.guard';
-import { Roles }           from '../auth/roles.decorator';
-import { DepotService }    from './depot.service';
-import { CreateDepotDto }  from './dto/create-depot.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { DepotService } from './depot.service';
+import { CreateDepotDto } from './dto/create-depot.dto';
 
 @Controller('depots')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -25,15 +25,13 @@ export class DepotController {
 
   constructor(private readonly svc: DepotService) {}
 
-  /** Création de dépôt — accessible à l’Admin */
   @Roles('Admin')
   @Post()
   async create(@Body() dto: CreateDepotDto, @Req() req: any) {
-    this.logger.log(`Admin ${req.user.id} crée un dépôt pour sa société`);
+    this.logger.log(`Admin ${req.user.id} crée un dépôt`);
     return this.svc.create(dto, req.user.id);
   }
 
-  /** Lister les dépôts de l’Admin */
   @Roles('Admin')
   @Get()
   async findAllForMe(@Req() req: any) {
@@ -41,32 +39,25 @@ export class DepotController {
     return this.svc.findAllForCompany(req.user.id);
   }
 
-  /** Détails d’un dépôt */
-  @Roles('Admin')
+  @Roles('Admin', 'responsable depot')
   @Get(':id')
   async findOne(@Param('id') id: string, @Req() req: any) {
-    this.logger.log(`Admin ${req.user.id} consulte dépôt ${id}`);
-    return this.svc.findOne(id, req.user.id);
+    this.logger.log(`${req.user.role} ${req.user.id} consulte le dépôt ${id}`);
+    return this.svc.findOne(id, req.user);
   }
 
-  /** Mettre à jour un dépôt */
   @Roles('Admin')
   @Patch(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() dto: Partial<CreateDepotDto>,
-    @Req() req: any,
-  ) {
-    this.logger.log(`Admin ${req.user.id} modifie dépôt ${id}`);
+  async update(@Param('id') id: string, @Body() dto: Partial<CreateDepotDto>, @Req() req: any) {
+    this.logger.log(`Admin ${req.user.id} modifie le dépôt ${id}`);
     return this.svc.update(id, dto, req.user.id);
   }
 
-  /** Supprimer un dépôt */
   @Roles('Admin')
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string, @Req() req: any) {
-    this.logger.log(`Admin ${req.user.id} supprime dépôt ${id}`);
+    this.logger.log(`Admin ${req.user.id} supprime le dépôt ${id}`);
     return this.svc.remove(id, req.user.id);
   }
 }

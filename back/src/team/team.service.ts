@@ -1,4 +1,3 @@
-// back/src/team/team.service.ts
 import {
   Injectable,
   ForbiddenException,
@@ -23,18 +22,18 @@ import { CreateMemberDto } from './dto/create-member.dto';
 export class TeamService {
   constructor(
     @InjectModel(Depot.name) private readonly depotModel: Model<DepotDocument>,
-    @InjectModel(User.name)  private readonly userModel : Model<UserDocument>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
 
-  /* ───────────────────────── LISTE ───────────────────────── */
   async listByDepot(
-    depotId : string,
-    adminId : string,
-    role?   : 'livraison' | 'prevente' | 'entrepot',   // query facultative
+    depotId: string,
+    userId: string,
+    role?: 'livraison' | 'prevente' | 'entrepot',
   ) {
-    await this.guardDepot(depotId, adminId);
+    const user = await this.userModel.findById(userId).lean();
+    if (!user) throw new NotFoundException('Utilisateur introuvable');
 
-    const oid = new Types.ObjectId(depotId);          // ✅ conversion
+    const oid = new Types.ObjectId(depotId);
 
     const fetch = (r: string) =>
       this.userModel
@@ -42,9 +41,28 @@ export class TeamService {
         .select('-password')
         .lean();
 
+    if (user.role === 'responsable depot') {
+      if (user.depot?.toString() !== depotId)
+        throw new ForbiddenException('Ce dépôt ne vous appartient pas');
+
+      const [livraison, prevente, entrepot] = await Promise.all([
+        fetch('livraison'),
+        fetch('prevente'),
+        fetch('entrepot'),
+      ]);
+
+      if (role) {
+        return { [role]: role === 'livraison' ? livraison : role === 'prevente' ? prevente : entrepot };
+      }
+
+      return { livraison, prevente, entrepot };
+    }
+
+    await this.guardDepot(depotId, userId);
+
     if (role) {
       const arr = await fetch(role);
-      return { [role]: arr };                         // ex. { livraison:[…] }
+      return { [role]: arr };
     }
 
     const [livraison, prevente, entrepot] = await Promise.all([
@@ -56,13 +74,12 @@ export class TeamService {
     return { livraison, prevente, entrepot };
   }
 
-  /* ──────────────────────── AJOUT ────────────────────────── */
   async addMember(
-    depotId : string,
-    dto     : CreateMemberDto,
-    adminId : string,
+    depotId: string,
+    dto: CreateMemberDto,
+    userId: string,
   ) {
-    const depot = await this.guardDepot(depotId, adminId);
+    const depot = await this.guardDepot(depotId, userId);
 
     if (await this.userModel.exists({ email: dto.email }))
       throw new ConflictException('Email déjà utilisé');
@@ -70,23 +87,22 @@ export class TeamService {
     const hashed = await bcrypt.hash(dto.password, 10);
 
     const user = new this.userModel({
-      nom      : dto.nom,
-      prenom   : dto.prenom,
-      email    : dto.email,
-      num      : dto.num,
-      password : hashed,
-      role     : dto.role,          // livraison | prevente | entrepot
-      fonction : dto.fonction,      // ex. “Pré-vendeur”
-      company  : depot.company_id,
-      depot    : new Types.ObjectId(depotId),
+      nom: dto.nom,
+      prenom: dto.prenom,
+      email: dto.email,
+      num: dto.num,
+      password: hashed,
+      role: dto.role,
+      fonction: dto.fonction,
+      company: depot.company_id,
+      depot: new Types.ObjectId(depotId),
     });
 
     await user.save();
     const { password, ...safe } = user.toObject();
-    return safe;                                   // mot de passe exclu
+    return safe;
   }
 
-  /* ───────────────────── SUPPRESSION ─────────────────────── */
   async removeMember(memberId: string, adminId: string) {
     const member = await this.userModel.findById(memberId).lean();
     if (!member) throw new NotFoundException('Membre introuvable');
@@ -96,16 +112,28 @@ export class TeamService {
     return { deleted: true };
   }
 
-  /* ─────────── Vérifie l’accès à un dépôt ────────── */
-  private async guardDepot(depotId: string, adminId: string) {
-    const admin = await this.userModel.findById(adminId).lean();
-    if (!admin?.company)
-      throw new ForbiddenException('Pas de société associée');
+  private async guardDepot(depotId: string, userId: string) {
+    const user = await this.userModel.findById(userId).lean();
+    if (!user) throw new ForbiddenException('Utilisateur non trouvé');
 
-    const depot = await this.depotModel.findById(depotId).lean();
-    if (!depot || depot.company_id.toString() !== admin.company.toString())
-      throw new ForbiddenException('Accès refusé');
+    if (user.role === 'Admin') {
+      if (!user.company) throw new ForbiddenException('Pas de société associée');
+      const depot = await this.depotModel.findById(depotId).lean();
+      if (!depot || depot.company_id.toString() !== user.company.toString())
+        throw new ForbiddenException('Accès refusé');
+      return depot;
+    }
 
-    return depot;
+    if (user.role === 'responsable depot') {
+      const depot = await this.depotModel.findOne({
+        _id: depotId,
+        responsable_id: user._id,
+      }).lean();
+
+      if (!depot) throw new ForbiddenException('Accès refusé');
+      return depot;
+    }
+
+    throw new ForbiddenException('Rôle non autorisé');
   }
 }

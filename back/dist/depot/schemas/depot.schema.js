@@ -33,23 +33,7 @@ __decorate([
 ], Depot.prototype, "capacite", void 0);
 __decorate([
     (0, mongoose_1.Prop)({
-        type: {
-            responsable: String,
-            telephone: String,
-            email: String,
-        },
-        required: true,
-    }),
-    __metadata("design:type", Object)
-], Depot.prototype, "contact", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({
-        type: {
-            rue: String,
-            ville: String,
-            code_postal: String,
-            pays: String,
-        },
+        type: { rue: String, ville: String, code_postal: String, pays: String },
         required: true,
     }),
     __metadata("design:type", Object)
@@ -57,11 +41,14 @@ __decorate([
 __decorate([
     (0, mongoose_1.Prop)({
         type: { latitude: Number, longitude: Number },
-        required: false,
         default: null,
     }),
     __metadata("design:type", Object)
 ], Depot.prototype, "coordonnees", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
+    __metadata("design:type", mongoose_2.Types.ObjectId)
+], Depot.prototype, "responsable_id", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: Date, default: () => new Date() }),
     __metadata("design:type", Date)

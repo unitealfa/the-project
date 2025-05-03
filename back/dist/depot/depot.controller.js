@@ -26,7 +26,7 @@ let DepotController = DepotController_1 = class DepotController {
         this.logger = new common_1.Logger(DepotController_1.name);
     }
     async create(dto, req) {
-        this.logger.log(`Admin ${req.user.id} crée un dépôt pour sa société`);
+        this.logger.log(`Admin ${req.user.id} crée un dépôt`);
         return this.svc.create(dto, req.user.id);
     }
     async findAllForMe(req) {
@@ -34,15 +34,15 @@ let DepotController = DepotController_1 = class DepotController {
         return this.svc.findAllForCompany(req.user.id);
     }
     async findOne(id, req) {
-        this.logger.log(`Admin ${req.user.id} consulte dépôt ${id}`);
-        return this.svc.findOne(id, req.user.id);
+        this.logger.log(`${req.user.role} ${req.user.id} consulte le dépôt ${id}`);
+        return this.svc.findOne(id, req.user);
     }
     async update(id, dto, req) {
-        this.logger.log(`Admin ${req.user.id} modifie dépôt ${id}`);
+        this.logger.log(`Admin ${req.user.id} modifie le dépôt ${id}`);
         return this.svc.update(id, dto, req.user.id);
     }
     async remove(id, req) {
-        this.logger.log(`Admin ${req.user.id} supprime dépôt ${id}`);
+        this.logger.log(`Admin ${req.user.id} supprime le dépôt ${id}`);
         return this.svc.remove(id, req.user.id);
     }
 };
@@ -65,7 +65,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], DepotController.prototype, "findAllForMe", null);
 __decorate([
-    (0, roles_decorator_1.Roles)('Admin'),
+    (0, roles_decorator_1.Roles)('Admin', 'responsable depot'),
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Req)()),

@@ -3,12 +3,11 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Header      from '../components/Header';
 import { apiFetch } from '../utils/api';
 
-/* — types — */
 interface Member {
   _id: string;
   nom: string;
   prenom: string;
-  fonction?: string;                   // “Gestionnaire de stock”, …
+  fonction?: string;
 }
 interface Depot { _id:string; nom_depot:string }
 
@@ -22,7 +21,8 @@ export default function EntrepotTeam () {
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
 
-  /* charge dépôt + membres ENTREPÔT ------------------------------ */
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
   useEffect(() => {
     let cancel = false;
     (async () => {
@@ -42,23 +42,23 @@ export default function EntrepotTeam () {
     })();
     return () => { cancel = true; };
   }, [depotId, location.key]);
-  /* -------------------------------------------------------------- */
 
   return (
     <>
       <Header/>
       <div style={{padding:'1rem',fontFamily:'Arial, sans-serif'}}>
-        {/* titre + bouton */}
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <h1 style={{margin:0}}>
             Équipe Entrepôt {depot ? `du dépôt « ${depot.nom_depot} »` : ''}
           </h1>
-          <button
-            onClick={()=> nav(`/teams/${depotId}/entrepot/add`)}
-            style={{padding:'.5rem 1rem',background:'#4f46e5',color:'#fff',
-                    border:'none',borderRadius:8,cursor:'pointer'}}>
-            + Ajouter un membre
-          </button>
+          {user.role === 'responsable depot' && (
+            <button
+              onClick={()=> nav(`/teams/${depotId}/entrepot/add`)}
+              style={{padding:'.5rem 1rem',background:'#4f46e5',color:'#fff',
+                      border:'none',borderRadius:8,cursor:'pointer'}}>
+              + Ajouter un membre
+            </button>
+          )}
         </div>
 
         {error && <p style={{color:'red',marginTop:'1rem'}}>{error}</p>}

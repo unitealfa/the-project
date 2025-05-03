@@ -1,33 +1,49 @@
-// front/src/components/RequireAuth.tsx
-
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 
-export type UserType = {
+/* ───────────────── Types ─────────────────────────────────────────── */
+export interface UserType {
   id: string;
   nom: string;
   prenom: string;
   email: string;
-  role: string;
+  role: string;              // ex. 'Admin', 'responsable depot', …
   company?: string | null;
   num?: string;
-};
+}
 
-type RequireAuthProps = {
+interface RequireAuthProps {
   children: React.ReactNode;
-  allowedRoles?: string[];    // si absent, on accepte tous les users authentifiés
-};
-
+  /** Liste blanche de rôles.  
+   *  ● Si absent → on accepte tout utilisateur connecté.  
+   *  ● Comparaison insensible à la casse / espaces.            */
+  allowedRoles?: string[];
+}
+/* ───────────────── Composant ─────────────────────────────────────── */
 export default function RequireAuth({ children, allowedRoles }: RequireAuthProps) {
+  /* récupère le user depuis localStorage --------------------------- */
   const raw = localStorage.getItem('user');
   if (!raw) {
-    return <Navigate to="/" replace />;
+    /* non connecté → retour à la page de login */
+    return <Navigate to='/' replace />;
   }
-  const user = JSON.parse(raw) as UserType;
+  const user: UserType = JSON.parse(raw);
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+  /* normalise le rôle : trim + lowercase --------------------------- */
+  const userRole = user.role?.trim().toLowerCase();
+
+  /* si une liste de rôles est fournie, on vérifie la présence ------- */
+  if (allowedRoles) {
+    const ok = allowedRoles
+      .map(r => r.trim().toLowerCase())
+      .includes(userRole);
+
+    if (!ok) {
+      /* rôle non autorisé → redirection */
+      return <Navigate to='/' replace />;
+    }
   }
 
+  /* tout est bon → on rend les enfants ----------------------------- */
   return <>{children}</>;
 }

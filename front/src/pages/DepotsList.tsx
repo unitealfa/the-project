@@ -2,12 +2,18 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
 
+interface Responsable {
+  nom: string;
+  prenom: string;
+}
+
 interface Depot {
   _id: string;
   nom_depot: string;
   type_depot: string;
   capacite: number;
   date_creation: string;
+  responsable_id?: Responsable | null;
 }
 
 export default function DepotsList() {
@@ -79,6 +85,7 @@ export default function DepotsList() {
             ➕ Nouveau dépôt
           </Link>
         </div>
+
         <table
           style={{
             width: "100%",
@@ -88,21 +95,12 @@ export default function DepotsList() {
         >
           <thead>
             <tr>
-              <th style={{ padding: "0.5rem", borderBottom: "1px solid #ccc" }}>
-                Nom
-              </th>
-              <th style={{ padding: "0.5rem", borderBottom: "1px solid #ccc" }}>
-                Type
-              </th>
-              <th style={{ padding: "0.5rem", borderBottom: "1px solid #ccc" }}>
-                Capacité
-              </th>
-              <th style={{ padding: "0.5rem", borderBottom: "1px solid #ccc" }}>
-                Créé le
-              </th>
-              <th style={{ padding: "0.5rem", borderBottom: "1px solid #ccc" }}>
-                Actions
-              </th>
+              <th style={{ padding: "0.5rem", borderBottom: "1px solid #ccc" }}>Nom</th>
+              <th style={{ padding: "0.5rem", borderBottom: "1px solid #ccc" }}>Type</th>
+              <th style={{ padding: "0.5rem", borderBottom: "1px solid #ccc" }}>Capacité</th>
+              <th style={{ padding: "0.5rem", borderBottom: "1px solid #ccc" }}>Responsable</th>
+              <th style={{ padding: "0.5rem", borderBottom: "1px solid #ccc" }}>Créé le</th>
+              <th style={{ padding: "0.5rem", borderBottom: "1px solid #ccc" }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -111,6 +109,11 @@ export default function DepotsList() {
                 <td style={{ padding: "0.5rem 0" }}>{d.nom_depot}</td>
                 <td style={{ padding: "0.5rem 0" }}>{d.type_depot}</td>
                 <td style={{ padding: "0.5rem 0" }}>{d.capacite}</td>
+                <td style={{ padding: "0.5rem 0" }}>
+                  {d.responsable_id
+                    ? `${d.responsable_id.prenom} ${d.responsable_id.nom}`
+                    : '—'}
+                </td>
                 <td style={{ padding: "0.5rem 0" }}>
                   {new Date(d.date_creation).toLocaleDateString()}
                 </td>
@@ -124,10 +127,7 @@ export default function DepotsList() {
                   <Link to={`/depots/${d._id}`} style={{ color: "#4f46e5" }}>
                     Voir
                   </Link>
-                  <Link
-                    to={`/depots/${d._id}/edit`}
-                    style={{ color: "#4f46e5" }}
-                  >
+                  <Link to={`/depots/${d._id}/edit`} style={{ color: "#4f46e5" }}>
                     Modifier
                   </Link>
                   <button
@@ -142,9 +142,6 @@ export default function DepotsList() {
                   >
                     Supprimer
                   </button>
-                  <Link to={`/teams/${d._id}`} style={{ color: "#4f46e5" }}>
-                    Équipe
-                  </Link>
                 </td>
               </tr>
             ))}
