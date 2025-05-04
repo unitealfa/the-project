@@ -6,7 +6,8 @@ import { AuthModule }       from './auth/auth.module';
 import { UserModule }       from './user/user.module';
 import { CompanyModule }    from './company/company.module';
 import { DepotModule }      from './depot/depot.module';
-import { TeamModule }       from './team/team.module'; 
+import { TeamModule }       from './team/team.module';
+import { ClientModule }     from './client/client.module'; // ✅ AJOUT ICI
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { TeamModule }       from './team/team.module';
     UserModule,
     CompanyModule,
     DepotModule,
-    TeamModule,            // ← ajout du nouveau module
+    TeamModule,
+    ClientModule,           // ✅ assure l'enregistrement de /clients
   ],
 })
 export class AppModule {}

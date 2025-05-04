@@ -7,13 +7,13 @@ export class RolesGuard implements CanActivate {
 
   canActivate(ctx: ExecutionContext): boolean {
     const required = this.reflector.get<string[]>('roles', ctx.getHandler());
-    if (!required) return true; // si aucun rôle requis → accès libre
+    if (!required) return true;
 
     const { user } = ctx.switchToHttp().getRequest();
 
     console.log('🛡️ rôle reçu du JWT :', user?.role);
     console.log('🔐 rôles attendus pour la route :', required);
 
-    return required.includes(user.role); // l'utilisateur a-t-il le bon rôle ?
+    return required.includes(user.role);
   }
 }

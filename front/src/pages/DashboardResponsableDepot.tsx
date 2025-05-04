@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import Header from '../components/Header';
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import Header from "../components/Header";
 
 interface User {
   nom: string;
@@ -14,13 +14,13 @@ interface Depot {
 }
 
 function DashboardResponsableDepot() {
-  const raw = localStorage.getItem('user');
+  const raw = localStorage.getItem("user");
   const user: User | null = raw ? JSON.parse(raw) : null;
-  const token = localStorage.getItem('token') || '';
+  const token = localStorage.getItem("token") || "";
   const apiBase = import.meta.env.VITE_API_URL;
 
   const [depot, setDepot] = useState<Depot | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!user?.depot) return;
@@ -41,29 +41,51 @@ function DashboardResponsableDepot() {
   return (
     <>
       <Header />
-      <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-        <h1>Bonjour {user.prenom} {user.nom}</h1>
-        <p>Rôle : <strong>Responsable dépôt</strong></p>
+      <main style={{ padding: "2rem", fontFamily: "Arial, sans-serif" }}>
+        <h1>
+          Bonjour {user.prenom} {user.nom}
+        </h1>
+        <p>
+          Rôle : <strong>Responsable dépôt</strong>
+        </p>
 
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {error && <p style={{ color: "red" }}>{error}</p>}
 
         {depot && (
-          <section style={{ marginTop: '2rem' }}>
-            <h2>🏬 Dépôt assigné : <strong>{depot.nom_depot}</strong></h2>
+          <section style={{ marginTop: "2rem" }}>
+            <h2>
+              🏬 Dépôt assigné : <strong>{depot.nom_depot}</strong>
+            </h2>
 
             <Link
               to={`/teams/${depot._id}`}
               style={{
-                display: 'inline-block',
-                marginTop: '1rem',
-                padding: '0.5rem 1rem',
-                backgroundColor: '#4f46e5',
-                color: '#fff',
-                borderRadius: '4px',
-                textDecoration: 'none',
+                display: "inline-block",
+                marginTop: "1rem",
+                padding: "0.5rem 1rem",
+                backgroundColor: "#4f46e5",
+                color: "#fff",
+                borderRadius: "4px",
+                textDecoration: "none",
               }}
             >
               👥 Gérer l’équipe du dépôt <strong>{depot.nom_depot}</strong>
+            </Link>
+
+            <Link
+              to={`/clients?depot=${depot._id}`}
+              style={{
+                display: "inline-block",
+                marginTop: "1rem",
+                marginLeft: "1rem",
+                padding: "0.5rem 1rem",
+                backgroundColor: "#10b981",
+                color: "#fff",
+                borderRadius: "4px",
+                textDecoration: "none",
+              }}
+            >
+              👥 Consulter les clients de ce dépôt
             </Link>
           </section>
         )}

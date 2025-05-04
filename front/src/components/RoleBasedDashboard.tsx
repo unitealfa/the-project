@@ -1,68 +1,84 @@
 import React from 'react';
 
-/* ───────── Back‑office ───────── */
+/* ───────── Dashboards Back‑office ───────── */
 import DashboardSuperAdmin    from '../pages/DashboardSuperAdmin';
 import DashboardAdmin         from '../pages/DashboardAdmin';
 
-/* ───────── Livraison ─────────── */
+/* ───────── Dashboards Livraison ─────────── */
 import DashboardAdminVentes   from '../pages/DashboardAdminVentes';
 import DashboardLivreur       from '../pages/DashboardLivreur';
 import DashboardChauffeur     from '../pages/DashboardChauffeur';
 
-/* ───────── Pré‑vente ─────────── */
+/* ───────── Dashboards Pré‑vente ─────────── */
 import DashboardSuperviseurVentes from '../pages/DashboardSuperviseurVentes';
 import DashboardPreVendeur        from '../pages/DashboardPreVendeur';
 
-/* ───────── Entrepôt ──────────── */
-import DashboardGestionStock   from '../pages/DashboardGestionStock';
-import DashboardControleur     from '../pages/DashboardControleur';
+/* ───────── Dashboards Entrepôt ──────────── */
+import DashboardGestionStock     from '../pages/DashboardGestionStock';
+import DashboardControleur       from '../pages/DashboardControleur';
 import DashboardManutentionnaire from '../pages/DashboardManutentionnaire';
 
-/* ───────── Responsable dépôt ─── */
+/* ───────── Dashboard Responsable dépôt ─── */
 import DashboardResponsableDepot from '../pages/DashboardResponsableDepot';
 
-/* clé (fonction OU rôle) → composant ------------------------------- */
+/* ───────── Dashboard Client ────────────── */
+import DashboardClient from '../pages/DashboardClient';
+
+/**
+ * 🔑 Table de correspondance : rôle (ou fonction) → composant dashboard
+ * 
+ * On tente d’abord avec `fonction`, puis avec `role` (si pas de fonction précisée)
+ */
 const mapping: Record<string, React.FC> = {
-  /* back‑office */
+  /* Back‑office */
   'Super Admin'               : DashboardSuperAdmin,
   'Admin'                     : DashboardAdmin,
 
-  /* livraison */
+  /* Livraison */
   'Administrateur des ventes' : DashboardAdminVentes,
   'Livreur'                   : DashboardLivreur,
   'Chauffeur'                 : DashboardChauffeur,
 
-  /* pré‑vente */
+  /* Pré‑vente */
   'Superviseur des ventes'    : DashboardSuperviseurVentes,
   'Pré vendeur'               : DashboardPreVendeur,
 
-  /* entrepôt */
+  /* Entrepôt */
   'Gestionnaire de stock'     : DashboardGestionStock,
   'Contrôleur'                : DashboardControleur,
   'Manutentionnaire'          : DashboardManutentionnaire,
 
-  /* responsable dépôt */
-  'responsable depot'         : DashboardResponsableDepot,      // ← nouveau
+  /* Responsable dépôt */
+  'responsable depot'         : DashboardResponsableDepot,
+
+  /* Client */
+  'Client'                    : DashboardClient,
 };
 
-/* ───────── Composant principal ─────────────────────────────────── */
+/**
+ * Composant principal appelé dynamiquement selon le rôle connecté
+ */
 export default function RoleBasedDashboard() {
+  // 🔐 Récupération des infos stockées dans localStorage
   const raw = localStorage.getItem('user');
-  if (!raw) return null;                                 // sécurité
+  if (!raw) return null;
 
+  // On extrait la fonction (prioritaire) ou à défaut le rôle
   const { fonction, role } = JSON.parse(raw) as {
-    fonction?: string; role: string;
+    fonction?: string;
+    role: string;
   };
 
-  /* on privilégie la fonction (si définie), sinon le rôle */
+  // Nettoyage de la clé (évite espaces ou capitalisation incohérente)
   const key  = (fonction ?? role)?.trim();
-  const Dash = mapping[key.toLowerCase()] || mapping[key]; // tolère casse
+  const Dash = mapping[key?.toLowerCase()] || mapping[key]; // on tente minuscule ou original
 
+  // Si on a un dashboard connu : on l'affiche, sinon message erreur
   return Dash
     ? <Dash />
     : (
       <p style={{ padding: '1rem' }}>
-        Rôle non reconnu&nbsp;: <code>{key}</code>
+        Rôle non reconnu : <code>{key}</code>
       </p>
     );
 }

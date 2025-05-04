@@ -11,15 +11,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  /**
-   * Le contenu retourné ici est injecté dans `req.user`
-   */
   async validate(payload: any) {
     return {
       id: payload.id,
       email: payload.email,
       role: payload.role,
-      depot: payload.depot || null, // ← utile pour le responsable dépôt
+      depot: payload.depot || null,
     };
   }
 }

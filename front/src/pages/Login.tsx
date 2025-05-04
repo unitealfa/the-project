@@ -1,21 +1,21 @@
-// front/src/pages/Login.tsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 /* ---------- types de la réponse ----------------------------- */
 interface LoginResponse {
-  token: string;
+  access_token: string;
   user: {
     id: string;
-    nom: string;
-    prenom: string;
+    nom_client?: string; // pour les clients
+    nom?: string;        // pour les utilisateurs internes
+    prenom?: string;
     email: string;
-    role: string; // Admin, Super Admin, livraison…
-    fonction?: string; // Livreur, Chauffeur, …
-    company: string | null; // ObjectId
-    companyName: string | null; // nom lisible
-    num: string;
-    depot: string | null; // ✅ AJOUTÉ ICI
+    role: string;
+    fonction?: string;
+    company?: string | null;
+    companyName?: string | null;
+    num?: string;
+    depot?: string | null;
   };
 }
 /* ------------------------------------------------------------- */
@@ -27,49 +27,30 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  /* déjà connecté ? → dashboard -------------------------------- */
+  // Redirection si déjà connecté
   useEffect(() => {
     if (localStorage.getItem("token") && localStorage.getItem("user")) {
       navigate("/dashboard", { replace: true });
     }
   }, [navigate]);
 
-  /* ------------------------------------------------------------- */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const res = await fetch(`${apiBase}/user/login`, {
+      const res = await fetch(`${apiBase}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
       const payload = await res.json();
-
       if (!res.ok) throw new Error(payload.message || "Échec de la connexion");
 
       const data = payload as LoginResponse;
 
-      /* on stocke TOUT le user (avec fonction + companyName) ---- */
-      localStorage.setItem("token", data.token);
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          id: data.user.id,
-          nom: data.user.nom,
-          prenom: data.user.prenom,
-          email: data.user.email,
-          role: data.user.role,
-          fonction: data.user.fonction,
-          company: data.user.company,
-          companyName: data.user.companyName,
-          num: data.user.num,
-          depot: data.user.depot || null, // ✅ AJOUTE ICI AUSSI
-        })
-      );
-
-      /* --------------------------------------------------------- */
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
 
       navigate("/dashboard", { replace: true });
     } catch (err: any) {
@@ -77,15 +58,10 @@ const Login: React.FC = () => {
     }
   };
 
-  /* ---------------------------- UI ---------------------------- */
   return (
     <form
       onSubmit={handleSubmit}
-      style={{
-        maxWidth: 320,
-        margin: "2rem auto",
-        fontFamily: "Arial, sans-serif",
-      }}
+      style={{ maxWidth: 320, margin: "2rem auto", fontFamily: "Arial, sans-serif" }}
     >
       <h2>Connexion</h2>
 
@@ -99,14 +75,7 @@ const Login: React.FC = () => {
         />
       </div>
 
-      <div
-        style={{
-          marginTop: "1rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: 4,
-        }}
-      >
+      <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: 4 }}>
         <label>Mot de passe</label>
         <input
           type="password"
@@ -116,10 +85,7 @@ const Login: React.FC = () => {
         />
       </div>
 
-      <button
-        type="submit"
-        style={{ marginTop: "1.5rem", padding: ".5rem 1rem" }}
-      >
+      <button type="submit" style={{ marginTop: "1.5rem", padding: ".5rem 1rem" }}>
         Se connecter
       </button>
     </form>

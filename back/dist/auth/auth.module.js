@@ -14,7 +14,9 @@ const mongoose_1 = require("@nestjs/mongoose");
 const config_1 = require("@nestjs/config");
 const auth_service_1 = require("./auth.service");
 const jwt_strategy_1 = require("./jwt.strategy");
+const auth_controller_1 = require("./auth.controller");
 const user_schema_1 = require("../user/schemas/user.schema");
+const client_schema_1 = require("../client/schemas/client.schema");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -30,8 +32,12 @@ exports.AuthModule = AuthModule = __decorate([
                     secret: config.get('JWT_SECRET'),
                 }),
             }),
-            mongoose_1.MongooseModule.forFeature([{ name: user_schema_1.User.name, schema: user_schema_1.UserSchema }]),
+            mongoose_1.MongooseModule.forFeature([
+                { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
+                { name: 'Client', schema: client_schema_1.ClientSchema },
+            ]),
         ],
+        controllers: [auth_controller_1.AuthController],
         providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy],
         exports: [auth_service_1.AuthService],
     })
