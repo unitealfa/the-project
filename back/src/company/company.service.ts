@@ -1,21 +1,29 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+// back/src/company/company.service.ts
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
 import { Company, CompanyDocument } from './schemas/company.schema';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { User, UserDocument } from '../user/schemas/user.schema';
+import { Depot } from '../depot/schemas/depot.schema';
+import { Client } from '../client/schemas/client.schema';
 
 @Injectable()
 export class CompanyService {
   constructor(
     @InjectModel(Company.name) private companyModel: Model<CompanyDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Depot.name) private depotModel: Model<Depot>,
+    @InjectModel(Client.name) private clientModel: Model<Client>,
   ) {}
 
-  /** Crée une société + son admin */
   async createWithAdmin(companyData: CreateCompanyDto, adminData: CreateAdminDto) {
     const exists = await this.companyModel.findOne({ nom_company: companyData.nom_company });
     if (exists) {
@@ -42,16 +50,12 @@ export class CompanyService {
     return { company, admin };
   }
 
-  /** Récupère une société par ID */
   async findOne(id: string): Promise<Company> {
     const company = await this.companyModel.findById(id).lean();
-    if (!company) {
-      throw new NotFoundException(`Société ${id} introuvable.`);
-    }
+    if (!company) throw new NotFoundException(`Société ${id} introuvable.`);
     return company;
   }
 
-  /** Récupère toutes les sociétés + leur admin */
   async findAll(): Promise<
     Array<Company & { admin: { nom: string; prenom: string; email: string } | null }>
   > {
@@ -72,22 +76,22 @@ export class CompanyService {
     );
   }
 
-  /** Met à jour une société */
   async update(id: string, dto: Partial<CreateCompanyDto>): Promise<Company> {
     const updated = await this.companyModel
       .findByIdAndUpdate(id, dto, { new: true, runValidators: true })
       .lean();
-    if (!updated) {
-      throw new NotFoundException(`Société ${id} introuvable pour mise à jour.`);
-    }
+    if (!updated) throw new NotFoundException(`Société ${id} introuvable pour mise à jour.`);
     return updated;
   }
 
-  /** Supprime une société */
   async delete(id: string): Promise<void> {
-    const result = await this.companyModel.findByIdAndDelete(id).exec();
-    if (!result) {
-      throw new NotFoundException(`Société ${id} introuvable pour suppression.`);
-    }
+    const companyObjectId = new Types.ObjectId(id);
+
+    await this.userModel.deleteMany({ company: companyObjectId });
+    await this.clientModel.deleteMany({ company: companyObjectId });
+    await this.depotModel.deleteMany({ company_id: companyObjectId });
+
+    const result = await this.companyModel.findByIdAndDelete(companyObjectId).exec();
+    if (!result) throw new NotFoundException(`Société ${id} introuvable pour suppression.`);
   }
 }

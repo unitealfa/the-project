@@ -52,10 +52,14 @@ const mongoose_2 = require("mongoose");
 const bcrypt = __importStar(require("bcrypt"));
 const company_schema_1 = require("./schemas/company.schema");
 const user_schema_1 = require("../user/schemas/user.schema");
+const depot_schema_1 = require("../depot/schemas/depot.schema");
+const client_schema_1 = require("../client/schemas/client.schema");
 let CompanyService = class CompanyService {
-    constructor(companyModel, userModel) {
+    constructor(companyModel, userModel, depotModel, clientModel) {
         this.companyModel = companyModel;
         this.userModel = userModel;
+        this.depotModel = depotModel;
+        this.clientModel = clientModel;
     }
     async createWithAdmin(companyData, adminData) {
         const exists = await this.companyModel.findOne({ nom_company: companyData.nom_company });
@@ -75,9 +79,8 @@ let CompanyService = class CompanyService {
     }
     async findOne(id) {
         const company = await this.companyModel.findById(id).lean();
-        if (!company) {
+        if (!company)
             throw new common_1.NotFoundException(`Société ${id} introuvable.`);
-        }
         return company;
     }
     async findAll() {
@@ -96,16 +99,18 @@ let CompanyService = class CompanyService {
         const updated = await this.companyModel
             .findByIdAndUpdate(id, dto, { new: true, runValidators: true })
             .lean();
-        if (!updated) {
+        if (!updated)
             throw new common_1.NotFoundException(`Société ${id} introuvable pour mise à jour.`);
-        }
         return updated;
     }
     async delete(id) {
-        const result = await this.companyModel.findByIdAndDelete(id).exec();
-        if (!result) {
+        const companyObjectId = new mongoose_2.Types.ObjectId(id);
+        await this.userModel.deleteMany({ company: companyObjectId });
+        await this.clientModel.deleteMany({ company: companyObjectId });
+        await this.depotModel.deleteMany({ company_id: companyObjectId });
+        const result = await this.companyModel.findByIdAndDelete(companyObjectId).exec();
+        if (!result)
             throw new common_1.NotFoundException(`Société ${id} introuvable pour suppression.`);
-        }
     }
 };
 exports.CompanyService = CompanyService;
@@ -113,7 +118,11 @@ exports.CompanyService = CompanyService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(company_schema_1.Company.name)),
     __param(1, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
+    __param(2, (0, mongoose_1.InjectModel)(depot_schema_1.Depot.name)),
+    __param(3, (0, mongoose_1.InjectModel)(client_schema_1.Client.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
         mongoose_2.Model])
 ], CompanyService);
 //# sourceMappingURL=company.service.js.map

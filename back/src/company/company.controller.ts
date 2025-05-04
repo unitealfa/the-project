@@ -12,12 +12,12 @@ import {
   Logger,
   BadRequestException,
 } from '@nestjs/common';
-import { CompanyService }      from './company.service';
-import { CreateCompanyDto }    from './dto/create-company.dto';
-import { CreateAdminDto }      from './dto/create-admin.dto';
-import { JwtAuthGuard }        from '../auth/jwt-auth.guard';
-import { RolesGuard }          from '../auth/roles.guard';
-import { Roles }               from '../auth/roles.decorator';
+import { CompanyService } from './company.service';
+import { CreateCompanyDto } from './dto/create-company.dto';
+import { CreateAdminDto } from './dto/create-admin.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @Controller('companies')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -26,12 +26,12 @@ export class CompanyController {
 
   constructor(private readonly svc: CompanyService) {}
 
-  /** Création d’une company + Admin (Super Admin only) */
+  /** Création d’une société + Admin (Super Admin uniquement) */
   @Roles('Super Admin')
   @Post()
   async create(
     @Body('companyData') companyData: CreateCompanyDto,
-    @Body('adminData')   adminData:   CreateAdminDto,
+    @Body('adminData') adminData: CreateAdminDto,
   ) {
     try {
       this.logger.log(`Création ${JSON.stringify(companyData)}`);
@@ -45,15 +45,15 @@ export class CompanyController {
     }
   }
 
-  /** Liste de toutes les companies (Super Admin only) */
+  /** Liste de toutes les sociétés (Super Admin uniquement) */
   @Roles('Super Admin')
   @Get()
   async findAll() {
-    this.logger.log('Récupération de toutes les companies');
+    this.logger.log('Récupération de toutes les sociétés');
     return this.svc.findAll();
   }
 
-  /** Détails d’une company (Super Admin + Admin) */
+  /** Détails d’une société (Super Admin + Admin) */
   @Roles('Super Admin', 'Admin')
   @Get(':id')
   async findOne(@Param('id') id: string) {
@@ -61,7 +61,7 @@ export class CompanyController {
     return this.svc.findOne(id);
   }
 
-  /** Mise à jour d’une company (Super Admin only) */
+  /** Mise à jour d’une société (Super Admin uniquement) */
   @Roles('Super Admin')
   @Patch(':id')
   async update(
@@ -72,12 +72,12 @@ export class CompanyController {
     return this.svc.update(id, dto);
   }
 
-  /** Suppression d’une company (Super Admin only) */
+  /** Suppression d’une société (Super Admin uniquement) */
   @Roles('Super Admin')
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    this.logger.log(`remove id=${id}`);
+    this.logger.log(`Suppression totale de la société id=${id}`);
     await this.svc.delete(id);
-    return { message: 'Société supprimée avec succès.' };
+    return { message: 'Société et données associées supprimées avec succès.' };
   }
 }

@@ -1,4 +1,4 @@
-// back/src/depot/depot.service.ts
+// ✅ back/src/depot/depot.service.ts
 import {
   Injectable,
   ForbiddenException,
@@ -45,31 +45,26 @@ export class DepotService {
     depot.responsable_id = respUser._id;
     await depot.save();
 
-    return this.depotModel
-      .findById(depot._id)
-      .populate('responsable_id', '-password -__v')
-      .lean();
+    return this.depotModel.findById(depot._id).lean();
   }
 
   async findAllForCompany(adminId: string): Promise<Depot[]> {
     const admin = await this.userModel.findById(adminId).lean();
     if (!admin?.company) throw new ForbiddenException('Aucune entreprise associée');
-
+  
     return this.depotModel
       .find({ company_id: admin.company })
-      .populate('responsable_id', '-password -__v')
+      .populate('responsable_id', 'nom prenom email') // ✅ On récupère le nom/prénom/email
       .lean();
   }
+  
 
   async findOne(id: string, user: any): Promise<Depot> {
     if (user.role === 'responsable depot') {
-      const depot = await this.depotModel
-        .findOne({
-          _id: new Types.ObjectId(id),
-          responsable_id: new Types.ObjectId(user.id),
-        })
-        .populate('responsable_id', '-password -__v')
-        .lean();
+      const depot = await this.depotModel.findOne({
+        _id: new Types.ObjectId(id),
+        responsable_id: new Types.ObjectId(user.id),
+      }).lean();
 
       if (!depot) {
         throw new NotFoundException('Dépôt introuvable ou accès interdit');
@@ -81,13 +76,10 @@ export class DepotService {
     const admin = await this.userModel.findById(user.id).lean();
     if (!admin?.company) throw new ForbiddenException('Aucune entreprise associée');
 
-    const depot = await this.depotModel
-      .findOne({
-        _id: new Types.ObjectId(id),
-        company_id: new Types.ObjectId(admin.company),
-      })
-      .populate('responsable_id', '-password -__v')
-      .lean();
+    const depot = await this.depotModel.findOne({
+      _id: new Types.ObjectId(id),
+      company_id: new Types.ObjectId(admin.company),
+    }).lean();
 
     if (!depot) {
       throw new NotFoundException('Dépôt introuvable ou non autorisé');
@@ -100,14 +92,12 @@ export class DepotService {
     const admin = await this.userModel.findById(adminId).lean();
     if (!admin?.company) throw new ForbiddenException('Aucune entreprise associée');
 
-    const existingDepot = await this.depotModel
-      .findOne({ _id: id, company_id: admin.company })
-      .populate('responsable_id')
-      .exec();
-
+    const existingDepot = await this.depotModel.findOne({ _id: id, company_id: admin.company });
     if (!existingDepot) throw new NotFoundException('Dépôt introuvable ou non autorisé');
 
-    if (dto.responsable && existingDepot.responsable_id) {
+    const responsableExiste = existingDepot.responsable_id && String(existingDepot.responsable_id) !== '';
+
+    if (dto.responsable && responsableExiste) {
       const update: any = {
         nom: dto.responsable.nom,
         prenom: dto.responsable.prenom,
@@ -119,28 +109,35 @@ export class DepotService {
         update.password = await bcrypt.hash(dto.responsable.password, 10);
       }
 
-      await this.userModel.findByIdAndUpdate(
-        existingDepot.responsable_id._id,
-        update,
-        { new: true, runValidators: true },
-      );
+      await this.userModel.findByIdAndUpdate(existingDepot.responsable_id, update);
+    } else if (dto.responsable) {
+      const hashedPwd = await bcrypt.hash(dto.responsable.password, 10);
+      const newResp = await this.userModel.create({
+        nom: dto.responsable.nom,
+        prenom: dto.responsable.prenom,
+        email: dto.responsable.email,
+        password: hashedPwd,
+        num: dto.responsable.num,
+        role: 'responsable depot',
+        company: existingDepot.company_id,
+        depot: existingDepot._id,
+      });
+      existingDepot.responsable_id = newResp._id;
+      await existingDepot.save();
     }
 
     const { responsable, ...depotData } = dto;
 
-    const updatedDepot = await this.depotModel
-      .findByIdAndUpdate(
-        id,
-        {
-          $set: {
-            ...depotData,
-            company_id: existingDepot.company_id,
-          },
+    const updatedDepot = await this.depotModel.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          ...depotData,
+          company_id: existingDepot.company_id,
         },
-        { new: true, runValidators: true },
-      )
-      .populate('responsable_id', '-password -__v')
-      .lean();
+      },
+      { new: true, runValidators: true },
+    ).lean();
 
     return updatedDepot;
   }

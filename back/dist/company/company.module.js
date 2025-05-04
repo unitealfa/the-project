@@ -9,10 +9,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CompanyModule = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
-const company_schema_1 = require("./schemas/company.schema");
 const company_service_1 = require("./company.service");
 const company_controller_1 = require("./company.controller");
+const company_schema_1 = require("./schemas/company.schema");
 const user_schema_1 = require("../user/schemas/user.schema");
+const client_schema_1 = require("../client/schemas/client.schema");
+const depot_schema_1 = require("../depot/schemas/depot.schema");
 let CompanyModule = class CompanyModule {
 };
 exports.CompanyModule = CompanyModule;
@@ -22,10 +24,12 @@ exports.CompanyModule = CompanyModule = __decorate([
             mongoose_1.MongooseModule.forFeature([
                 { name: company_schema_1.Company.name, schema: company_schema_1.CompanySchema },
                 { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
+                { name: client_schema_1.Client.name, schema: client_schema_1.ClientSchema },
+                { name: depot_schema_1.Depot.name, schema: depot_schema_1.DepotSchema },
             ]),
         ],
-        providers: [company_service_1.CompanyService],
         controllers: [company_controller_1.CompanyController],
+        providers: [company_service_1.CompanyService],
     })
 ], CompanyModule);
 //# sourceMappingURL=company.module.js.map

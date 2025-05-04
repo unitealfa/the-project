@@ -40,7 +40,7 @@ let CompanyController = CompanyController_1 = class CompanyController {
         }
     }
     async findAll() {
-        this.logger.log('Récupération de toutes les companies');
+        this.logger.log('Récupération de toutes les sociétés');
         return this.svc.findAll();
     }
     async findOne(id) {
@@ -52,9 +52,9 @@ let CompanyController = CompanyController_1 = class CompanyController {
         return this.svc.update(id, dto);
     }
     async remove(id) {
-        this.logger.log(`remove id=${id}`);
+        this.logger.log(`Suppression totale de la société id=${id}`);
         await this.svc.delete(id);
-        return { message: 'Société supprimée avec succès.' };
+        return { message: 'Société et données associées supprimées avec succès.' };
     }
 };
 exports.CompanyController = CompanyController;

@@ -3,23 +3,28 @@ import { Document, Types } from 'mongoose';
 
 export type UserDocument = User & Document;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true }) // ⏱️ active createdAt + updatedAt
 export class User {
-  @Prop({ required: true }) nom: string;
+  @Prop({ required: true })
+  nom: string;
 
-  @Prop({ required: true }) prenom: string;
+  @Prop({ required: true })
+  prenom: string;
 
-  @Prop({ required: true, unique: true }) email: string;
+  @Prop({ required: true, unique: true })
+  email: string;
 
-  /** ⚠️ Sécurité : rendre le hash non sélectionné par défaut */
-  @Prop({ required: true, select: false }) password: string;
+  /** ⚠️ hash du mot de passe, non sélectionné par défaut */
+  @Prop({ required: true, select: false })
+  password: string;
 
   /**
-   *  Rôles possibles :
-   *  - cœur d’app : Super Admin / Admin
-   *  - équipes dépôt : livraison | prevente | entrepot
-   *  - responsable dépôt : responsable depot
-   *  - (optionnel) User = compte sans privilège particulier
+   * Rôles autorisés :
+   * - Super Admin : gestion globale
+   * - Admin : gestion société
+   * - User : sans privilèges
+   * - responsable depot : chef de dépôt
+   * - livraison / prevente / entrepot : équipes opérationnelles
    */
   @Prop({
     default: 'User',
@@ -35,19 +40,21 @@ export class User {
   })
   role: string;
 
-  /** Société (null pour Super Admin) */
+  /** Lien vers la société (optionnel) */
   @Prop({ type: Types.ObjectId, ref: 'Company', default: null })
   company: Types.ObjectId | null;
 
-  /** Dépôt d’affectation (null si non concerné) */
+  /** Lien vers un dépôt (si concerné) */
   @Prop({ type: Types.ObjectId, ref: 'Depot', default: null })
   depot: Types.ObjectId | null;
 
-  /** Téléphone */
-  @Prop() num: string;
+  /** Numéro de téléphone */
+  @Prop()
+  num: string;
 
-  /** Fonction précise (ex : “Livreur”, “Chauffeur”) */
-  @Prop() fonction?: string;
+  /** Fonction métier précise (livreur, chauffeur…) */
+  @Prop()
+  fonction?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

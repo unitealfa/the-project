@@ -35,6 +35,7 @@ __decorate([
     (0, mongoose_1.Prop)({
         type: { rue: String, ville: String, code_postal: String, pays: String },
         required: true,
+        _id: false,
     }),
     __metadata("design:type", Object)
 ], Depot.prototype, "adresse", void 0);
@@ -42,6 +43,7 @@ __decorate([
     (0, mongoose_1.Prop)({
         type: { latitude: Number, longitude: Number },
         default: null,
+        _id: false,
     }),
     __metadata("design:type", Object)
 ], Depot.prototype, "coordonnees", void 0);
