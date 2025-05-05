@@ -105,7 +105,7 @@ let DepotService = class DepotService {
         const objId = new mongoose_2.Types.ObjectId(id);
         if (user.role === 'responsable depot') {
             const dp = await this.depotModel
-                .findOne({ _id: objId, responsable_id: user.id })
+                .findOne({ _id: objId, responsable_id: new mongoose_2.Types.ObjectId(user.id) })
                 .populate('responsable_id', 'nom prenom email num')
                 .lean();
             if (!dp)
@@ -135,17 +135,16 @@ let DepotService = class DepotService {
         let responsableId = existing.responsable_id;
         if (dto.responsable) {
             const { nom, prenom, email, num, password } = dto.responsable;
-            if (responsableId) {
-                const u = await this.userModel.findById(responsableId);
+            if (existing.responsable_id) {
+                const u = await this.userModel.findById(existing.responsable_id);
                 if (!u)
                     throw new common_1.NotFoundException('Responsable introuvable');
                 u.nom = nom;
                 u.prenom = prenom;
                 u.email = email;
                 u.num = num;
-                if (password && password.length >= 3) {
+                if ((password === null || password === void 0 ? void 0 : password.length) >= 3)
                     u.password = await bcrypt.hash(password, 10);
-                }
                 await u.save();
                 responsableId = u._id;
             }

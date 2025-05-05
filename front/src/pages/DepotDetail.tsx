@@ -1,4 +1,3 @@
-// front/src/pages/DepotDetail.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '../components/Header';
@@ -15,8 +14,16 @@ interface Depot {
   nom_depot: string;
   type_depot: string;
   capacite: number;
-  adresse: { rue: string; ville: string; code_postal: string; pays: string };
-  coordonnees?: { latitude: number; longitude: number } | null;
+  adresse: {
+    rue: string;
+    ville: string;
+    code_postal: string;
+    pays: string;
+  };
+  coordonnees?: {
+    latitude: number;
+    longitude: number;
+  } | null;
   responsable_id?: ResponsableRef | null;
   date_creation: string;
 }
@@ -36,7 +43,7 @@ export default function DepotDetail() {
         if (!res.ok) throw new Error(`Erreur ${res.status}`);
         return res.json();
       })
-      .then((data: Depot) => setDepot(data))
+      .then((d: Depot) => setDepot(d))
       .catch(err => setError(err.message));
   }, [apiBase, id, token]);
 
@@ -44,16 +51,15 @@ export default function DepotDetail() {
     return (
       <>
         <Header />
-        <div style={{ padding: '2rem', color: 'red' }}>{error}</div>
+        <div style={{ padding: '1rem', color: 'red' }}>{error}</div>
       </>
     );
   }
-
   if (!depot) {
     return (
       <>
         <Header />
-        <div style={{ padding: '2rem' }}>Chargement…</div>
+        <div style={{ padding: '1rem' }}>Chargement…</div>
       </>
     );
   }

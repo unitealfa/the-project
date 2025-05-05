@@ -13,7 +13,7 @@ interface Depot {
   nom_depot: string;
 }
 
-function DashboardResponsableDepot() {
+export default function DashboardResponsableDepot() {
   const raw = localStorage.getItem("user");
   const user: User | null = raw ? JSON.parse(raw) : null;
   const token = localStorage.getItem("token") || "";
@@ -49,7 +49,9 @@ function DashboardResponsableDepot() {
           Rôle : <strong>Responsable dépôt</strong>
         </p>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
+        {error && (
+          <p style={{ color: "red", marginTop: "1rem" }}>{error}</p>
+        )}
 
         {depot && (
           <section style={{ marginTop: "2rem" }}>
@@ -69,7 +71,7 @@ function DashboardResponsableDepot() {
                 textDecoration: "none",
               }}
             >
-              👥 Gérer l’équipe du dépôt <strong>{depot.nom_depot}</strong>
+              👥 Gérer l’équipe du dépôt
             </Link>
 
             <Link
@@ -93,5 +95,3 @@ function DashboardResponsableDepot() {
     </>
   );
 }
-
-export default DashboardResponsableDepot;

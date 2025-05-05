@@ -11,89 +11,81 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var DepotController_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DepotController = void 0;
 const common_1 = require("@nestjs/common");
+const depot_service_1 = require("./depot.service");
+const create_depot_dto_1 = require("./dto/create-depot.dto");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
 const roles_guard_1 = require("../auth/roles.guard");
 const roles_decorator_1 = require("../auth/roles.decorator");
-const depot_service_1 = require("./depot.service");
-const create_depot_dto_1 = require("./dto/create-depot.dto");
-let DepotController = DepotController_1 = class DepotController {
-    constructor(svc) {
-        this.svc = svc;
-        this.logger = new common_1.Logger(DepotController_1.name);
+let DepotController = class DepotController {
+    constructor(depotService) {
+        this.depotService = depotService;
     }
-    async create(dto, req) {
-        this.logger.log(`Admin ${req.user.id} crée un dépôt`);
-        return this.svc.create(dto, req.user.id);
+    create(dto, req) {
+        return this.depotService.create(dto, req.user.id);
     }
-    async findAllForMe(req) {
-        this.logger.log(`Admin ${req.user.id} liste ses dépôts`);
-        return this.svc.findAllForCompany(req.user.id);
+    findAll(req) {
+        return this.depotService.findAllForCompany(req.user.id);
     }
-    async findOne(id, req) {
-        this.logger.log(`${req.user.role} ${req.user.id} consulte le dépôt ${id}`);
-        return this.svc.findOne(id, req.user);
+    findOne(id, req) {
+        return this.depotService.findOne(id, req.user);
     }
-    async update(id, dto, req) {
-        this.logger.log(`Admin ${req.user.id} modifie le dépôt ${id}`);
-        return this.svc.update(id, dto, req.user.id);
+    update(id, dto, req) {
+        return this.depotService.update(id, dto, req.user.id);
     }
-    async remove(id, req) {
-        this.logger.log(`Admin ${req.user.id} supprime le dépôt ${id}`);
-        return this.svc.remove(id, req.user.id);
+    remove(id, req) {
+        return this.depotService.remove(id, req.user.id);
     }
 };
 exports.DepotController = DepotController;
 __decorate([
-    (0, roles_decorator_1.Roles)('Admin'),
     (0, common_1.Post)(),
+    (0, roles_decorator_1.Roles)('Admin'),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_depot_dto_1.CreateDepotDto, Object]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], DepotController.prototype, "create", null);
 __decorate([
-    (0, roles_decorator_1.Roles)('Admin'),
     (0, common_1.Get)(),
+    (0, roles_decorator_1.Roles)('Admin'),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], DepotController.prototype, "findAllForMe", null);
+    __metadata("design:returntype", void 0)
+], DepotController.prototype, "findAll", null);
 __decorate([
-    (0, roles_decorator_1.Roles)('Admin', 'responsable depot'),
     (0, common_1.Get)(':id'),
+    (0, roles_decorator_1.Roles)('Admin', 'responsable depot'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], DepotController.prototype, "findOne", null);
 __decorate([
-    (0, roles_decorator_1.Roles)('Admin'),
     (0, common_1.Patch)(':id'),
+    (0, roles_decorator_1.Roles)('Admin'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object, Object]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], DepotController.prototype, "update", null);
 __decorate([
-    (0, roles_decorator_1.Roles)('Admin'),
     (0, common_1.Delete)(':id'),
-    (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
+    (0, roles_decorator_1.Roles)('Admin'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], DepotController.prototype, "remove", null);
-exports.DepotController = DepotController = DepotController_1 = __decorate([
+exports.DepotController = DepotController = __decorate([
     (0, common_1.Controller)('depots'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     __metadata("design:paramtypes", [depot_service_1.DepotService])

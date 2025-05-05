@@ -74,7 +74,7 @@ export default function CreateCompany() {
         throw new Error(err.message || 'Erreur création');
       }
 
-      navigate('/dashboard/super');
+      navigate('/companies');
     } catch (err: any) {
       setError(err.message);
     }

@@ -15,6 +15,13 @@ interface Company {
   nom_company: string;
 }
 
+const linkStyle = {
+  padding: '0.5rem 1rem',
+  color: '#4f46e5',
+  textDecoration: 'none',
+  fontWeight: '500',
+};
+
 export default function DashboardAdmin() {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
@@ -59,21 +66,29 @@ export default function DashboardAdmin() {
       <Header />
       <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
         <h1>Tableau de bord – Admin de {company.nom_company}</h1>
-        <p>Bienvenue <strong>{user.nom} {user.prenom}</strong></p>
-        <p>Votre rôle est : <strong>{user.role}</strong></p>
+        <p>
+          Bienvenue <strong>{user.nom} {user.prenom}</strong>
+        </p>
+        <p>
+          Votre rôle est : <strong>{user.role}</strong>
+        </p>
 
-        <section style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <Link to="/depots" style={linkStyle}>• Voir mes dépôts</Link>
-          <Link to="/clients" style={linkStyle}>• Consulter tous les clients</Link>
+        <section
+          style={{
+            marginTop: '2rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem',
+          }}
+        >
+          <Link to="/depots" style={linkStyle}>
+            • Voir mes dépôts
+          </Link>
+          <Link to="/clients" style={linkStyle}>
+            • Consulter tous les clients
+          </Link>
         </section>
       </div>
     </>
   );
 }
-
-const linkStyle = {
-  padding: '0.5rem 1rem',
-  color: '#4f46e5',
-  textDecoration: 'none',
-  fontWeight: '500',
-};

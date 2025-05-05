@@ -1,5 +1,7 @@
+// back/src/auth/auth.controller.ts
 import { Controller, Post, Body } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { Types } from 'mongoose';
 
 @Controller('auth')
 export class AuthController {
@@ -10,9 +12,21 @@ export class AuthController {
     const { email, password } = body;
 
     try {
-      // 1️⃣ First try internal user
+      // 1️⃣ Tentative en tant qu’utilisateur interne
       const user = await this.authService.validateUser(email, password);
       const { access_token } = await this.authService.login(user);
+
+      // On récupère l’ID de company même si c’est un document peuplé
+      let companyId: string | null = null;
+      if (user.company) {
+        // si populate('company') → company est un objet
+        if (typeof (user.company as any)?._id !== 'undefined') {
+          companyId = (user.company as any)._id.toString();
+        } else {
+          // sinon c’est déjà un ObjectId
+          companyId = user.company.toString();
+        }
+      }
 
       return {
         access_token,
@@ -23,17 +37,17 @@ export class AuthController {
           email: user.email,
           role: user.role,
           fonction: user.fonction || null,
-          company: user.company?.toString() || null,
+          company: companyId,
           companyName:
-            typeof user.company === 'object' && 'nom' in user.company
-              ? (user.company as any).nom
+            companyId && typeof user.company !== 'string'
+              ? (user.company as any).nom_company || (user.company as any).nom
               : null,
           num: user.num,
           depot: user.depot?.toString() || null,
         },
       };
     } catch {
-      // 2️⃣ Fallback to client
+      // 2️⃣ Si échec → tentative en tant que client
       const client = await this.authService.validateClient(email, password);
       const { access_token } = await this.authService.loginClient(client);
 

@@ -1,4 +1,3 @@
-// back/src/depot/depot.service.ts
 import {
   Injectable,
   ForbiddenException,
@@ -9,14 +8,14 @@ import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 
 import { Depot, DepotDocument } from './schemas/depot.schema';
-import { CreateDepotDto }       from './dto/create-depot.dto';
-import { User, UserDocument }   from '../user/schemas/user.schema';
+import { CreateDepotDto } from './dto/create-depot.dto';
+import { User, UserDocument } from '../user/schemas/user.schema';
 
 @Injectable()
 export class DepotService {
   constructor(
     @InjectModel(Depot.name) private depotModel: Model<DepotDocument>,
-    @InjectModel(User.name)   private userModel:  Model<UserDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
   /** CREATE */
@@ -30,7 +29,7 @@ export class DepotService {
       company_id: new Types.ObjectId(admin.company),
     });
 
-    // création du user responsable
+    // création du responsable
     const hashed = await bcrypt.hash(responsable.password, 10);
     const respUser = await this.userModel.create({
       nom:       responsable.nom,
@@ -52,7 +51,7 @@ export class DepotService {
       .lean();
   }
 
-  /** LIST ALL for Admin */
+  /** LIST ALL */
   async findAllForCompany(adminId: string): Promise<Depot[]> {
     const admin = await this.userModel.findById(adminId).lean();
     if (!admin?.company) throw new ForbiddenException('Aucune entreprise associée');
@@ -69,13 +68,14 @@ export class DepotService {
 
     if (user.role === 'responsable depot') {
       const dp = await this.depotModel
-        .findOne({ _id: objId, responsable_id: user.id })
+        .findOne({ _id: objId, responsable_id: new Types.ObjectId(user.id) })
         .populate('responsable_id', 'nom prenom email num')
         .lean();
       if (!dp) throw new NotFoundException('Accès interdit ou introuvable');
       return dp;
     }
 
+    // Admin branch
     const admin = await this.userModel.findById(user.id).lean();
     if (!admin?.company) throw new ForbiddenException('Aucune entreprise associée');
 
@@ -88,11 +88,7 @@ export class DepotService {
   }
 
   /** UPDATE */
-  async update(
-    id: string,
-    dto: Partial<CreateDepotDto>,
-    adminId: string,
-  ): Promise<Depot> {
+  async update(id: string, dto: Partial<CreateDepotDto>, adminId: string): Promise<Depot> {
     const admin = await this.userModel.findById(adminId).lean();
     if (!admin?.company) throw new ForbiddenException('Aucune entreprise associée');
 
@@ -101,38 +97,35 @@ export class DepotService {
       .lean();
     if (!existing) throw new NotFoundException('Dépôt introuvable');
 
-    let responsableId = existing.responsable_id as Types.ObjectId | null;
+    let responsableId = existing.responsable_id as any;
 
     if (dto.responsable) {
       const { nom, prenom, email, num, password } = dto.responsable;
-      if (responsableId) {
-        // on met à jour l’ancien user
-        const u = await this.userModel.findById(responsableId);
+      if (existing.responsable_id) {
+        // mise à jour
+        const u = await this.userModel.findById(existing.responsable_id);
         if (!u) throw new NotFoundException('Responsable introuvable');
-        u.nom    = nom;
+        u.nom = nom;
         u.prenom = prenom;
-        u.email  = email;
-        u.num    = num;
-        if (password && password.length >= 3) {
-          u.password = await bcrypt.hash(password, 10);
-        }
+        u.email = email;
+        u.num = num;
+        if (password?.length >= 3) u.password = await bcrypt.hash(password, 10);
         await u.save();
         responsableId = u._id;
       } else {
-        // on crée un nouveau user
+        // création si absent
         const hashed = await bcrypt.hash(password, 10);
         const newU = await this.userModel.create({
           nom, prenom, email, num,
           password: hashed,
           role: 'responsable depot',
           company: admin.company,
-          depot:   new Types.ObjectId(id),
+          depot: new Types.ObjectId(id),
         });
         responsableId = newU._id;
       }
     }
 
-    // on prépare les champs à modifier
     const set: any = { responsable_id: responsableId };
     if (dto.nom_depot   !== undefined) set.nom_depot   = dto.nom_depot;
     if (dto.type_depot  !== undefined) set.type_depot  = dto.type_depot;
