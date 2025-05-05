@@ -1,4 +1,4 @@
-// ✅ back/src/depot/depot.service.ts
+// back/src/depot/depot.service.ts
 import {
   Injectable,
   ForbiddenException,
@@ -9,156 +9,158 @@ import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 
 import { Depot, DepotDocument } from './schemas/depot.schema';
-import { CreateDepotDto } from './dto/create-depot.dto';
-import { User, UserDocument } from '../user/schemas/user.schema';
+import { CreateDepotDto }       from './dto/create-depot.dto';
+import { User, UserDocument }   from '../user/schemas/user.schema';
 
 @Injectable()
 export class DepotService {
   constructor(
     @InjectModel(Depot.name) private depotModel: Model<DepotDocument>,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(User.name)   private userModel:  Model<UserDocument>,
   ) {}
 
+  /** CREATE */
   async create(dto: CreateDepotDto, adminId: string): Promise<Depot> {
     const admin = await this.userModel.findById(adminId).lean();
     if (!admin?.company) throw new ForbiddenException('Aucune entreprise associée');
 
-    const { responsable, ...depotPayload } = dto;
-
+    const { responsable, ...payload } = dto;
     const depot = new this.depotModel({
-      ...depotPayload,
+      ...payload,
       company_id: new Types.ObjectId(admin.company),
     });
 
-    const hashedPwd = await bcrypt.hash(responsable.password, 10);
+    // création du user responsable
+    const hashed = await bcrypt.hash(responsable.password, 10);
     const respUser = await this.userModel.create({
-      nom: responsable.nom,
-      prenom: responsable.prenom,
-      email: responsable.email,
-      password: hashedPwd,
-      num: responsable.num,
-      role: 'responsable depot',
-      company: new Types.ObjectId(admin.company),
-      depot: depot._id,
+      nom:       responsable.nom,
+      prenom:    responsable.prenom,
+      email:     responsable.email,
+      num:       responsable.num,
+      password:  hashed,
+      role:      'responsable depot',
+      company:   admin.company,
+      depot:     depot._id,
     });
 
     depot.responsable_id = respUser._id;
     await depot.save();
 
-    return this.depotModel.findById(depot._id).lean();
+    return this.depotModel
+      .findById(depot._id)
+      .populate('responsable_id', 'nom prenom email num')
+      .lean();
   }
 
+  /** LIST ALL for Admin */
   async findAllForCompany(adminId: string): Promise<Depot[]> {
     const admin = await this.userModel.findById(adminId).lean();
     if (!admin?.company) throw new ForbiddenException('Aucune entreprise associée');
-  
+
     return this.depotModel
       .find({ company_id: admin.company })
-      .populate('responsable_id', 'nom prenom email') // ✅ On récupère le nom/prénom/email
+      .populate('responsable_id', 'nom prenom email num')
       .lean();
   }
-  
 
+  /** GET ONE */
   async findOne(id: string, user: any): Promise<Depot> {
+    const objId = new Types.ObjectId(id);
+
     if (user.role === 'responsable depot') {
-      const depot = await this.depotModel.findOne({
-        _id: new Types.ObjectId(id),
-        responsable_id: new Types.ObjectId(user.id),
-      }).lean();
-
-      if (!depot) {
-        throw new NotFoundException('Dépôt introuvable ou accès interdit');
-      }
-
-      return depot;
+      const dp = await this.depotModel
+        .findOne({ _id: objId, responsable_id: user.id })
+        .populate('responsable_id', 'nom prenom email num')
+        .lean();
+      if (!dp) throw new NotFoundException('Accès interdit ou introuvable');
+      return dp;
     }
 
     const admin = await this.userModel.findById(user.id).lean();
     if (!admin?.company) throw new ForbiddenException('Aucune entreprise associée');
 
-    const depot = await this.depotModel.findOne({
-      _id: new Types.ObjectId(id),
-      company_id: new Types.ObjectId(admin.company),
-    }).lean();
-
-    if (!depot) {
-      throw new NotFoundException('Dépôt introuvable ou non autorisé');
-    }
-
-    return depot;
+    const dp = await this.depotModel
+      .findOne({ _id: objId, company_id: admin.company })
+      .populate('responsable_id', 'nom prenom email num')
+      .lean();
+    if (!dp) throw new NotFoundException('Dépôt introuvable');
+    return dp;
   }
 
-  async update(id: string, dto: Partial<CreateDepotDto>, adminId: string): Promise<Depot> {
+  /** UPDATE */
+  async update(
+    id: string,
+    dto: Partial<CreateDepotDto>,
+    adminId: string,
+  ): Promise<Depot> {
     const admin = await this.userModel.findById(adminId).lean();
     if (!admin?.company) throw new ForbiddenException('Aucune entreprise associée');
 
-    const existingDepot = await this.depotModel.findOne({ _id: id, company_id: admin.company });
-    if (!existingDepot) throw new NotFoundException('Dépôt introuvable ou non autorisé');
+    const existing = await this.depotModel
+      .findOne({ _id: id, company_id: admin.company })
+      .lean();
+    if (!existing) throw new NotFoundException('Dépôt introuvable');
 
-    const responsableExiste = existingDepot.responsable_id && String(existingDepot.responsable_id) !== '';
+    let responsableId = existing.responsable_id as Types.ObjectId | null;
 
-    if (dto.responsable && responsableExiste) {
-      const update: any = {
-        nom: dto.responsable.nom,
-        prenom: dto.responsable.prenom,
-        email: dto.responsable.email,
-        num: dto.responsable.num,
-      };
-
-      if (dto.responsable.password && dto.responsable.password.length >= 3) {
-        update.password = await bcrypt.hash(dto.responsable.password, 10);
+    if (dto.responsable) {
+      const { nom, prenom, email, num, password } = dto.responsable;
+      if (responsableId) {
+        // on met à jour l’ancien user
+        const u = await this.userModel.findById(responsableId);
+        if (!u) throw new NotFoundException('Responsable introuvable');
+        u.nom    = nom;
+        u.prenom = prenom;
+        u.email  = email;
+        u.num    = num;
+        if (password && password.length >= 3) {
+          u.password = await bcrypt.hash(password, 10);
+        }
+        await u.save();
+        responsableId = u._id;
+      } else {
+        // on crée un nouveau user
+        const hashed = await bcrypt.hash(password, 10);
+        const newU = await this.userModel.create({
+          nom, prenom, email, num,
+          password: hashed,
+          role: 'responsable depot',
+          company: admin.company,
+          depot:   new Types.ObjectId(id),
+        });
+        responsableId = newU._id;
       }
-
-      await this.userModel.findByIdAndUpdate(existingDepot.responsable_id, update);
-    } else if (dto.responsable) {
-      const hashedPwd = await bcrypt.hash(dto.responsable.password, 10);
-      const newResp = await this.userModel.create({
-        nom: dto.responsable.nom,
-        prenom: dto.responsable.prenom,
-        email: dto.responsable.email,
-        password: hashedPwd,
-        num: dto.responsable.num,
-        role: 'responsable depot',
-        company: existingDepot.company_id,
-        depot: existingDepot._id,
-      });
-      existingDepot.responsable_id = newResp._id;
-      await existingDepot.save();
     }
 
-    const { responsable, ...depotData } = dto;
+    // on prépare les champs à modifier
+    const set: any = { responsable_id: responsableId };
+    if (dto.nom_depot   !== undefined) set.nom_depot   = dto.nom_depot;
+    if (dto.type_depot  !== undefined) set.type_depot  = dto.type_depot;
+    if (dto.capacite    !== undefined) set.capacite    = dto.capacite;
+    if (dto.adresse     !== undefined) set.adresse     = dto.adresse;
+    if (dto.coordonnees !== undefined) set.coordonnees = dto.coordonnees;
 
-    const updatedDepot = await this.depotModel.findByIdAndUpdate(
-      id,
-      {
-        $set: {
-          ...depotData,
-          company_id: existingDepot.company_id,
-        },
-      },
-      { new: true, runValidators: true },
-    ).lean();
-
-    return updatedDepot;
+    const updated = await this.depotModel
+      .findByIdAndUpdate(id, { $set: set }, { new: true, runValidators: true })
+      .populate('responsable_id', 'nom prenom email num')
+      .lean();
+    if (!updated) throw new NotFoundException('Erreur mise à jour');
+    return updated;
   }
 
+  /** DELETE */
   async remove(id: string, adminId: string): Promise<void> {
     const admin = await this.userModel.findById(adminId).lean();
     if (!admin?.company) throw new ForbiddenException('Aucune entreprise associée');
 
-    const depot = await this.depotModel.findOne({
-      _id: id,
-      company_id: admin.company,
-    });
-
-    if (!depot) {
-      throw new NotFoundException('Dépôt introuvable ou non autorisé');
-    }
+    const depot = await this.depotModel
+      .findOne({ _id: id, company_id: admin.company })
+      .lean();
+    if (!depot) throw new NotFoundException('Dépôt introuvable');
 
     if (depot.responsable_id) {
       await this.userModel.deleteOne({ _id: depot.responsable_id });
     }
-
-    await depot.deleteOne();
+    await this.depotModel.deleteOne({ _id: id });
   }
 }

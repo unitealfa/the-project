@@ -1,6 +1,6 @@
 import React from 'react';
 
-/* ───────── Dashboards Back‑office ───────── */
+/* ───────── Dashboards Back-office ───────── */
 import DashboardSuperAdmin    from '../pages/DashboardSuperAdmin';
 import DashboardAdmin         from '../pages/DashboardAdmin';
 
@@ -9,7 +9,7 @@ import DashboardAdminVentes   from '../pages/DashboardAdminVentes';
 import DashboardLivreur       from '../pages/DashboardLivreur';
 import DashboardChauffeur     from '../pages/DashboardChauffeur';
 
-/* ───────── Dashboards Pré‑vente ─────────── */
+/* ───────── Dashboards Pré-vente ─────────── */
 import DashboardSuperviseurVentes from '../pages/DashboardSuperviseurVentes';
 import DashboardPreVendeur        from '../pages/DashboardPreVendeur';
 
@@ -26,11 +26,11 @@ import DashboardClient from '../pages/DashboardClient';
 
 /**
  * 🔑 Table de correspondance : rôle (ou fonction) → composant dashboard
- * 
+ *
  * On tente d’abord avec `fonction`, puis avec `role` (si pas de fonction précisée)
  */
 const mapping: Record<string, React.FC> = {
-  /* Back‑office */
+  /* Back-office */
   'Super Admin'               : DashboardSuperAdmin,
   'Admin'                     : DashboardAdmin,
 
@@ -39,7 +39,7 @@ const mapping: Record<string, React.FC> = {
   'Livreur'                   : DashboardLivreur,
   'Chauffeur'                 : DashboardChauffeur,
 
-  /* Pré‑vente */
+  /* Pré-vente */
   'Superviseur des ventes'    : DashboardSuperviseurVentes,
   'Pré vendeur'               : DashboardPreVendeur,
 

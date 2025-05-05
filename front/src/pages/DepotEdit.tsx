@@ -2,86 +2,102 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 
-interface Adresse { rue: string; ville: string; code_postal: string; pays: string }
-interface Coordonnees { latitude: number; longitude: number }
-interface Responsable {
+interface UserRef {
   _id: string;
   nom: string;
   prenom: string;
   email: string;
   num: string;
-  password?: string; // facultatif si on laisse vide
+  password?: string;
 }
 
 interface DepotDto {
   nom_depot: string;
   type_depot: string;
   capacite: number;
-  adresse: Adresse;
-  coordonnees?: Coordonnees | null;
-  responsable_id?: Responsable;
+  adresse: { rue: string; ville: string; code_postal: string; pays: string };
+  coordonnees?: { latitude: number; longitude: number } | null;
+  responsable_id?: UserRef | null;
 }
 
 export default function DepotEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [dto, setDto] = useState<DepotDto>({
-    nom_depot: '',
-    type_depot: '',
-    capacite: 0,
-    adresse: { rue: '', ville: '', code_postal: '', pays: '' },
-    coordonnees: { latitude: 0, longitude: 0 },
-    responsable_id: { _id: '', nom: '', prenom: '', email: '', num: '' },
-  });
+  const [data, setData] = useState<DepotDto | null>(null);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
   const token = localStorage.getItem('token') || '';
   const apiBase = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    fetch(`${apiBase}/depots/${id}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => { if (!r.ok) throw new Error(`Erreur ${r.status}`); return r.json(); })
-      .then((data: any) => {
-        setDto({
-          ...data,
-          coordonnees: data.coordonnees || { latitude: 0, longitude: 0 },
-          responsable_id: data.responsable_id || { _id: '', nom: '', prenom: '', email: '', num: '' },
-        });
-      })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
+    fetch(`${apiBase}/depots/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(res => { if (!res.ok) throw new Error(`Erreur ${res.status}`); return res.json(); })
+      .then((d: any) => setData({
+        nom_depot: d.nom_depot,
+        type_depot: d.type_depot,
+        capacite: d.capacite,
+        adresse: d.adresse,
+        coordonnees: d.coordonnees,
+        responsable_id: d.responsable_id,
+      }))
+      .catch(err => setError(err.message));
   }, [apiBase, id, token]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const bodyToSend = {
-      ...dto,
-      responsable: {
-        _id: dto.responsable_id?._id,
-        nom: dto.responsable_id?.nom,
-        prenom: dto.responsable_id?.prenom,
-        email: dto.responsable_id?.email,
-        num: dto.responsable_id?.num,
-        ...(dto.responsable_id?.password ? { password: dto.responsable_id.password } : {}),
-      },
-    };
-
-    try {
-      const res = await fetch(`${apiBase}/depots/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(bodyToSend),
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!data) return;
+    const { name, value } = e.target;
+    if (name.startsWith('adresse.')) {
+      const k = name.split('.')[1] as keyof DepotDto['adresse'];
+      setData({ ...data, adresse: { ...data.adresse, [k]: value } });
+    } else if (name.startsWith('coordonnees.')) {
+      const k = name.split('.')[1] as keyof NonNullable<DepotDto['coordonnees']>;
+      setData({
+        ...data,
+        coordonnees: { ...(data.coordonnees ?? { latitude: 0, longitude: 0 }), [k]: Number(value) },
       });
-      if (!res.ok) throw new Error(`Erreur ${res.status}`);
-      navigate('/depots');
-    } catch (err: any) {
-      setError(err.message);
+    } else if (name.startsWith('responsable_id.')) {
+      const k = name.split('.')[1] as keyof UserRef;
+      setData({
+        ...data,
+        responsable_id: {
+          ...data.responsable_id!,
+          [k]: value,
+        },
+      });
+    } else {
+      setData({ ...data, [name]: name === 'capacite' ? Number(value) : value } as any);
     }
   };
 
-  if (loading) return <><Header /><p style={{ padding: '1rem' }}>Chargement…</p></>;
-  if (error) return <><Header /><p style={{ color: 'red', padding: '1rem' }}>{error}</p></>;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!data) return;
+    const body = {
+      ...data,
+      responsable: {
+        nom: data.responsable_id?.nom,
+        prenom: data.responsable_id?.prenom,
+        email: data.responsable_id?.email,
+        num: data.responsable_id?.num,
+        password: data.responsable_id?.password,
+      },
+    };
+    const res = await fetch(`${apiBase}/depots/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      setError(err.message || `Erreur ${res.status}`);
+    } else {
+      navigate('/depots');
+    }
+  };
+
+  if (error) return <><Header /><p style={{ padding: '1rem', color:'red' }}>{error}</p></>;
+  if (!data) return <><Header /><p style={{ padding: '1rem' }}>Chargement…</p></>;
 
   return (
     <>
@@ -89,141 +105,54 @@ export default function DepotEdit() {
       <form onSubmit={handleSubmit} style={{ maxWidth: 600, margin: '2rem auto' }}>
         <h2>Modifier le dépôt</h2>
 
-        <div>
-          <label>Nom du dépôt</label>
-          <input
-            value={dto.nom_depot}
-            onChange={e => setDto({ ...dto, nom_depot: e.target.value })}
-            required
-          />
-        </div>
+        <label>Nom</label>
+        <input name="nom_depot" value={data.nom_depot} onChange={handleChange} required />
 
-        <div>
-          <label>Type de dépôt</label>
-          <input
-            value={dto.type_depot}
-            onChange={e => setDto({ ...dto, type_depot: e.target.value })}
-            required
-          />
-        </div>
+        <label>Type</label>
+        <input name="type_depot" value={data.type_depot} onChange={handleChange} required />
 
-        <div>
-          <label>Capacité</label>
-          <input
-            type="number"
-            value={dto.capacite}
-            onChange={e => setDto({ ...dto, capacite: +e.target.value })}
-            required
-          />
-        </div>
+        <label>Capacité</label>
+        <input name="capacite" type="number" value={data.capacite} onChange={handleChange} required />
 
-        <fieldset style={{ marginTop: '1rem' }}>
+        <fieldset>
           <legend>Adresse</legend>
-          {['rue', 'ville', 'code_postal', 'pays'].map(k => (
+          {(['rue','ville','code_postal','pays'] as const).map(k => (
             <div key={k}>
-              <label>{k.toUpperCase()}</label>
+              <label>{k}</label>
+              <input name={`adresse.${k}`} value={(data.adresse as any)[k]} onChange={handleChange} required />
+            </div>
+          ))}
+        </fieldset>
+
+        <fieldset>
+          <legend>Coordonnées</legend>
+          <div>
+            <label>Latitude</label>
+            <input name="coordonnees.latitude" type="number" value={data.coordonnees?.latitude||0} onChange={handleChange} />
+          </div>
+          <div>
+            <label>Longitude</label>
+            <input name="coordonnees.longitude" type="number" value={data.coordonnees?.longitude||0} onChange={handleChange} />
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Responsable</legend>
+          {(['nom','prenom','email','num','password'] as (keyof UserRef)[]).map(k => (
+            <div key={k}>
+              <label>{k}</label>
               <input
-                value={(dto.adresse as any)[k]}
-                onChange={e =>
-                  setDto({ ...dto, adresse: { ...dto.adresse, [k]: e.target.value } })
-                }
-                required
+                name={`responsable_id.${k}`}
+                type={k==='email'?'email': k==='password'?'password':'text'}
+                value={(data.responsable_id as any)?.[k]||''}
+                onChange={handleChange}
+                required={k!=='password'}
               />
             </div>
           ))}
         </fieldset>
 
-        <fieldset style={{ marginTop: '1rem' }}>
-          <legend>Coordonnées</legend>
-          <div>
-            <label>Latitude</label>
-            <input
-              type="number"
-              value={dto.coordonnees?.latitude ?? ''}
-              onChange={e =>
-                setDto({ ...dto, coordonnees: { ...dto.coordonnees!, latitude: +e.target.value } })
-              }
-            />
-          </div>
-          <div>
-            <label>Longitude</label>
-            <input
-              type="number"
-              value={dto.coordonnees?.longitude ?? ''}
-              onChange={e =>
-                setDto({ ...dto, coordonnees: { ...dto.coordonnees!, longitude: +e.target.value } })
-              }
-            />
-          </div>
-        </fieldset>
-
-        {dto.responsable_id && (
-          <fieldset style={{ marginTop: '1rem' }}>
-            <legend>Responsable dépôt</legend>
-
-            <div>
-              <label>NOM</label>
-              <input
-                value={dto.responsable_id.nom}
-                onChange={e =>
-                  setDto({ ...dto, responsable_id: { ...dto.responsable_id!, nom: e.target.value } })
-                }
-                required
-              />
-            </div>
-
-            <div>
-              <label>PRENOM</label>
-              <input
-                value={dto.responsable_id.prenom}
-                onChange={e =>
-                  setDto({ ...dto, responsable_id: { ...dto.responsable_id!, prenom: e.target.value } })
-                }
-                required
-              />
-            </div>
-
-            <div>
-              <label>EMAIL</label>
-              <input
-                type="email"
-                value={dto.responsable_id.email}
-                onChange={e =>
-                  setDto({ ...dto, responsable_id: { ...dto.responsable_id!, email: e.target.value } })
-                }
-                required
-              />
-            </div>
-
-            <div>
-              <label>NUM</label>
-              <input
-                value={dto.responsable_id.num}
-                onChange={e =>
-                  setDto({ ...dto, responsable_id: { ...dto.responsable_id!, num: e.target.value } })
-                }
-                required
-              />
-            </div>
-
-            <div>
-              <label>Mot de passe (laisser vide si inchangé)</label>
-              <input
-                type="password"
-                value={dto.responsable_id.password || ''}
-                onChange={e =>
-                  setDto({ ...dto, responsable_id: { ...dto.responsable_id!, password: e.target.value } })
-                }
-              />
-            </div>
-          </fieldset>
-        )}
-
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-
-        <button type="submit" style={{ marginTop: '1rem' }}>
-          Enregistrer
-        </button>
+        <button type="submit" style={{ marginTop:'1rem' }}>Enregistrer</button>
       </form>
     </>
   );

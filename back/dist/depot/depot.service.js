@@ -72,22 +72,25 @@ let DepotService = class DepotService {
         const admin = await this.userModel.findById(adminId).lean();
         if (!(admin === null || admin === void 0 ? void 0 : admin.company))
             throw new common_1.ForbiddenException('Aucune entreprise associée');
-        const { responsable } = dto, depotPayload = __rest(dto, ["responsable"]);
-        const depot = new this.depotModel(Object.assign(Object.assign({}, depotPayload), { company_id: new mongoose_2.Types.ObjectId(admin.company) }));
-        const hashedPwd = await bcrypt.hash(responsable.password, 10);
+        const { responsable } = dto, payload = __rest(dto, ["responsable"]);
+        const depot = new this.depotModel(Object.assign(Object.assign({}, payload), { company_id: new mongoose_2.Types.ObjectId(admin.company) }));
+        const hashed = await bcrypt.hash(responsable.password, 10);
         const respUser = await this.userModel.create({
             nom: responsable.nom,
             prenom: responsable.prenom,
             email: responsable.email,
-            password: hashedPwd,
             num: responsable.num,
+            password: hashed,
             role: 'responsable depot',
-            company: new mongoose_2.Types.ObjectId(admin.company),
+            company: admin.company,
             depot: depot._id,
         });
         depot.responsable_id = respUser._id;
         await depot.save();
-        return this.depotModel.findById(depot._id).lean();
+        return this.depotModel
+            .findById(depot._id)
+            .populate('responsable_id', 'nom prenom email num')
+            .lean();
     }
     async findAllForCompany(adminId) {
         const admin = await this.userModel.findById(adminId).lean();
@@ -95,88 +98,101 @@ let DepotService = class DepotService {
             throw new common_1.ForbiddenException('Aucune entreprise associée');
         return this.depotModel
             .find({ company_id: admin.company })
-            .populate('responsable_id', 'nom prenom email')
+            .populate('responsable_id', 'nom prenom email num')
             .lean();
     }
     async findOne(id, user) {
+        const objId = new mongoose_2.Types.ObjectId(id);
         if (user.role === 'responsable depot') {
-            const depot = await this.depotModel.findOne({
-                _id: new mongoose_2.Types.ObjectId(id),
-                responsable_id: new mongoose_2.Types.ObjectId(user.id),
-            }).lean();
-            if (!depot) {
-                throw new common_1.NotFoundException('Dépôt introuvable ou accès interdit');
-            }
-            return depot;
+            const dp = await this.depotModel
+                .findOne({ _id: objId, responsable_id: user.id })
+                .populate('responsable_id', 'nom prenom email num')
+                .lean();
+            if (!dp)
+                throw new common_1.NotFoundException('Accès interdit ou introuvable');
+            return dp;
         }
         const admin = await this.userModel.findById(user.id).lean();
         if (!(admin === null || admin === void 0 ? void 0 : admin.company))
             throw new common_1.ForbiddenException('Aucune entreprise associée');
-        const depot = await this.depotModel.findOne({
-            _id: new mongoose_2.Types.ObjectId(id),
-            company_id: new mongoose_2.Types.ObjectId(admin.company),
-        }).lean();
-        if (!depot) {
-            throw new common_1.NotFoundException('Dépôt introuvable ou non autorisé');
-        }
-        return depot;
+        const dp = await this.depotModel
+            .findOne({ _id: objId, company_id: admin.company })
+            .populate('responsable_id', 'nom prenom email num')
+            .lean();
+        if (!dp)
+            throw new common_1.NotFoundException('Dépôt introuvable');
+        return dp;
     }
     async update(id, dto, adminId) {
         const admin = await this.userModel.findById(adminId).lean();
         if (!(admin === null || admin === void 0 ? void 0 : admin.company))
             throw new common_1.ForbiddenException('Aucune entreprise associée');
-        const existingDepot = await this.depotModel.findOne({ _id: id, company_id: admin.company });
-        if (!existingDepot)
-            throw new common_1.NotFoundException('Dépôt introuvable ou non autorisé');
-        const responsableExiste = existingDepot.responsable_id && String(existingDepot.responsable_id) !== '';
-        if (dto.responsable && responsableExiste) {
-            const update = {
-                nom: dto.responsable.nom,
-                prenom: dto.responsable.prenom,
-                email: dto.responsable.email,
-                num: dto.responsable.num,
-            };
-            if (dto.responsable.password && dto.responsable.password.length >= 3) {
-                update.password = await bcrypt.hash(dto.responsable.password, 10);
+        const existing = await this.depotModel
+            .findOne({ _id: id, company_id: admin.company })
+            .lean();
+        if (!existing)
+            throw new common_1.NotFoundException('Dépôt introuvable');
+        let responsableId = existing.responsable_id;
+        if (dto.responsable) {
+            const { nom, prenom, email, num, password } = dto.responsable;
+            if (responsableId) {
+                const u = await this.userModel.findById(responsableId);
+                if (!u)
+                    throw new common_1.NotFoundException('Responsable introuvable');
+                u.nom = nom;
+                u.prenom = prenom;
+                u.email = email;
+                u.num = num;
+                if (password && password.length >= 3) {
+                    u.password = await bcrypt.hash(password, 10);
+                }
+                await u.save();
+                responsableId = u._id;
             }
-            await this.userModel.findByIdAndUpdate(existingDepot.responsable_id, update);
+            else {
+                const hashed = await bcrypt.hash(password, 10);
+                const newU = await this.userModel.create({
+                    nom, prenom, email, num,
+                    password: hashed,
+                    role: 'responsable depot',
+                    company: admin.company,
+                    depot: new mongoose_2.Types.ObjectId(id),
+                });
+                responsableId = newU._id;
+            }
         }
-        else if (dto.responsable) {
-            const hashedPwd = await bcrypt.hash(dto.responsable.password, 10);
-            const newResp = await this.userModel.create({
-                nom: dto.responsable.nom,
-                prenom: dto.responsable.prenom,
-                email: dto.responsable.email,
-                password: hashedPwd,
-                num: dto.responsable.num,
-                role: 'responsable depot',
-                company: existingDepot.company_id,
-                depot: existingDepot._id,
-            });
-            existingDepot.responsable_id = newResp._id;
-            await existingDepot.save();
-        }
-        const { responsable } = dto, depotData = __rest(dto, ["responsable"]);
-        const updatedDepot = await this.depotModel.findByIdAndUpdate(id, {
-            $set: Object.assign(Object.assign({}, depotData), { company_id: existingDepot.company_id }),
-        }, { new: true, runValidators: true }).lean();
-        return updatedDepot;
+        const set = { responsable_id: responsableId };
+        if (dto.nom_depot !== undefined)
+            set.nom_depot = dto.nom_depot;
+        if (dto.type_depot !== undefined)
+            set.type_depot = dto.type_depot;
+        if (dto.capacite !== undefined)
+            set.capacite = dto.capacite;
+        if (dto.adresse !== undefined)
+            set.adresse = dto.adresse;
+        if (dto.coordonnees !== undefined)
+            set.coordonnees = dto.coordonnees;
+        const updated = await this.depotModel
+            .findByIdAndUpdate(id, { $set: set }, { new: true, runValidators: true })
+            .populate('responsable_id', 'nom prenom email num')
+            .lean();
+        if (!updated)
+            throw new common_1.NotFoundException('Erreur mise à jour');
+        return updated;
     }
     async remove(id, adminId) {
         const admin = await this.userModel.findById(adminId).lean();
         if (!(admin === null || admin === void 0 ? void 0 : admin.company))
             throw new common_1.ForbiddenException('Aucune entreprise associée');
-        const depot = await this.depotModel.findOne({
-            _id: id,
-            company_id: admin.company,
-        });
-        if (!depot) {
-            throw new common_1.NotFoundException('Dépôt introuvable ou non autorisé');
-        }
+        const depot = await this.depotModel
+            .findOne({ _id: id, company_id: admin.company })
+            .lean();
+        if (!depot)
+            throw new common_1.NotFoundException('Dépôt introuvable');
         if (depot.responsable_id) {
             await this.userModel.deleteOne({ _id: depot.responsable_id });
         }
-        await depot.deleteOne();
+        await this.depotModel.deleteOne({ _id: id });
     }
 };
 exports.DepotService = DepotService;
