@@ -42,6 +42,7 @@ __decorate([
             'livraison',
             'prevente',
             'entrepot',
+            'Gestionnaire de stock',
         ],
     }),
     __metadata("design:type", String)
