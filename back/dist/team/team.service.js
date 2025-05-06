@@ -74,10 +74,7 @@ let TeamService = class TeamService {
         if (!user)
             throw new common_1.NotFoundException('Utilisateur introuvable');
         const oid = new mongoose_2.Types.ObjectId(depotId);
-        const fetch = (r) => this.userModel
-            .find({ depot: oid, role: r })
-            .select('-password')
-            .lean();
+        const fetch = (r) => this.userModel.find({ depot: oid, role: r }).select('-password').lean();
         if (user.role === 'responsable depot') {
             if (((_a = user.depot) === null || _a === void 0 ? void 0 : _a.toString()) !== depotId)
                 throw new common_1.ForbiddenException('Ce dépôt ne vous appartient pas');
@@ -86,10 +83,9 @@ let TeamService = class TeamService {
                 fetch('prevente'),
                 fetch('entrepot'),
             ]);
-            if (role) {
-                return { [role]: role === 'livraison' ? livraison : role === 'prevente' ? prevente : entrepot };
-            }
-            return { livraison, prevente, entrepot };
+            return role
+                ? { [role]: role === 'livraison' ? livraison : role === 'prevente' ? prevente : entrepot }
+                : { livraison, prevente, entrepot };
         }
         await this.guardDepot(depotId, userId);
         if (role) {
@@ -115,7 +111,6 @@ let TeamService = class TeamService {
             num: dto.num,
             password: hashed,
             role: dto.role,
-            fonction: dto.fonction,
             company: depot.company_id,
             depot: new mongoose_2.Types.ObjectId(depotId),
         });
@@ -144,10 +139,9 @@ let TeamService = class TeamService {
             return depot;
         }
         if (user.role === 'responsable depot') {
-            const depot = await this.depotModel.findOne({
-                _id: depotId,
-                responsable_id: user._id,
-            }).lean();
+            const depot = await this.depotModel
+                .findOne({ _id: depotId, responsable_id: user._id })
+                .lean();
             if (!depot)
                 throw new common_1.ForbiddenException('Accès refusé');
             return depot;

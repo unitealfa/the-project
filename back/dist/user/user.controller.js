@@ -14,8 +14,8 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
 const common_1 = require("@nestjs/common");
-const user_service_1 = require("./user.service");
 const auth_service_1 = require("../auth/auth.service");
+const user_service_1 = require("./user.service");
 let UserController = class UserController {
     constructor(userSvc, authSvc) {
         this.userSvc = userSvc;
@@ -34,7 +34,6 @@ let UserController = class UserController {
                 prenom: obj.prenom,
                 email: obj.email,
                 role: obj.role,
-                fonction: obj.fonction,
                 company: (_b = (_a = obj.company) === null || _a === void 0 ? void 0 : _a._id) !== null && _b !== void 0 ? _b : null,
                 companyName: (_d = (_c = obj.company) === null || _c === void 0 ? void 0 : _c.nom_company) !== null && _d !== void 0 ? _d : null,
                 num: obj.num,

@@ -1,5 +1,5 @@
-import { UserService } from './user.service';
 import { AuthService } from '../auth/auth.service';
+import { UserService } from './user.service';
 export declare class UserController {
     private readonly userSvc;
     private readonly authSvc;
@@ -15,7 +15,6 @@ export declare class UserController {
             prenom: any;
             email: any;
             role: any;
-            fonction: any;
             company: any;
             companyName: any;
             num: any;

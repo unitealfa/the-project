@@ -48,7 +48,6 @@ export declare class TeamController {
         company: import("mongoose").Types.ObjectId | null;
         depot: import("mongoose").Types.ObjectId | null;
         num: string;
-        fonction?: string;
         _id: any;
         __v?: any;
         $locals: Record<string, unknown>;

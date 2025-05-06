@@ -9,7 +9,6 @@ export declare class User {
     company: Types.ObjectId | null;
     depot: Types.ObjectId | null;
     num: string;
-    fonction?: string;
 }
 export declare const UserSchema: import("mongoose").Schema<User, import("mongoose").Model<User, any, any, any, Document<unknown, any, User> & User & {
     _id: Types.ObjectId;

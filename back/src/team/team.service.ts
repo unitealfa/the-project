@@ -1,28 +1,17 @@
-import {
-  Injectable,
-  ForbiddenException,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
-import {
-  Depot,
-  DepotDocument,
-} from '../depot/schemas/depot.schema';
-import {
-  User,
-  UserDocument,
-} from '../user/schemas/user.schema';
-import { CreateMemberDto } from './dto/create-member.dto';
+import { Depot, DepotDocument } from '../depot/schemas/depot.schema';
+import { User, UserDocument }   from '../user/schemas/user.schema';
+import { CreateMemberDto }      from './dto/create-member.dto';
 
 @Injectable()
 export class TeamService {
   constructor(
     @InjectModel(Depot.name) private readonly depotModel: Model<DepotDocument>,
-    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    @InjectModel(User.name)  private readonly userModel: Model<UserDocument>,
   ) {}
 
   async listByDepot(
@@ -34,12 +23,8 @@ export class TeamService {
     if (!user) throw new NotFoundException('Utilisateur introuvable');
 
     const oid = new Types.ObjectId(depotId);
-
     const fetch = (r: string) =>
-      this.userModel
-        .find({ depot: oid, role: r })
-        .select('-password')
-        .lean();
+      this.userModel.find({ depot: oid, role: r }).select('-password').lean();
 
     if (user.role === 'responsable depot') {
       if (user.depot?.toString() !== depotId)
@@ -51,11 +36,9 @@ export class TeamService {
         fetch('entrepot'),
       ]);
 
-      if (role) {
-        return { [role]: role === 'livraison' ? livraison : role === 'prevente' ? prevente : entrepot };
-      }
-
-      return { livraison, prevente, entrepot };
+      return role
+        ? { [role]: role === 'livraison' ? livraison : role === 'prevente' ? prevente : entrepot }
+        : { livraison, prevente, entrepot };
     }
 
     await this.guardDepot(depotId, userId);
@@ -70,22 +53,16 @@ export class TeamService {
       fetch('prevente'),
       fetch('entrepot'),
     ]);
-
     return { livraison, prevente, entrepot };
   }
 
-  async addMember(
-    depotId: string,
-    dto: CreateMemberDto,
-    userId: string,
-  ) {
+  async addMember(depotId: string, dto: CreateMemberDto, userId: string) {
     const depot = await this.guardDepot(depotId, userId);
 
     if (await this.userModel.exists({ email: dto.email }))
       throw new ConflictException('Email déjà utilisé');
 
     const hashed = await bcrypt.hash(dto.password, 10);
-
     const user = new this.userModel({
       nom: dto.nom,
       prenom: dto.prenom,
@@ -93,12 +70,11 @@ export class TeamService {
       num: dto.num,
       password: hashed,
       role: dto.role,
-      fonction: dto.fonction,
       company: depot.company_id,
       depot: new Types.ObjectId(depotId),
     });
-
     await user.save();
+
     const { password, ...safe } = user.toObject();
     return safe;
   }
@@ -125,11 +101,9 @@ export class TeamService {
     }
 
     if (user.role === 'responsable depot') {
-      const depot = await this.depotModel.findOne({
-        _id: depotId,
-        responsable_id: user._id,
-      }).lean();
-
+      const depot = await this.depotModel
+        .findOne({ _id: depotId, responsable_id: user._id })
+        .lean();
       if (!depot) throw new ForbiddenException('Accès refusé');
       return depot;
     }

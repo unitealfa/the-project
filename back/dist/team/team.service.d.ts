@@ -32,7 +32,6 @@ export declare class TeamService {
         company: Types.ObjectId | null;
         depot: Types.ObjectId | null;
         num: string;
-        fonction?: string;
         _id: any;
         __v?: any;
         $locals: Record<string, unknown>;

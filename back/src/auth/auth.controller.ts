@@ -1,4 +1,3 @@
-// back/src/auth/auth.controller.ts
 import { Controller, Post, Body } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Types } from 'mongoose';
@@ -16,14 +15,12 @@ export class AuthController {
       const user = await this.authService.validateUser(email, password);
       const { access_token } = await this.authService.login(user);
 
-      // On récupère l’ID de company même si c’est un document peuplé
+      // Récupère l’ID de company même si c’est un document peuplé
       let companyId: string | null = null;
       if (user.company) {
-        // si populate('company') → company est un objet
         if (typeof (user.company as any)?._id !== 'undefined') {
           companyId = (user.company as any)._id.toString();
         } else {
-          // sinon c’est déjà un ObjectId
           companyId = user.company.toString();
         }
       }
@@ -36,7 +33,6 @@ export class AuthController {
           prenom: user.prenom,
           email: user.email,
           role: user.role,
-          fonction: user.fonction || null,
           company: companyId,
           companyName:
             companyId && typeof user.company !== 'string'
@@ -58,7 +54,6 @@ export class AuthController {
           nom_client: client.nom_client,
           email: client.email,
           role: client.role,
-          fonction: null,
           company: null,
           companyName: null,
           num: '',

@@ -2,7 +2,6 @@ import { Document, Types } from 'mongoose';
 export declare class Member {
     depotId: Types.ObjectId;
     role: 'livraison' | 'prevente' | 'entrepot';
-    fonction?: string;
     nom: string;
     prenom: string;
 }

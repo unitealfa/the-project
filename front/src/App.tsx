@@ -1,3 +1,4 @@
+// front/src/App.tsx
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
@@ -6,6 +7,7 @@ import Login from './pages/Login';
 import RoleBasedDashboard from './components/RoleBasedDashboard';
 import DashboardResponsableDepot from './pages/DashboardResponsableDepot';
 import DashboardAdmin from './pages/DashboardAdmin';
+import DashboardGestionStock from './pages/DashboardGestionStock';
 
 /* Super-Admin */
 import CreateCompany from './pages/CreateCompany';
@@ -37,6 +39,11 @@ import AddClient from './pages/AddClient';
 import EditClient from './pages/EditClient';
 import ClientDetail from './pages/ClientDetail';
 
+/* Gestion des produits (CRUD stock) */
+import ProductList from './pages/ProductList';
+import ProductDetail from './pages/ProductDetail';
+import FormulaireProduit from './pages/FormulaireProduit';
+
 /* Helpers */
 import RequireAuth from './components/RequireAuth';
 
@@ -46,7 +53,7 @@ export default function App() {
       {/* Connexion */}
       <Route path="/" element={<Login />} />
 
-      {/* Dashboard générique, redirige vers le composant adapté */}
+      {/* Dashboard générique (redirection selon rôle) */}
       <Route
         path="/dashboard"
         element={
@@ -56,7 +63,15 @@ export default function App() {
         }
       />
 
-      {/* Routes accessibles directement si besoin (optionnel) */}
+      {/* Dashboards directs */}
+      <Route
+        path="/dashboard-admin"
+        element={
+          <RequireAuth allowedRoles={['admin', 'super admin']}>
+            <DashboardAdmin />
+          </RequireAuth>
+        }
+      />
       <Route
         path="/dashboard-responsable"
         element={
@@ -66,10 +81,10 @@ export default function App() {
         }
       />
       <Route
-        path="/dashboard-admin"
+        path="/dashboard-stock"
         element={
-          <RequireAuth allowedRoles={['admin']}>
-            <DashboardAdmin />
+          <RequireAuth allowedRoles={['gestionnaire de stock']}>
+            <DashboardGestionStock />
           </RequireAuth>
         }
       />
@@ -248,8 +263,42 @@ export default function App() {
         }
       />
 
+      {/* Gestion des produits */}
+      <Route
+        path="/gestion-produit"
+        element={
+          <RequireAuth allowedRoles={['gestionnaire de stock']}>
+            <ProductList />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/gestion-produit/ajouter"
+        element={
+          <RequireAuth allowedRoles={['gestionnaire de stock']}>
+            <FormulaireProduit mode="create" />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/gestion-produit/:id"
+        element={
+          <RequireAuth allowedRoles={['gestionnaire de stock']}>
+            <ProductDetail />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/gestion-produit/:id/edit"
+        element={
+          <RequireAuth allowedRoles={['gestionnaire de stock']}>
+            <FormulaireProduit mode="edit" />
+          </RequireAuth>
+        }
+      />
+
       {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 }

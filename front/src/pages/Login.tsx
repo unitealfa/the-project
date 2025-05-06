@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// front/src/pages/Login.tsx
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-/* ---------- types de la réponse ----------------------------- */
 interface LoginResponse {
   access_token: string;
   user: {
@@ -11,81 +11,73 @@ interface LoginResponse {
     prenom?: string;
     email: string;
     role: string;
-    fonction?: string;
     company?: string | null;
     companyName?: string | null;
     num?: string;
     depot?: string | null;
   };
 }
-/* ------------------------------------------------------------- */
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const apiBase: string = import.meta.env.VITE_API_URL;
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   // Redirection si déjà connecté
   useEffect(() => {
-    if (localStorage.getItem("token") && localStorage.getItem("user")) {
-      navigate("/dashboard", { replace: true });
+    if (localStorage.getItem('token') && localStorage.getItem('user')) {
+      navigate('/dashboard', { replace: true });
     }
   }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
       const res = await fetch(`${apiBase}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
       const payload = await res.json();
-      if (!res.ok) throw new Error(payload.message || "Échec de la connexion");
+      if (!res.ok) throw new Error(payload.message || 'Échec de la connexion');
 
       const data = payload as LoginResponse;
-
-      localStorage.setItem("token", data.access_token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      navigate("/dashboard", { replace: true });
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      navigate('/dashboard', { replace: true });
     } catch (err: any) {
-      alert(err.message || "Erreur réseau");
+      alert(err.message || 'Erreur réseau');
     }
   };
 
   return (
     <form
       onSubmit={handleSubmit}
-      style={{ maxWidth: 320, margin: "2rem auto", fontFamily: "Arial, sans-serif" }}
+      style={{ maxWidth: 320, margin: '2rem auto', fontFamily: 'Arial, sans-serif' }}
     >
       <h2>Connexion</h2>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <label>Email</label>
         <input
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={e => setEmail(e.target.value)}
           required
         />
       </div>
-
-      <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: 4 }}>
+      <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: 4 }}>
         <label>Mot de passe</label>
         <input
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={e => setPassword(e.target.value)}
           required
         />
       </div>
-
-      <button type="submit" style={{ marginTop: "1.5rem", padding: ".5rem 1rem" }}>
+      <button type="submit" style={{ marginTop: '1.5rem', padding: '.5rem 1rem' }}>
         Se connecter
       </button>
     </form>
