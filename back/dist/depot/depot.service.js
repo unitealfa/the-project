@@ -104,12 +104,15 @@ let DepotService = class DepotService {
     async findOne(id, user) {
         const objId = new mongoose_2.Types.ObjectId(id);
         if (user.role === 'responsable depot') {
+            if (user.depot !== id) {
+                throw new common_1.NotFoundException('Accès interdit ou introuvable');
+            }
             const dp = await this.depotModel
-                .findOne({ _id: objId, responsable_id: new mongoose_2.Types.ObjectId(user.id) })
+                .findById(objId)
                 .populate('responsable_id', 'nom prenom email num')
                 .lean();
             if (!dp)
-                throw new common_1.NotFoundException('Accès interdit ou introuvable');
+                throw new common_1.NotFoundException('Dépôt introuvable');
             return dp;
         }
         const admin = await this.userModel.findById(user.id).lean();
@@ -151,7 +154,10 @@ let DepotService = class DepotService {
             else {
                 const hashed = await bcrypt.hash(password, 10);
                 const newU = await this.userModel.create({
-                    nom, prenom, email, num,
+                    nom,
+                    prenom,
+                    email,
+                    num,
                     password: hashed,
                     role: 'responsable depot',
                     company: admin.company,

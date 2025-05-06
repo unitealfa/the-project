@@ -1,3 +1,5 @@
+// back/src/depot/depot.service.ts
+
 import {
   Injectable,
   ForbiddenException,
@@ -8,14 +10,14 @@ import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 
 import { Depot, DepotDocument } from './schemas/depot.schema';
-import { CreateDepotDto } from './dto/create-depot.dto';
-import { User, UserDocument } from '../user/schemas/user.schema';
+import { CreateDepotDto }       from './dto/create-depot.dto';
+import { User, UserDocument }   from '../user/schemas/user.schema';
 
 @Injectable()
 export class DepotService {
   constructor(
     @InjectModel(Depot.name) private depotModel: Model<DepotDocument>,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(User.name)  private userModel: Model<UserDocument>,
   ) {}
 
   /** CREATE */
@@ -67,11 +69,15 @@ export class DepotService {
     const objId = new Types.ObjectId(id);
 
     if (user.role === 'responsable depot') {
+      // on autorise uniquement le dépôt associé dans le JWT
+      if (user.depot !== id) {
+        throw new NotFoundException('Accès interdit ou introuvable');
+      }
       const dp = await this.depotModel
-        .findOne({ _id: objId, responsable_id: new Types.ObjectId(user.id) })
+        .findById(objId)
         .populate('responsable_id', 'nom prenom email num')
         .lean();
-      if (!dp) throw new NotFoundException('Accès interdit ou introuvable');
+      if (!dp) throw new NotFoundException('Dépôt introuvable');
       return dp;
     }
 
@@ -102,7 +108,6 @@ export class DepotService {
     if (dto.responsable) {
       const { nom, prenom, email, num, password } = dto.responsable;
       if (existing.responsable_id) {
-        // mise à jour
         const u = await this.userModel.findById(existing.responsable_id);
         if (!u) throw new NotFoundException('Responsable introuvable');
         u.nom = nom;
@@ -113,10 +118,12 @@ export class DepotService {
         await u.save();
         responsableId = u._id;
       } else {
-        // création si absent
         const hashed = await bcrypt.hash(password, 10);
         const newU = await this.userModel.create({
-          nom, prenom, email, num,
+          nom,
+          prenom,
+          email,
+          num,
           password: hashed,
           role: 'responsable depot',
           company: admin.company,
