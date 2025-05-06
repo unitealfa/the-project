@@ -42,7 +42,6 @@ import ClientDetail from './pages/ClientDetail';
 /* Gestion des produits (CRUD stock) */
 import ProductList from './pages/ProductList';
 import ProductDetail from './pages/ProductDetail';
-import FormulaireProduit from './pages/FormulaireProduit';
 
 /* Helpers */
 import RequireAuth from './components/RequireAuth';
@@ -263,40 +262,7 @@ export default function App() {
         }
       />
 
-      {/* Gestion des produits */}
-      <Route
-        path="/gestion-produit"
-        element={
-          <RequireAuth allowedRoles={['gestionnaire de stock']}>
-            <ProductList />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/gestion-produit/ajouter"
-        element={
-          <RequireAuth allowedRoles={['gestionnaire de stock']}>
-            <FormulaireProduit mode="create" />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/gestion-produit/:id"
-        element={
-          <RequireAuth allowedRoles={['gestionnaire de stock']}>
-            <ProductDetail />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/gestion-produit/:id/edit"
-        element={
-          <RequireAuth allowedRoles={['gestionnaire de stock']}>
-            <FormulaireProduit mode="edit" />
-          </RequireAuth>
-        }
-      />
-
+    
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
