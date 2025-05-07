@@ -1,4 +1,3 @@
-// BACKEND - DTO pour création de produit
 import { IsString, IsNumber, IsArray, IsOptional, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -46,4 +45,7 @@ export class CreateProductDto {
   @ValidateNested({ each: true })
   @Type(() => DisponibiliteDto)
   disponibilite?: DisponibiliteDto[];
+
+  @IsString()
+  company_id: string;
 }

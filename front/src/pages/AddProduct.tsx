@@ -28,8 +28,10 @@ export default function AddProduct() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
     const newProduct = {
-      nom_product: formData.nom_product, 
+      nom_product: formData.nom_product,
       prix_gros: parseFloat(formData.prix_gros),
       prix_detail: parseFloat(formData.prix_detail),
       description: formData.description,
@@ -40,11 +42,11 @@ export default function AddProduct() {
         volume: formData.volume,
       },
       disponibilite: depotId ? [{ depot_id: depotId, quantite: 0 }] : [],
+      company_id: user.company, // ✅ ajoute automatiquement l'entreprise liée
     };
 
     try {
       await axios.post("/api/products", newProduct);
-
       if (depotId) {
         navigate(`/gestion-depot/${depotId}`);
       } else {
