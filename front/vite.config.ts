@@ -1,10 +1,20 @@
 // front/vite.config.ts
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import react            from '@vitejs/plugin-react';
+import * as path        from 'path';
 
 export default defineConfig({
   base: './',
+
   plugins: [react()],
+
+  /* ───── alias pour import '@/...' ───── */
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    },
+  },
+
   server: {
     port: 3000,
     proxy: {
@@ -12,10 +22,11 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        rewrite: (p) => p.replace(/^\/api/, ''),
       },
     },
   },
+
   build: {
     outDir: 'build',
   },

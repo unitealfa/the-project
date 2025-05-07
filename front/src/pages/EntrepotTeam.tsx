@@ -1,35 +1,59 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import Header    from '../components/Header';
-import { apiFetch } from '../utils/api';
+import { useNavigate, useLocation }  from 'react-router-dom';
+import Header                        from '@/components/Header';
+import { apiFetch }                  from '@/utils/api';
 
-interface Member { _id: string; nom: string; prenom: string; role: string }
-interface Depot  { _id: string; nom_depot: string }
+interface Member {
+  _id:    string;
+  nom:    string;
+  prenom: string;
+  role:   string;
+}
+interface Depot {
+  _id:       string;
+  nom_depot: string;
+}
+interface UserLocal {
+  role:  string;
+  depot: string | null;
+}
 
 export default function EntrepotTeam() {
-  const { depotId = '' } = useParams<{ depotId: string }>();
   const nav = useNavigate();
   const loc = useLocation();
-  const [depot, setDepot] = useState<Depot | null>(null);
-  const [list, setList] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
-  const user = JSON.parse(localStorage.getItem('user') || '{}') as { role: string };
+  const stored = localStorage.getItem('user') || '{}';
+  const user: UserLocal = JSON.parse(stored);
+
+  const [depot,   setDepot]   = useState<Depot | null>(null);
+  const [list,    setList]    = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState('');
 
   useEffect(() => {
+    if (!user.depot) {
+      setError('Aucun dépôt assigné');
+      setLoading(false);
+      return;
+    }
+
     let cancel = false;
     (async () => {
       setLoading(true);
       try {
-        const [dRes, tRes] = await Promise.all([
-          apiFetch(`/depots/${depotId}`),
-          apiFetch(`/teams/${depotId}?role=entrepot`),
-        ]);
+        // Charge le dépôt
+        const dRes = await apiFetch(`/depots/${user.depot}`);
+        // Charge TOUTE l'équipe du responsable
+        const tRes = await apiFetch('/teams/mine');
+
         if (cancel) return;
-        setDepot(await dRes.json());
-        const payload = await tRes.json();
-        setList(Array.isArray(payload) ? payload : payload.entrepot ?? []);
+
+        const dJson = await dRes.json();
+        setDepot(dJson);
+
+        const tJson = await tRes.json();
+        // On ne garde que la catégorie “entrepot”
+        setList(tJson.entrepot ?? []);
       } catch {
         if (!cancel) setError('Impossible de charger');
       } finally {
@@ -37,7 +61,7 @@ export default function EntrepotTeam() {
       }
     })();
     return () => { cancel = true; };
-  }, [depotId, loc.key]);
+  }, [loc.key, user.depot]);
 
   return (
     <>
@@ -47,33 +71,54 @@ export default function EntrepotTeam() {
           <h1 style={{ margin:0 }}>
             Équipe Entrepôt {depot ? `du dépôt « ${depot.nom_depot} »` : ''}
           </h1>
-          {user.role === 'responsable depot' && (
-            <button onClick={() => nav(`/teams/${depotId}/entrepot/add`)}
-                    style={{ padding:'.5rem 1rem', background:'#4f46e5', color:'#fff', border:'none', borderRadius:8 }}>
+          {user.role === 'responsable depot' && user.depot && (
+            <button
+              onClick={() => nav(`/teams/${user.depot}/entrepot/add`)}
+              style={{
+                padding:'.5rem 1rem',
+                background:'#4f46e5',
+                color:'#fff',
+                border:'none',
+                borderRadius:8,
+              }}
+            >
               + Ajouter un membre
             </button>
           )}
         </div>
+
         {error && <p style={{ color:'red' }}>{error}</p>}
         {loading ? (
           <p>Chargement…</p>
         ) : (
           <table style={{ width:'100%', borderCollapse:'collapse', marginTop:'1rem' }}>
             <thead>
-              <tr>{['Nom','Prénom','Rôle'].map(h => (
-                <th key={h} style={{ padding:'.5rem', borderBottom:'1px solid #ccc', textAlign:'left' }}>{h}</th>
-              ))}</tr>
+              <tr>
+                {['Nom','Prénom','Rôle'].map(h => (
+                  <th
+                    key={h}
+                    style={{ padding:'.5rem', borderBottom:'1px solid #ccc', textAlign:'left' }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
             </thead>
             <tbody>
-              {list.map(m => (
-                <tr key={m._id}>
-                  <td style={{ padding:'.5rem 0' }}>{m.nom}</td>
-                  <td style={{ padding:'.5rem 0' }}>{m.prenom}</td>
-                  <td style={{ padding:'.5rem 0' }}>{m.role}</td>
+              {list.length > 0 ? (
+                list.map(m => (
+                  <tr key={m._id}>
+                    <td style={{ padding:'.5rem 0' }}>{m.nom}</td>
+                    <td style={{ padding:'.5rem 0' }}>{m.prenom}</td>
+                    <td style={{ padding:'.5rem 0' }}>{m.role}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={3} style={{ padding:'.75rem', fontStyle:'italic' }}>
+                    Aucun membre
+                  </td>
                 </tr>
-              ))}
-              {list.length === 0 && (
-                <tr><td colSpan={3} style={{ padding:'.75rem', fontStyle:'italic' }}>Aucun membre</td></tr>
               )}
             </tbody>
           </table>

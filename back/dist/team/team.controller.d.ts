@@ -22,8 +22,8 @@ export declare class TeamController {
             _id: import("mongoose").Types.ObjectId;
         })[];
     }>;
-    list(depotId: string, req: any, role?: 'livraison' | 'prevente' | 'entrepot'): Promise<{
-        [role]: (import("mongoose").FlattenMaps<import("../user/schemas/user.schema").UserDocument> & {
+    list(depotId: string, req: any, poste?: 'Livraison' | 'Prévente' | 'Entrepôt'): Promise<{
+        [x: string]: (import("mongoose").FlattenMaps<import("../user/schemas/user.schema").UserDocument> & {
             _id: import("mongoose").Types.ObjectId;
         })[];
         livraison?: undefined;
@@ -45,6 +45,7 @@ export declare class TeamController {
         prenom: string;
         email: string;
         role: string;
+        poste: string;
         company: import("mongoose").Types.ObjectId | null;
         depot: import("mongoose").Types.ObjectId | null;
         num: string;

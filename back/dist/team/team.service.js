@@ -68,34 +68,21 @@ let TeamService = class TeamService {
         this.depotModel = depotModel;
         this.userModel = userModel;
     }
-    async listByDepot(depotId, userId, role) {
-        var _a;
+    async listByDepot(depotId, userId, poste) {
         const user = await this.userModel.findById(userId).lean();
         if (!user)
             throw new common_1.NotFoundException('Utilisateur introuvable');
-        const oid = new mongoose_2.Types.ObjectId(depotId);
-        const fetch = (r) => this.userModel.find({ depot: oid, role: r }).select('-password').lean();
-        if (user.role === 'responsable depot') {
-            if (((_a = user.depot) === null || _a === void 0 ? void 0 : _a.toString()) !== depotId)
-                throw new common_1.ForbiddenException('Ce dépôt ne vous appartient pas');
-            const [livraison, prevente, entrepot] = await Promise.all([
-                fetch('livraison'),
-                fetch('prevente'),
-                fetch('entrepot'),
-            ]);
-            return role
-                ? { [role]: role === 'livraison' ? livraison : role === 'prevente' ? prevente : entrepot }
-                : { livraison, prevente, entrepot };
-        }
         await this.guardDepot(depotId, userId);
-        if (role) {
-            const arr = await fetch(role);
-            return { [role]: arr };
+        const oid = new mongoose_2.Types.ObjectId(depotId);
+        const fetch = (cat) => this.userModel.find({ depot: oid, poste: cat }).select('-password').lean();
+        if (poste) {
+            const arr = await fetch(poste);
+            return { [poste.toLowerCase()]: arr };
         }
         const [livraison, prevente, entrepot] = await Promise.all([
-            fetch('livraison'),
-            fetch('prevente'),
-            fetch('entrepot'),
+            fetch('Livraison'),
+            fetch('Prévente'),
+            fetch('Entrepôt'),
         ]);
         return { livraison, prevente, entrepot };
     }
@@ -111,6 +98,7 @@ let TeamService = class TeamService {
             num: dto.num,
             password: hashed,
             role: dto.role,
+            poste: dto.poste,
             company: depot.company_id,
             depot: new mongoose_2.Types.ObjectId(depotId),
         });

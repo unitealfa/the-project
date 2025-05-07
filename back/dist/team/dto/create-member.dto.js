@@ -9,17 +9,32 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateMemberDto = exports.TEAM_ROLES = void 0;
+exports.CreateMemberDto = exports.TEAM_CATEGORIES = exports.JOB_TITLES = void 0;
 const class_validator_1 = require("class-validator");
-exports.TEAM_ROLES = ['livraison', 'prevente', 'entrepot'];
+exports.JOB_TITLES = [
+    'Administrateurs des ventes',
+    'Livreurs',
+    'Chauffeurs',
+    'Superviseurs des ventes',
+    'Pré vendeurs',
+    'Gestionnaire de stock',
+    'Contrôleur',
+    'Manutentionnaire',
+];
+exports.TEAM_CATEGORIES = ['Livraison', 'Prévente', 'Entrepôt'];
 class CreateMemberDto {
 }
 exports.CreateMemberDto = CreateMemberDto;
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsIn)(exports.TEAM_ROLES),
+    (0, class_validator_1.IsIn)(exports.JOB_TITLES),
     __metadata("design:type", String)
 ], CreateMemberDto.prototype, "role", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsIn)(exports.TEAM_CATEGORIES),
+    __metadata("design:type", String)
+], CreateMemberDto.prototype, "poste", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),

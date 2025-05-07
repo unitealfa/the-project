@@ -6,8 +6,8 @@ export declare class TeamService {
     private readonly depotModel;
     private readonly userModel;
     constructor(depotModel: Model<DepotDocument>, userModel: Model<UserDocument>);
-    listByDepot(depotId: string, userId: string, role?: 'livraison' | 'prevente' | 'entrepot'): Promise<{
-        [role]: (import("mongoose").FlattenMaps<UserDocument> & {
+    listByDepot(depotId: string, userId: string, poste?: 'Livraison' | 'Prévente' | 'Entrepôt'): Promise<{
+        [x: string]: (import("mongoose").FlattenMaps<UserDocument> & {
             _id: Types.ObjectId;
         })[];
         livraison?: undefined;
@@ -29,6 +29,7 @@ export declare class TeamService {
         prenom: string;
         email: string;
         role: string;
+        poste: string;
         company: Types.ObjectId | null;
         depot: Types.ObjectId | null;
         num: string;

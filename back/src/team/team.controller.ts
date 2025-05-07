@@ -1,21 +1,11 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Param,
-  Body,
-  Req,
-  Query,
-  UseGuards,
-  Logger,
-  BadRequestException,
-  ForbiddenException,
+  Controller, Get, Post, Delete, Param, Body, Req, Query,
+  UseGuards, Logger, BadRequestException, ForbiddenException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
-import { TeamService } from './team.service';
+import { RolesGuard }   from '../auth/roles.guard';
+import { Roles }        from '../auth/roles.decorator';
+import { TeamService }  from './team.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -25,32 +15,30 @@ export class TeamController {
 
   constructor(private readonly svc: TeamService) {}
 
-  /** Pour le responsable de dépôt : son équipe uniquement */
+  /** Pour le responsable : toute son équipe (toutes catégories) */
   @Roles('responsable depot')
   @Get('mine')
   async getMyTeam(@Req() req: any) {
     const depotId = req.user.depot;
-    if (!depotId) {
-      throw new ForbiddenException('Aucun dépôt assigné');
-    }
+    if (!depotId) throw new ForbiddenException('Aucun dépôt assigné');
     this.logger.log(`Responsable ${req.user.id} consulte son équipe`);
     return this.svc.listByDepot(depotId, req.user.id);
   }
 
-  /** Liste par dépôt */
+  /** Liste par dépôt, filtre sur `poste` (catégorie) */
   @Roles('Admin', 'responsable depot')
   @Get(':depotId')
   async list(
     @Param('depotId') depotId: string,
     @Req() req: any,
-    @Query('role') role?: 'livraison' | 'prevente' | 'entrepot',
+    @Query('poste') poste?: 'Livraison' | 'Prévente' | 'Entrepôt',
   ) {
-    this.logger.log(`${req.user.role} ${req.user.id} liste ${role ?? 'ALL'} pour dépôt ${depotId}`);
-    return this.svc.listByDepot(depotId, req.user.id, role);
+    this.logger.log(`${req.user.role} ${req.user.id} liste ${poste ?? 'ALL'} pour dépôt ${depotId}`);
+    return this.svc.listByDepot(depotId, req.user.id, poste);
   }
 
   /** Ajout d’un membre */
-  @Roles('Admin', 'responsable depot') // ✅ permet au responsable de créer aussi
+  @Roles('Admin', 'responsable depot')
   @Post(':depotId/members')
   async addMember(
     @Param('depotId') depotId: string,

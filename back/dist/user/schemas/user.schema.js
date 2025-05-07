@@ -33,20 +33,27 @@ __decorate([
 ], User.prototype, "password", void 0);
 __decorate([
     (0, mongoose_1.Prop)({
-        default: 'User',
+        required: true,
         enum: [
-            'Super Admin',
-            'Admin',
-            'User',
-            'responsable depot',
-            'livraison',
-            'prevente',
-            'entrepot',
+            'Administrateurs des ventes',
+            'Livreurs',
+            'Chauffeurs',
+            'Superviseurs des ventes',
+            'Pré vendeurs',
             'Gestionnaire de stock',
+            'Contrôleur',
+            'Manutentionnaire',
         ],
     }),
     __metadata("design:type", String)
 ], User.prototype, "role", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        required: true,
+        enum: ['Livraison', 'Prévente', 'Entrepôt'],
+    }),
+    __metadata("design:type", String)
+], User.prototype, "poste", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Company', default: null }),
     __metadata("design:type", mongoose_2.Types.ObjectId)

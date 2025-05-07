@@ -1,7 +1,10 @@
-export declare const TEAM_ROLES: readonly ["livraison", "prevente", "entrepot"];
-export type TeamRole = (typeof TEAM_ROLES)[number];
+export declare const JOB_TITLES: readonly ["Administrateurs des ventes", "Livreurs", "Chauffeurs", "Superviseurs des ventes", "Pré vendeurs", "Gestionnaire de stock", "Contrôleur", "Manutentionnaire"];
+export type JobTitle = typeof JOB_TITLES[number];
+export declare const TEAM_CATEGORIES: readonly ["Livraison", "Prévente", "Entrepôt"];
+export type TeamCategory = typeof TEAM_CATEGORIES[number];
 export declare class CreateMemberDto {
-    role: TeamRole;
+    role: JobTitle;
+    poste: TeamCategory;
     nom: string;
     prenom: string;
     email: string;

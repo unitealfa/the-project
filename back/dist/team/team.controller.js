@@ -27,15 +27,14 @@ let TeamController = TeamController_1 = class TeamController {
     }
     async getMyTeam(req) {
         const depotId = req.user.depot;
-        if (!depotId) {
+        if (!depotId)
             throw new common_1.ForbiddenException('Aucun dépôt assigné');
-        }
         this.logger.log(`Responsable ${req.user.id} consulte son équipe`);
         return this.svc.listByDepot(depotId, req.user.id);
     }
-    async list(depotId, req, role) {
-        this.logger.log(`${req.user.role} ${req.user.id} liste ${role !== null && role !== void 0 ? role : 'ALL'} pour dépôt ${depotId}`);
-        return this.svc.listByDepot(depotId, req.user.id, role);
+    async list(depotId, req, poste) {
+        this.logger.log(`${req.user.role} ${req.user.id} liste ${poste !== null && poste !== void 0 ? poste : 'ALL'} pour dépôt ${depotId}`);
+        return this.svc.listByDepot(depotId, req.user.id, poste);
     }
     async addMember(depotId, dto, req) {
         try {
@@ -67,7 +66,7 @@ __decorate([
     (0, common_1.Get)(':depotId'),
     __param(0, (0, common_1.Param)('depotId')),
     __param(1, (0, common_1.Req)()),
-    __param(2, (0, common_1.Query)('role')),
+    __param(2, (0, common_1.Query)('poste')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object, String]),
     __metadata("design:returntype", Promise)

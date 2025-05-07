@@ -1,10 +1,17 @@
 {
   "compilerOptions": {
+    /* ─── cible & bibliothèques ─── */
     "target": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
+
+    /* ─── React 17+ (vite) ─── */
     "jsx": "react-jsx",
+
+    /* ─── gestion des modules ─── */
     "module": "ESNext",
     "moduleResolution": "Node",
+
+    /* ─── rigueur TypeScript ─── */
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -13,8 +20,17 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
+
+    /* ─── alias @/ pour /src ─── */
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"]
+    },
+
+    /* ─── types Vite (env) ─── */
     "types": ["vite/client"]
   },
+
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",

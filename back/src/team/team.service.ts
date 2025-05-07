@@ -17,41 +17,27 @@ export class TeamService {
   async listByDepot(
     depotId: string,
     userId: string,
-    role?: 'livraison' | 'prevente' | 'entrepot',
+    poste?: 'Livraison' | 'Prévente' | 'Entrepôt',
   ) {
     const user = await this.userModel.findById(userId).lean();
     if (!user) throw new NotFoundException('Utilisateur introuvable');
 
-    const oid = new Types.ObjectId(depotId);
-    const fetch = (r: string) =>
-      this.userModel.find({ depot: oid, role: r }).select('-password').lean();
-
-    if (user.role === 'responsable depot') {
-      if (user.depot?.toString() !== depotId)
-        throw new ForbiddenException('Ce dépôt ne vous appartient pas');
-
-      const [livraison, prevente, entrepot] = await Promise.all([
-        fetch('livraison'),
-        fetch('prevente'),
-        fetch('entrepot'),
-      ]);
-
-      return role
-        ? { [role]: role === 'livraison' ? livraison : role === 'prevente' ? prevente : entrepot }
-        : { livraison, prevente, entrepot };
-    }
-
     await this.guardDepot(depotId, userId);
+    const oid = new Types.ObjectId(depotId);
 
-    if (role) {
-      const arr = await fetch(role);
-      return { [role]: arr };
+    // Filtre sur `poste` (catégorie)
+    const fetch = (cat: string) =>
+      this.userModel.find({ depot: oid, poste: cat }).select('-password').lean();
+
+    if (poste) {
+      const arr = await fetch(poste);
+      return { [poste.toLowerCase()]: arr };
     }
 
     const [livraison, prevente, entrepot] = await Promise.all([
-      fetch('livraison'),
-      fetch('prevente'),
-      fetch('entrepot'),
+      fetch('Livraison'),
+      fetch('Prévente'),
+      fetch('Entrepôt'),
     ]);
     return { livraison, prevente, entrepot };
   }
@@ -64,14 +50,15 @@ export class TeamService {
 
     const hashed = await bcrypt.hash(dto.password, 10);
     const user = new this.userModel({
-      nom: dto.nom,
-      prenom: dto.prenom,
-      email: dto.email,
-      num: dto.num,
+      nom     : dto.nom,
+      prenom  : dto.prenom,
+      email   : dto.email,
+      num     : dto.num,
       password: hashed,
-      role: dto.role,
-      company: depot.company_id,
-      depot: new Types.ObjectId(depotId),
+      role    : dto.role,
+      poste   : dto.poste,
+      company : depot.company_id,
+      depot   : new Types.ObjectId(depotId),
     });
     await user.save();
 
