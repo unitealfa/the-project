@@ -43,17 +43,25 @@ export default function AddClient() {
   const checkExistingClient = async () => {
     setVerifDone(true);
     setSuggestedClient(null);
-    const res = await fetch(`${apiBase}/clients/check?email=${form.email}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (res.ok) {
+
+    try {
+      const res = await fetch(`${apiBase}/clients/check?email=${form.email}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        setShowFullForm(true);
+        return;
+      }
+
       const data = await res.json();
+
       if (data && data.nom_client === form.nom_client) {
         setSuggestedClient(data);
       } else {
         setShowFullForm(true);
       }
-    } else {
+    } catch (err) {
       setShowFullForm(true);
     }
   };
@@ -139,26 +147,30 @@ export default function AddClient() {
             placeholder="Nom client (magasin)"
             required
             onChange={handleChange}
+            value={form.nom_client}
           />
           <input
             name="email"
             placeholder="Email"
             required
             onChange={handleChange}
+            value={form.email}
           />
-          <button
-            type="button"
-            style={{
-              padding: '0.5rem',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
-            }}
-            onClick={checkExistingClient}
-          >
-            🔍 Vérifier
-          </button>
+          {!showFullForm && (
+            <button
+              type="button"
+              style={{
+                padding: '0.5rem',
+                backgroundColor: '#3b82f6',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+              onClick={checkExistingClient}
+            >
+              🔍 Vérifier
+            </button>
+          )}
 
           {verifDone && suggestedClient && (
             <div style={{ border: '1px solid gray', padding: '1rem' }}>
