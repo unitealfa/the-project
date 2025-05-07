@@ -1,5 +1,6 @@
+// BACKEND - Schéma Mongoose du produit
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type ProductDocument = Product & Document;
 
@@ -14,12 +15,6 @@ export class Product {
   @Prop({ required: true })
   prix_detail: number;
 
-  @Prop({ required: true })
-  date_expiration: Date;
-
-  @Prop({ required: true })
-  quantite_stock: number;
-
   @Prop()
   description: string;
 
@@ -29,14 +24,22 @@ export class Product {
   @Prop([String])
   images: string[];
 
-  @Prop({
-    type: {
-      poids: String,
-      volume: String,
+  @Prop({ type: Object })
+  specifications: {
+    poids: string;
+    volume: string;
+  };
+
+  @Prop({ type: Types.ObjectId, ref: 'Company' })
+  company_id: Types.ObjectId;
+
+  @Prop([
+    {
+      depot_id: { type: Types.ObjectId, ref: 'Depot' },
+      quantite: Number,
     },
-    default: {},
-  })
-  specifications: { poids: string; volume: string };
+  ])
+  disponibilite: { depot_id: Types.ObjectId; quantite: number }[];
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);

@@ -1,125 +1,141 @@
-import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import Header from '../components/Header';
-import { apiFetch } from '../utils/api';
-import { Product } from '../types';
+// FRONTEND - ProductEdit.tsx
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 
 export default function ProductEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [form, setForm] = useState<Omit<Product, '_id'>>({
-    nom_product: '',
-    prix_gros: 0,
-    prix_detail: 0,
-    date_expiration: '',
-    quantite_stock: 0,
-    description: '',
-    categorie: '',
-    images: [''],
-    specifications: { poids: '', volume: '' },
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const fromDepot = searchParams.get("fromDepot");
+
+  const [formData, setFormData] = useState({
+    nom_product: "",
+    prix_gros: "",
+    prix_detail: "",
+    description: "",
+    categorie: "",
+    poids: "",
+    volume: "",
+    images: [""],
   });
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiFetch(`/products/${id}`)
-      .then((res: Response) => res.json() as Promise<Product>)
-      .then(data => {
-        const { _id, ...rest } = data;
-        setForm(rest);
-      })
-      .finally(() => setLoading(false));
+    axios.get(`/api/products/${id}`).then((res) => {
+      const prod = res.data;
+      setFormData({
+        nom_product: prod.nom_product,
+        prix_gros: prod.prix_gros,
+        prix_detail: prod.prix_detail,
+        description: prod.description,
+        categorie: prod.categorie,
+        poids: prod.specifications?.poids || "",
+        volume: prod.specifications?.volume || "",
+        images: prod.images || [""],
+      });
+    });
   }, [id]);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    if (['prix_gros', 'prix_detail', 'quantite_stock'].includes(name)) {
-      setForm(prev => ({ ...prev, [name]: Number(value) }));
-    } else if (name === 'poids' || name === 'volume') {
-      setForm(prev => ({
-        ...prev,
-        specifications: { ...prev.specifications, [name]: value }
-      }));
-    } else if (name === 'images') {
-      setForm(prev => ({ ...prev, images: [value] }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageChange = (index: number, value: string) => {
+    const updated = [...formData.images];
+    updated[index] = value;
+    setFormData((prev) => ({ ...prev, images: updated }));
+  };
+
+  const handleAddImage = () => {
+    setFormData((prev) => ({ ...prev, images: [...prev.images, ""] }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    await axios.put(`/api/products/${id}`, {
+      nom_product: formData.nom_product,
+      prix_gros: parseFloat(formData.prix_gros),
+      prix_detail: parseFloat(formData.prix_detail),
+      description: formData.description,
+      categorie: formData.categorie,
+      images: formData.images,
+      specifications: {
+        poids: formData.poids,
+        volume: formData.volume,
+      },
+    });
+
+    if (fromDepot) {
+      navigate(`/gestion-depot/${fromDepot}`);
     } else {
-      setForm(prev => ({ ...prev, [name]: value }));
+      navigate("/dashboard-stock");
     }
   };
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    apiFetch(`/products/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(form),
-    }).then(() => navigate('/gestion-produit'));
-  };
-
-  if (loading) return <p>Chargement du produit…</p>;
-
   return (
-    <>
-      <Header />
-      <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-        <h1>Modifier le produit</h1>
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem', maxWidth: '600px' }}>
-          <label>
-            Nom du produit
-            <input name="nom_product" value={form.nom_product} onChange={handleChange} required />
-          </label>
-          <label>
-            Prix gros
-            <input type="number" name="prix_gros" value={form.prix_gros} onChange={handleChange} required />
-          </label>
-          <label>
-            Prix détail
-            <input type="number" name="prix_detail" value={form.prix_detail} onChange={handleChange} required />
-          </label>
-          <label>
-            Quantité en stock
-            <input type="number" name="quantite_stock" value={form.quantite_stock} onChange={handleChange} required />
-          </label>
-          <label>
-            Date d'expiration
-            <input type="date" name="date_expiration" value={form.date_expiration} onChange={handleChange} required />
-          </label>
-          <label>
-            Description
-            <textarea name="description" value={form.description} onChange={handleChange} />
-          </label>
-          <label>
-            Catégorie
-            <input name="categorie" value={form.categorie} onChange={handleChange} />
-          </label>
-          <label>
-            URL Image
-            <input name="images" value={form.images[0]} onChange={handleChange} />
-          </label>
-          <fieldset style={{ border: '1px solid #ccc', padding: '1rem' }}>
-            <legend>Spécifications</legend>
-            <label>
-              Poids
-              <input name="poids" value={form.specifications.poids} onChange={handleChange} />
-            </label>
-            <label>
-              Volume
-              <input name="volume" value={form.specifications.volume} onChange={handleChange} />
-            </label>
-          </fieldset>
-          <button
-            type="submit"
-            style={{
-              padding: '0.5rem 1rem',
-              borderRadius: '4px',
-              backgroundColor: '#007bff',
-              color: '#fff',
-              border: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            Enregistrer
-          </button>
-        </form>
-      </main>
-    </>
+    <div style={{ padding: "2rem", maxWidth: "600px", margin: "auto" }}>
+      <h2 style={{ marginBottom: "1.5rem" }}>Modifier le produit</h2>
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <label>
+          Nom du produit
+          <input type="text" name="nom_product" value={formData.nom_product} onChange={handleChange} required />
+        </label>
+
+        <label>
+          Prix de gros (DA)
+          <input type="number" name="prix_gros" value={formData.prix_gros} onChange={handleChange} required />
+        </label>
+
+        <label>
+          Prix de détail (DA)
+          <input type="number" name="prix_detail" value={formData.prix_detail} onChange={handleChange} required />
+        </label>
+
+        <label>
+          Description
+          <textarea name="description" value={formData.description} onChange={handleChange} rows={3} required />
+        </label>
+
+        <label>
+          Catégorie
+          <input type="text" name="categorie" value={formData.categorie} onChange={handleChange} required />
+        </label>
+
+        <label>
+          Poids (kg)
+          <input type="text" name="poids" value={formData.poids} onChange={handleChange} />
+        </label>
+
+        <label>
+          Volume (L)
+          <input type="text" name="volume" value={formData.volume} onChange={handleChange} />
+        </label>
+
+        <div>
+          <h4>Images</h4>
+          {formData.images.map((img, index) => (
+            <div key={index} style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+              <input
+                type="text"
+                value={img}
+                onChange={(e) => handleImageChange(index, e.target.value)}
+                placeholder={`URL image ${index + 1}`}
+              />
+              {img && <img src={img} alt={`img-${index}`} style={{ width: "50px", height: "50px", objectFit: "cover" }} />}
+            </div>
+          ))}
+          <button type="button" onClick={handleAddImage}>+ Ajouter une image</button>
+        </div>
+
+        <div style={{ textAlign: "right" }}>
+          <button type="submit">Enregistrer</button>
+        </div>
+      </form>
+    </div>
   );
 }

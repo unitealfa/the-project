@@ -1,58 +1,49 @@
-// front/src/App.tsx
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+// FRONTEND - App.tsx
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
-/* Connexion + dashboards */
-import Login from './pages/Login';
-import RoleBasedDashboard from './components/RoleBasedDashboard';
-import DashboardResponsableDepot from './pages/DashboardResponsableDepot';
-import DashboardAdmin from './pages/DashboardAdmin';
-import DashboardGestionStock from './pages/DashboardGestionStock';
+import Login from "./pages/Login";
+import RoleBasedDashboard from "./components/RoleBasedDashboard";
+import DashboardResponsableDepot from "./pages/DashboardResponsableDepot";
+import DashboardAdmin from "./pages/DashboardAdmin";
+import DashboardGestionStock from "./pages/DashboardGestionStock";
 
-/* Super-Admin */
-import CreateCompany from './pages/CreateCompany';
-import CompaniesList from './pages/CompaniesList';
-import CompanyDetail from './pages/CompanyDetail';
-import CompanyEdit from './pages/CompanyEdit';
+import CreateCompany from "./pages/CreateCompany";
+import CompaniesList from "./pages/CompaniesList";
+import CompanyDetail from "./pages/CompanyDetail";
+import CompanyEdit from "./pages/CompanyEdit";
 
-/* Admin – dépôts */
-import CreateDepot from './pages/CreateDepot';
-import DepotsList from './pages/DepotsList';
-import DepotDetail from './pages/DepotDetail';
-import DepotEdit from './pages/DepotEdit';
+import CreateDepot from "./pages/CreateDepot";
+import DepotsList from "./pages/DepotsList";
+import DepotDetail from "./pages/DepotDetail";
+import DepotEdit from "./pages/DepotEdit";
 
-/* Équipes */
-import Teams from './pages/Teams';
-import TeamManage from './pages/TeamManage';
+import Teams from "./pages/Teams";
+import TeamManage from "./pages/TeamManage";
+import DeliveryTeam from "./pages/DeliveryTeam";
+import AddMember from "./pages/AddMember";
+import PreventeTeam from "./pages/PreventeTeam";
+import AddPrevente from "./pages/AddPrevente";
+import EntrepotTeam from "./pages/EntrepotTeam";
+import AddEntrepot from "./pages/AddEntrepot";
 
-/* Livraison / Pré-vente / Entrepôt */
-import DeliveryTeam from './pages/DeliveryTeam';
-import AddMember from './pages/AddMember';
-import PreventeTeam from './pages/PreventeTeam';
-import AddPrevente from './pages/AddPrevente';
-import EntrepotTeam from './pages/EntrepotTeam';
-import AddEntrepot from './pages/AddEntrepot';
+import ClientsList from "./pages/ClientsList";
+import AddClient from "./pages/AddClient";
+import EditClient from "./pages/EditClient";
+import ClientDetail from "./pages/ClientDetail";
 
-/* Clients */
-import ClientsList from './pages/ClientsList';
-import AddClient from './pages/AddClient';
-import EditClient from './pages/EditClient';
-import ClientDetail from './pages/ClientDetail';
+import ProductDetail from "./pages/ProductDetail";
+import ProductEdit from "./pages/ProductEdit";
+import GestionDepot from "./pages/GestionDepot";
+import AddProduct from "./pages/AddProduct";
 
-/* Gestion des produits (CRUD stock) */
-import ProductList from './pages/ProductList';
-import ProductDetail from './pages/ProductDetail';
-
-/* Helpers */
-import RequireAuth from './components/RequireAuth';
+import RequireAuth from "./components/RequireAuth";
 
 export default function App() {
   return (
     <Routes>
-      {/* Connexion */}
       <Route path="/" element={<Login />} />
 
-      {/* Dashboard générique (redirection selon rôle) */}
       <Route
         path="/dashboard"
         element={
@@ -61,12 +52,10 @@ export default function App() {
           </RequireAuth>
         }
       />
-
-      {/* Dashboards directs */}
       <Route
         path="/dashboard-admin"
         element={
-          <RequireAuth allowedRoles={['admin', 'super admin']}>
+          <RequireAuth allowedRoles={["admin", "super admin"]}>
             <DashboardAdmin />
           </RequireAuth>
         }
@@ -74,7 +63,7 @@ export default function App() {
       <Route
         path="/dashboard-responsable"
         element={
-          <RequireAuth allowedRoles={['responsable depot']}>
+          <RequireAuth allowedRoles={["responsable depot"]}>
             <DashboardResponsableDepot />
           </RequireAuth>
         }
@@ -82,17 +71,16 @@ export default function App() {
       <Route
         path="/dashboard-stock"
         element={
-          <RequireAuth allowedRoles={['gestionnaire de stock']}>
+          <RequireAuth allowedRoles={["gestionnaire de stock"]}>
             <DashboardGestionStock />
           </RequireAuth>
         }
       />
 
-      {/* Super-Admin */}
       <Route
         path="/create-company"
         element={
-          <RequireAuth allowedRoles={['super admin']}>
+          <RequireAuth allowedRoles={["super admin"]}>
             <CreateCompany />
           </RequireAuth>
         }
@@ -100,7 +88,7 @@ export default function App() {
       <Route
         path="/companies"
         element={
-          <RequireAuth allowedRoles={['super admin']}>
+          <RequireAuth allowedRoles={["super admin"]}>
             <CompaniesList />
           </RequireAuth>
         }
@@ -108,7 +96,7 @@ export default function App() {
       <Route
         path="/companies/:id"
         element={
-          <RequireAuth allowedRoles={['super admin', 'admin']}>
+          <RequireAuth allowedRoles={["super admin", "admin"]}>
             <CompanyDetail />
           </RequireAuth>
         }
@@ -116,17 +104,16 @@ export default function App() {
       <Route
         path="/companies/:id/edit"
         element={
-          <RequireAuth allowedRoles={['super admin']}>
+          <RequireAuth allowedRoles={["super admin"]}>
             <CompanyEdit />
           </RequireAuth>
         }
       />
 
-      {/* Admin – dépôts */}
       <Route
         path="/create-depot"
         element={
-          <RequireAuth allowedRoles={['admin']}>
+          <RequireAuth allowedRoles={["admin"]}>
             <CreateDepot />
           </RequireAuth>
         }
@@ -134,7 +121,7 @@ export default function App() {
       <Route
         path="/depots"
         element={
-          <RequireAuth allowedRoles={['admin']}>
+          <RequireAuth allowedRoles={["admin"]}>
             <DepotsList />
           </RequireAuth>
         }
@@ -142,7 +129,7 @@ export default function App() {
       <Route
         path="/depots/:id"
         element={
-          <RequireAuth allowedRoles={['admin']}>
+          <RequireAuth allowedRoles={["admin"]}>
             <DepotDetail />
           </RequireAuth>
         }
@@ -150,17 +137,16 @@ export default function App() {
       <Route
         path="/depots/:id/edit"
         element={
-          <RequireAuth allowedRoles={['admin']}>
+          <RequireAuth allowedRoles={["admin"]}>
             <DepotEdit />
           </RequireAuth>
         }
       />
 
-      {/* Équipes */}
       <Route
         path="/teams"
         element={
-          <RequireAuth allowedRoles={['admin']}>
+          <RequireAuth allowedRoles={["admin"]}>
             <Teams />
           </RequireAuth>
         }
@@ -168,17 +154,15 @@ export default function App() {
       <Route
         path="/teams/:depotId"
         element={
-          <RequireAuth allowedRoles={['admin', 'responsable depot']}>
+          <RequireAuth allowedRoles={["admin", "responsable depot"]}>
             <TeamManage />
           </RequireAuth>
         }
       />
-
-      {/* Livraison */}
       <Route
         path="/teams/:depotId/livraison"
         element={
-          <RequireAuth allowedRoles={['admin', 'responsable depot']}>
+          <RequireAuth allowedRoles={["admin", "responsable depot"]}>
             <DeliveryTeam />
           </RequireAuth>
         }
@@ -186,17 +170,15 @@ export default function App() {
       <Route
         path="/teams/:depotId/livraison/add"
         element={
-          <RequireAuth allowedRoles={['admin', 'responsable depot']}>
+          <RequireAuth allowedRoles={["admin", "responsable depot"]}>
             <AddMember />
           </RequireAuth>
         }
       />
-
-      {/* Pré-vente */}
       <Route
         path="/teams/:depotId/prevente"
         element={
-          <RequireAuth allowedRoles={['admin', 'responsable depot']}>
+          <RequireAuth allowedRoles={["admin", "responsable depot"]}>
             <PreventeTeam />
           </RequireAuth>
         }
@@ -204,17 +186,15 @@ export default function App() {
       <Route
         path="/teams/:depotId/prevente/add"
         element={
-          <RequireAuth allowedRoles={['admin', 'responsable depot']}>
+          <RequireAuth allowedRoles={["admin", "responsable depot"]}>
             <AddPrevente />
           </RequireAuth>
         }
       />
-
-      {/* Entrepôt */}
       <Route
         path="/teams/:depotId/entrepot"
         element={
-          <RequireAuth allowedRoles={['admin', 'responsable depot']}>
+          <RequireAuth allowedRoles={["admin", "responsable depot"]}>
             <EntrepotTeam />
           </RequireAuth>
         }
@@ -222,17 +202,16 @@ export default function App() {
       <Route
         path="/teams/:depotId/entrepot/add"
         element={
-          <RequireAuth allowedRoles={['admin', 'responsable depot']}>
+          <RequireAuth allowedRoles={["admin", "responsable depot"]}>
             <AddEntrepot />
           </RequireAuth>
         }
       />
 
-      {/* Clients */}
       <Route
         path="/clients"
         element={
-          <RequireAuth allowedRoles={['admin', 'responsable depot']}>
+          <RequireAuth allowedRoles={["admin", "responsable depot"]}>
             <ClientsList />
           </RequireAuth>
         }
@@ -240,7 +219,7 @@ export default function App() {
       <Route
         path="/clients/add"
         element={
-          <RequireAuth allowedRoles={['responsable depot']}>
+          <RequireAuth allowedRoles={["responsable depot"]}>
             <AddClient />
           </RequireAuth>
         }
@@ -248,7 +227,7 @@ export default function App() {
       <Route
         path="/clients/edit/:id"
         element={
-          <RequireAuth allowedRoles={['responsable depot']}>
+          <RequireAuth allowedRoles={["responsable depot"]}>
             <EditClient />
           </RequireAuth>
         }
@@ -256,14 +235,45 @@ export default function App() {
       <Route
         path="/clients/:id"
         element={
-          <RequireAuth allowedRoles={['admin', 'responsable depot']}>
+          <RequireAuth allowedRoles={["admin", "responsable depot"]}>
             <ClientDetail />
           </RequireAuth>
         }
       />
 
-    
-      {/* Fallback */}
+      <Route
+        path="/product-detail/:id"
+        element={
+          <RequireAuth allowedRoles={["admin", "gestionnaire de stock"]}>
+            <ProductDetail />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/product-edit/:id"
+        element={
+          <RequireAuth allowedRoles={["admin", "gestionnaire de stock"]}>
+            <ProductEdit />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/add-product"
+        element={
+          <RequireAuth allowedRoles={["admin", "gestionnaire de stock"]}>
+            <AddProduct />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/gestion-depot/:depotId"
+        element={
+          <RequireAuth allowedRoles={["gestionnaire de stock"]}>
+            <GestionDepot />
+          </RequireAuth>
+        }
+      />
+
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
