@@ -32,6 +32,8 @@ export default function ClientsList() {
       ? `${apiBase}/clients?depot=${depot}`
       : `${apiBase}/clients`;
 
+    console.log('➡️ Appel API clients pour dépôt:', depot); // DEBUG
+
     fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     })

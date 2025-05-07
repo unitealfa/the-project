@@ -1,5 +1,9 @@
 import { IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
-import { Types } from 'mongoose';
+
+class AffectationDto {
+  entreprise: string;
+  depot: string;
+}
 
 export class CreateClientDto {
   @IsNotEmpty()
@@ -17,9 +21,6 @@ export class CreateClientDto {
     telephone: string;
   };
 
-  @IsOptional()
-  depot?: Types.ObjectId;
-
   @IsNotEmpty()
   localisation: {
     adresse: string;
@@ -31,4 +32,7 @@ export class CreateClientDto {
       longitude: number;
     };
   };
+
+  @IsOptional()
+  affectations?: AffectationDto[];
 }

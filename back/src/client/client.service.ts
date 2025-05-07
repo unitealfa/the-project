@@ -1,29 +1,41 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Client } from "./schemas/client.schema";
-import { Model, Types } from "mongoose";
-import { CreateClientDto } from "./dto/create-client.dto";
-import * as bcrypt from "bcrypt";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Client } from './schemas/client.schema';
+import { Model, Types } from 'mongoose';
+import { CreateClientDto } from './dto/create-client.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class ClientService {
-  constructor(
-    @InjectModel("Client") private readonly clientModel: Model<Client>
-  ) {}
+  constructor(@InjectModel('Client') private readonly clientModel: Model<Client>) {}
 
   async create(dto: CreateClientDto): Promise<Client> {
+    const existing = await this.clientModel.findOne({ email: dto.email });
     const hashed = await bcrypt.hash(dto.password, 10);
+    const affectations = dto.affectations?.map((a) => ({
+      entreprise: new Types.ObjectId(a.entreprise),
+      depot: new Types.ObjectId(a.depot),
+    })) ?? [];
 
-    const depotObjectId = dto.depot
-      ? new Types.ObjectId(dto.depot) // 🔁 conversion en ObjectId si fourni
-      : undefined;
+    if (existing) {
+      const newAffectations = affectations.filter(
+        (a) =>
+          !existing.affectations.some(
+            (e) => e.depot.toString() === a.depot.toString()
+          )
+      );
+      if (newAffectations.length > 0) {
+        existing.affectations.push(...newAffectations);
+        return existing.save();
+      }
+      return existing;
+    }
 
     const created = new this.clientModel({
       ...dto,
       password: hashed,
-      depot: depotObjectId, // 👈 applique le ObjectId ici
+      affectations,
     });
-
     return created.save();
   }
 
@@ -32,24 +44,47 @@ export class ClientService {
   }
 
   async findByDepot(depotId: string): Promise<Client[]> {
-    return this.clientModel
-      .find({ depot: new Types.ObjectId(depotId) })
-      .lean();
+    return this.clientModel.find({
+      $or: [
+        { 'affectations.depot': depotId }, // si c'est une string
+        { 'affectations.depot': new Types.ObjectId(depotId) }, // si c'est un ObjectId
+      ],
+    }).lean();
   }
+  
 
   async findById(id: string): Promise<Client | null> {
     return this.clientModel.findById(id).lean();
+  }
+
+  async findByEmail(email: string): Promise<Client | null> {
+    return this.clientModel.findOne({ email }).lean();
+  }
+
+  async addAffectation(clientId: string, entrepriseId: string, depotId: string) {
+    const client = await this.clientModel.findById(clientId);
+    if (!client) return null;
+
+    const exists = client.affectations.some(
+      (a) => a.depot.toString() === depotId
+    );
+
+    if (exists) {
+      throw new Error('Ce client est déjà affecté à ce dépôt.');
+    }
+
+    client.affectations.push({
+      entreprise: new Types.ObjectId(entrepriseId),
+      depot: new Types.ObjectId(depotId),
+    });
+
+    return client.save();
   }
 
   async update(id: string, dto: Partial<CreateClientDto>) {
     if (dto.password) {
       dto.password = await bcrypt.hash(dto.password, 10);
     }
-
-    if (dto.depot && typeof dto.depot === "string") {
-      dto.depot = new Types.ObjectId(dto.depot);
-    }
-
     return this.clientModel.findByIdAndUpdate(id, dto, { new: true }).lean();
   }
 

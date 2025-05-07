@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-/* ───── Sous-documents ───── */
 @Schema({ _id: false })
 class Coordonnees {
   @Prop() latitude: number;
@@ -30,7 +29,12 @@ class Statistiques {
   @Prop({ default: null }) derniere_commande: Date;
 }
 
-/* ───── Schéma principal ───── */
+@Schema({ _id: false })
+class Affectation {
+  @Prop({ type: Types.ObjectId, ref: 'Entreprise' }) entreprise: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Depot' }) depot: Types.ObjectId;
+}
+
 @Schema({ timestamps: true })
 export class Client extends Document {
   @Prop({ required: true }) nom_client: string;
@@ -39,8 +43,8 @@ export class Client extends Document {
   @Prop({ default: 'Client' }) role: string;
 
   @Prop({ type: Contact, required: true }) contact: Contact;
-  @Prop({ type: Types.ObjectId, ref: 'Depot' }) depot: Types.ObjectId;
   @Prop({ type: Localisation, required: true }) localisation: Localisation;
+  @Prop([Affectation]) affectations: Affectation[];
 
   @Prop({ default: 0 }) fidelite_points: number;
   @Prop({ type: Statistiques, default: () => ({}) }) statistiques: Statistiques;
