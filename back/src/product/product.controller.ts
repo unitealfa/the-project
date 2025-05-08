@@ -30,6 +30,29 @@ export class ProductController {
     return this.productService.findAll();
   }
 
+  // ✅ Cette route doit être AVANT @Get(':id')
+  @Get('clients')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Client')
+  async getProduitsPourClient(@Req() req) {
+    const user = req.user;
+
+    const depots = (user.affectations ?? []).map((a: any) => {
+      if (typeof a.depot === 'object' && '$oid' in a.depot) {
+        return a.depot.$oid;
+      }
+      return a.depot;
+    });
+
+    console.log("📥 Dépôts du client :", depots);
+
+    const produits = await this.productService.findByDepots(depots);
+
+    console.log("📦 Produits trouvés :", produits.length);
+
+    return produits;
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.productService.findOne(id);
@@ -57,14 +80,5 @@ export class ProductController {
     @Body('quantite') quantite: number,
   ) {
     return this.productService.updateQuantiteParDepot(productId, depotId, quantite);
-  }
-
-  @Get('clients')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Client')
-  async getProduitsPourClient(@Req() req) {
-    const user = req.user;
-    const depots = user.affectations?.map((a) => a.depot) ?? [];
-    return this.productService.findByDepots(depots);
   }
 }

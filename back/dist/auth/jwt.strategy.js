@@ -21,11 +21,14 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         });
     }
     async validate(payload) {
+        var _a, _b, _c;
         return {
             id: payload.id,
             email: payload.email,
             role: payload.role,
-            depot: payload.depot || null,
+            depot: (_a = payload.depot) !== null && _a !== void 0 ? _a : null,
+            entreprise: (_b = payload.entreprise) !== null && _b !== void 0 ? _b : null,
+            affectations: (_c = payload.affectations) !== null && _c !== void 0 ? _c : [],
         };
     }
 };

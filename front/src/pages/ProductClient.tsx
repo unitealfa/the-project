@@ -1,17 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import Header from '../components/Header';
+import React, { useEffect, useState } from "react";
+import Header from "../components/Header";
 
 interface Product {
   _id: string;
-  nom: string;
+  nom_product: string;
   description: string;
-  prix: number;
-  depot: string;
+  prix_detail: number;
+}
+
+interface ObjectIdLike {
+  $oid: string;
 }
 
 interface Affectation {
-  entreprise: string;
-  depot: string;
+  entreprise: string | ObjectIdLike;
+  depot: string | ObjectIdLike;
 }
 
 interface User {
@@ -23,33 +26,34 @@ interface User {
 
 export default function ProductClient() {
   const [produits, setProduits] = useState<Product[]>([]);
-  const raw = localStorage.getItem('user');
+
+  const raw = localStorage.getItem("user");
   const user: User | null = raw ? JSON.parse(raw) : null;
 
   useEffect(() => {
     const fetchProduits = async () => {
-      if (!user || !user.affectations) return;
+      try {
+        const res = await fetch(`/api/products/clients`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
 
-      const depotIds = user.affectations.map((a) => a.depot);
-      const query = depotIds.map((id) => `depot=${id}`).join('&');
-
-      const res = await fetch(`/api/produits/clients?${query}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      const data = await res.json();
-      setProduits(data);
+        const data = await res.json();
+        console.log("🧪 Produits reçus côté client :", data); // ✅ LOG ICI
+        setProduits(data);
+      } catch (err) {
+        console.error("Erreur lors du chargement des produits", err);
+      }
     };
 
     fetchProduits();
-  }, [user]);
+  }, []);
 
   return (
     <>
       <Header />
-      <main style={{ padding: '2rem' }}>
+      <main style={{ padding: "2rem" }}>
         <h2>Produits disponibles</h2>
         {produits.length === 0 ? (
           <p>Aucun produit trouvé.</p>
@@ -57,9 +61,9 @@ export default function ProductClient() {
           <ul>
             {produits.map((p) => (
               <li key={p._id}>
-                <h4>{p.nom}</h4>
+                <h4>{p.nom_product}</h4>
                 <p>{p.description}</p>
-                <p>Prix: {p.prix} €</p>
+                <p>Prix: {p.prix_detail} €</p>
               </li>
             ))}
           </ul>

@@ -94,7 +94,7 @@ export default function AddClient() {
       const payload = {
         ...form,
         affectations: [
-          { entreprise: user.company, depot: user.depot }
+          { entreprise: user.entreprise, depot: user.depot }
         ],
       };
       const res = await fetch(`${apiBase}/clients`, {

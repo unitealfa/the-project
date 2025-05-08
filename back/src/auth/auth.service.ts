@@ -40,11 +40,15 @@ export class AuthService {
       email: user.email,
       role: user.role,
       depot: user.depot || null,
+      entreprise: user.company || null, // ✅ renommer pour cohérence côté client
     };
-
-    const access_token = this.jwtService.sign(payload);
-    return { access_token };
+    
+  
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+    };
   }
+  
 
   async validateClient(email: string, password: string): Promise<any> {
     const client = await this.clientModel
@@ -64,10 +68,13 @@ export class AuthService {
       id: client._id,
       email: client.email,
       role: client.role,
-      depot: client.depot || null,
+      affectations: client.affectations ?? [], // ✅ injecte les affectations
     };
-
+  
+    console.log('🔐 Payload JWT client:', payload); // ← debug pour vérifier les données
+  
     const access_token = this.jwtService.sign(payload);
     return { access_token };
   }
+  
 }

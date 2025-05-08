@@ -15,35 +15,34 @@ import { CreateClientDto } from './dto/create-client.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { DepotHelperService } from '../common/helpers/depot-helper.service';
 
 @Controller('clients')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ClientController {
-  constructor(private readonly clientService: ClientService) {}
+  constructor(
+    private readonly clientService: ClientService,
+    private readonly depotHelper: DepotHelperService,
+  ) {}
 
-  // 🔍 Récupérer les clients selon le rôle ou un dépôt spécifique
   @Get()
   @Roles('Admin', 'responsable depot')
   async getClients(@Req() req, @Query('depot') depotId?: string) {
     const user = req.user;
-
     if (user.role === 'responsable depot') {
       return this.clientService.findByDepot(user.depot);
     }
-
     return depotId
       ? this.clientService.findByDepot(depotId)
       : this.clientService.findAll();
   }
 
-  // 🔎 Vérifier si un client existe par email
   @Get('check')
   @Roles('Admin', 'responsable depot')
   async checkClient(@Query('email') email: string) {
     return this.clientService.findByEmail(email);
   }
 
-  // ➕ Affecter un client existant à un nouveau dépôt/entreprise (sans doublon)
   @Post(':id/affectation')
   @Roles('responsable depot')
   async addAffectation(
@@ -53,18 +52,28 @@ export class ClientController {
     return this.clientService.addAffectation(id, body.entreprise, body.depot);
   }
 
-  // 🆕 Créer un nouveau client, avec affectation automatique du responsable
   @Post()
   @Roles('responsable depot')
   async createClient(@Body() dto: CreateClientDto, @Req() req) {
     const user = req.user;
+
+    console.log('✅ USER dans createClient:', user);
+
     if (user.role === 'responsable depot') {
-      dto.affectations = [{ entreprise: user.entreprise, depot: user.depot }];
+      const entrepriseId = await this.depotHelper.getEntrepriseFromDepot(user.depot);
+      if (!entrepriseId) {
+        throw new Error("Entreprise introuvable pour ce dépôt.");
+      }
+
+      dto.affectations = [{
+        entreprise: entrepriseId.toString(),
+        depot: user.depot.toString(),
+      }];
     }
+
     return this.clientService.create(dto);
   }
 
-  // ✏️ Modifier les infos d’un client
   @Put(':id')
   @Roles('responsable depot')
   async updateClient(
@@ -74,7 +83,6 @@ export class ClientController {
     return this.clientService.update(id, dto);
   }
 
-  // ❌ Supprimer un client
   @Delete(':id')
   @Roles('responsable depot')
   async deleteClient(@Param('id') id: string) {
