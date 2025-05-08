@@ -1,4 +1,3 @@
-// back/src/product/product.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -43,6 +42,25 @@ export class ProductService {
         },
       },
     }).exec();
+  }
+
+  async findByDepots(depotIds: string[]): Promise<Product[]> {
+    const objectDepotIds = depotIds.map((id) => new Types.ObjectId(id));
+
+    console.log('🔍 Recherche de produits pour les dépôts :', objectDepotIds); // Debug
+
+    const results = await this.productModel.find({
+      disponibilite: {
+        $elemMatch: {
+          depot_id: { $in: objectDepotIds },
+          quantite: { $gt: 0 }, // filtre les produits avec stock uniquement
+        },
+      },
+    }).exec();
+
+    console.log("🎯 Résultats trouvés :", results.length); // Debug
+
+    return results;
   }
 
   async updateQuantiteParDepot(productId: string, depotId: string, quantite: number): Promise<Product> {

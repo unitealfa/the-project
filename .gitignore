@@ -4,9 +4,10 @@ node_modules/
 node_modules/.vite/
 
 # Vite / TS
-dist/
+**/dist/
 *.log
 *.tsbuildinfo
+
 
 # Environnement
 .env*

@@ -1,4 +1,4 @@
-// FRONTEND - App.tsx
+// ✅ FRONTEND - App.tsx
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -44,6 +44,7 @@ import DetailEntrepotMember from "./pages/DetailEntrepotMember";
 import EditEntrepotMember from "./pages/EditEntrepotMember";
 import EditPreventeMember from "./pages/EditPreventeMember";
 import DetailPreventeMember from "./pages/DetailPreventeMember";
+import ProductClient from "./pages/ProductClient"; // ✅ nouvelle page pour les clients
 
 export default function App() {
   return (
@@ -199,6 +200,22 @@ export default function App() {
         }
       />
       <Route
+        path="/teams/members/:memberId/detail-delivery"
+        element={
+          <RequireAuth allowedRoles={["admin", "responsable depot"]}>
+            <DeliveryMemberDetails />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/teams/members/:memberId/edit-delivery"
+        element={
+          <RequireAuth allowedRoles={["admin", "responsable depot"]}>
+            <EditDeliveryMember />
+          </RequireAuth>
+        }
+      />
+      <Route
         path="/teams/:depotId/prevente"
         element={
           <RequireAuth allowedRoles={["admin", "responsable depot"]}>
@@ -215,6 +232,22 @@ export default function App() {
         }
       />
       {/* Routes pour les membres Pré-vente */}
+      <Route
+        path="/teams/members/:memberId/detail-prevente"
+        element={
+          <RequireAuth allowedRoles={["admin", "responsable depot"]}>
+            <DetailPreventeMember />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/teams/members/:memberId/edit-prevente"
+        element={
+          <RequireAuth allowedRoles={["admin", "responsable depot"]}>
+            <EditPreventeMember />
+          </RequireAuth>
+        }
+      />
       <Route
         path="/teams/members/:memberId/detail-prevente"
         element={
@@ -335,6 +368,16 @@ export default function App() {
         element={
           <RequireAuth allowedRoles={["gestionnaire de stock"]}>
             <GestionDepot />
+          </RequireAuth>
+        }
+      />
+
+      {/* ✅ Ajout route client pour voir les produits */}
+      <Route
+        path="/productclient"
+        element={
+          <RequireAuth allowedRoles={["client"]}>
+            <ProductClient />
           </RequireAuth>
         }
       />

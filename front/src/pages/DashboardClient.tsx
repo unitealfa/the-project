@@ -1,5 +1,7 @@
+// ✅ /src/pages/DashboardClient.tsx
 import React from 'react';
 import Header from '../components/Header';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: string;
@@ -10,12 +12,14 @@ interface User {
 }
 
 export default function DashboardClient() {
-  // Récupération de l'utilisateur
+  const navigate = useNavigate();
   const raw = localStorage.getItem('user');
   const user: User | null = raw ? JSON.parse(raw) : null;
-
-  // Affichage du nom interne ou du nom client
   const displayName = user?.nom || user?.nom_client || '';
+
+  const consulterProduits = () => {
+    navigate('/productclient');
+  };
 
   return (
     <>
@@ -32,6 +36,22 @@ export default function DashboardClient() {
           )}
         </h1>
         <p>Votre tableau de bord fidélité et commandes arrive ici.</p>
+
+        <button
+          onClick={consulterProduits}
+          style={{
+            marginTop: '1rem',
+            padding: '0.75rem 1.5rem',
+            backgroundColor: '#007bff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '1rem'
+          }}
+        >
+          Consulter les produits
+        </button>
       </main>
     </>
   );

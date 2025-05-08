@@ -23,10 +23,10 @@ export class UserController {
         prenom: obj.prenom,
         email: obj.email,
         role: obj.role,
-        company: obj.company?._id ?? null,
+        company: obj.company?._id.toString() ?? null,  // ← seulement l’ID
         companyName: obj.company?.nom_company ?? null,
+        depot: obj.depot?.toString() ?? null,
         num: obj.num,
-        depot: obj.depot ?? null,
       },
     };
   }
