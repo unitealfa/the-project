@@ -1,7 +1,7 @@
 import { Model, Types } from 'mongoose';
 import { DepotDocument } from '../depot/schemas/depot.schema';
 import { UserDocument } from '../user/schemas/user.schema';
-import { CreateMemberDto } from './dto/create-member.dto';
+import { CreateMemberDto, UpdateMemberDto } from './dto/create-member.dto';
 export declare class TeamService {
     private readonly depotModel;
     private readonly userModel;
@@ -50,4 +50,29 @@ export declare class TeamService {
         deleted: boolean;
     }>;
     private guardDepot;
+    findOneMember(memberId: string, userId: string): Promise<import("mongoose").FlattenMaps<UserDocument> & {
+        _id: Types.ObjectId;
+    }>;
+    updateMember(memberId: string, dto: UpdateMemberDto, userId: string): Promise<{
+        nom: string;
+        prenom: string;
+        email: string;
+        role: string;
+        poste: string;
+        company: Types.ObjectId | null;
+        depot: Types.ObjectId | null;
+        num: string;
+        _id: any;
+        __v?: any;
+        $locals: Record<string, unknown>;
+        $op: "save" | "validate" | "remove" | null;
+        $where: Record<string, unknown>;
+        baseModelName?: string;
+        collection: import("mongoose").Collection;
+        db: import("mongoose").Connection;
+        errors?: import("mongoose").Error.ValidationError;
+        id?: any;
+        isNew: boolean;
+        schema: import("mongoose").Schema;
+    }>;
 }

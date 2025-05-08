@@ -1,0 +1,101 @@
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
+import { apiFetch } from '../utils/api';
+
+const DELIVERY_ROLES = [
+  "Administrateurs des ventes",
+  "livreurs",
+  "chauffeurs"
+];
+
+interface Member {
+  _id: string;
+  nom: string;
+  prenom: string;
+  email: string;
+  num: string;
+  role: string;
+  poste?: string;
+}
+
+export default function EditDeliveryMember() {
+  const { memberId = '' } = useParams<{ memberId: string }>();
+  const nav = useNavigate();
+  const [f, setF] = useState<Member | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await apiFetch(`/teams/members/${memberId}`);
+        if (!res.ok) throw new Error('Impossible de charger le membre');
+        const data = await res.json();
+        setF({
+          _id: data._id,
+          nom: data.nom,
+          prenom: data.prenom,
+          email: data.email,
+          num: data.num,
+          role: DELIVERY_ROLES.includes(data.role) ? data.role : DELIVERY_ROLES[0],
+          poste: data.poste,
+        });
+      } catch (err: any) {
+        setError(err.message || 'Erreur');
+      }
+    })();
+  }, [memberId]);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!f) return;
+    setError('');
+    setSuccess('');
+    setSaving(true);
+    try {
+      await apiFetch(`/teams/members/${memberId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(f),
+      });
+      setSuccess('Membre modifié avec succès');
+      setTimeout(() => nav(-1), 1000);
+    } catch {
+      setError('Erreur lors de la modification');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (error) return <><Header /><p style={{ color: 'red', padding: '1rem' }}>{error}</p></>;
+  if (!f) return <><Header /><p style={{ padding: '1rem' }}>Chargement…</p></>;
+
+  return (
+    <>
+      <Header />
+      <form onSubmit={submit} style={{
+        maxWidth: 480, margin: '2rem auto',
+        display: 'flex', flexDirection: 'column', gap: '.8rem',
+        fontFamily: 'Arial, sans-serif'
+      }}>
+        <h1>Éditer membre Livraison</h1>
+        <input placeholder="Nom" value={f.nom} onChange={e => setF({ ...f, nom: e.target.value })} required />
+        <input placeholder="Prénom" value={f.prenom} onChange={e => setF({ ...f, prenom: e.target.value })} required />
+        <input type="email" placeholder="Email" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} required />
+        <input placeholder="Téléphone" value={f.num} onChange={e => setF({ ...f, num: e.target.value })} required />
+        <select value={f.role} onChange={e => setF({ ...f, role: e.target.value })} required>
+          {DELIVERY_ROLES.map(jt => (
+            <option key={jt} value={jt}>{jt}</option>
+          ))}
+        </select>
+        <input placeholder="Poste" value={f.poste || ''} onChange={e => setF({ ...f, poste: e.target.value })} required />
+        <button type="submit" disabled={saving} style={{ padding: '.6rem 1.4rem', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 8 }}>
+          {saving ? 'Enregistrement…' : 'Enregistrer'}
+        </button>
+        {success && <p style={{ color: 'green' }}>{success}</p>}
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+      </form>
+    </>
+  );
+}

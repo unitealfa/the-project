@@ -1,5 +1,5 @@
 import { TeamService } from './team.service';
-import { CreateMemberDto } from './dto/create-member.dto';
+import { CreateMemberDto, UpdateMemberDto } from './dto/create-member.dto';
 export declare class TeamController {
     private readonly svc;
     private readonly logger;
@@ -40,7 +40,32 @@ export declare class TeamController {
             _id: import("mongoose").Types.ObjectId;
         })[];
     }>;
+    getMember(memberId: string, req: any): Promise<import("mongoose").FlattenMaps<import("../user/schemas/user.schema").UserDocument> & {
+        _id: import("mongoose").Types.ObjectId;
+    }>;
     addMember(depotId: string, dto: CreateMemberDto, req: any): Promise<{
+        nom: string;
+        prenom: string;
+        email: string;
+        role: string;
+        poste: string;
+        company: import("mongoose").Types.ObjectId | null;
+        depot: import("mongoose").Types.ObjectId | null;
+        num: string;
+        _id: any;
+        __v?: any;
+        $locals: Record<string, unknown>;
+        $op: "save" | "validate" | "remove" | null;
+        $where: Record<string, unknown>;
+        baseModelName?: string;
+        collection: import("mongoose").Collection;
+        db: import("mongoose").Connection;
+        errors?: import("mongoose").Error.ValidationError;
+        id?: any;
+        isNew: boolean;
+        schema: import("mongoose").Schema;
+    }>;
+    updateMember(memberId: string, dto: UpdateMemberDto, req: any): Promise<{
         nom: string;
         prenom: string;
         email: string;

@@ -1,5 +1,5 @@
 import {
-  IsIn, IsNotEmpty, IsString,
+  IsIn, IsNotEmpty, IsString, IsOptional
 } from 'class-validator';
 
 /** fonctions métiers possibles (→ role) */
@@ -31,4 +31,17 @@ export class CreateMemberDto {
   @IsString() @IsNotEmpty() email!   : string;
   @IsString() @IsNotEmpty() password!: string;
   @IsString() @IsNotEmpty() num!     : string;
+}
+export class UpdateMemberDto {
+  @IsString() @IsIn(JOB_TITLES) @IsOptional()
+  role?: JobTitle;            // ex. "Livreurs"
+
+  @IsString() @IsIn(TEAM_CATEGORIES) @IsOptional()
+  poste?: TeamCategory;       // ex. "Livraison"
+
+  @IsString() @IsOptional() nom?     : string;
+  @IsString() @IsOptional() prenom?  : string;
+  @IsString() @IsOptional() email?   : string;
+  @IsString() @IsOptional() num?     : string;
+  @IsString() @IsOptional() password?: string; 
 }

@@ -136,6 +136,29 @@ let TeamService = class TeamService {
         }
         throw new common_1.ForbiddenException('Rôle non autorisé');
     }
+    async findOneMember(memberId, userId) {
+        const member = await this.userModel.findById(memberId).select('-password').lean();
+        if (!member)
+            throw new common_1.NotFoundException('Membre introuvable');
+        await this.guardDepot(member.depot.toString(), userId);
+        return member;
+    }
+    async updateMember(memberId, dto, userId) {
+        const member = await this.userModel.findById(memberId);
+        if (!member)
+            throw new common_1.NotFoundException('Membre introuvable');
+        await this.guardDepot(member.depot.toString(), userId);
+        if (dto.password && dto.password.length >= 3) {
+            dto.password = await bcrypt.hash(dto.password, 10);
+        }
+        else {
+            delete dto.password;
+        }
+        Object.assign(member, dto);
+        await member.save();
+        const _a = member.toObject(), { password } = _a, safe = __rest(_a, ["password"]);
+        return safe;
+    }
 };
 exports.TeamService = TeamService;
 exports.TeamService = TeamService = __decorate([

@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateMemberDto = exports.TEAM_CATEGORIES = exports.JOB_TITLES = void 0;
+exports.UpdateMemberDto = exports.CreateMemberDto = exports.TEAM_CATEGORIES = exports.JOB_TITLES = void 0;
 const class_validator_1 = require("class-validator");
 exports.JOB_TITLES = [
     'Administrateurs des ventes',
@@ -60,4 +60,44 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateMemberDto.prototype, "num", void 0);
+class UpdateMemberDto {
+}
+exports.UpdateMemberDto = UpdateMemberDto;
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsIn)(exports.JOB_TITLES),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateMemberDto.prototype, "role", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsIn)(exports.TEAM_CATEGORIES),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateMemberDto.prototype, "poste", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateMemberDto.prototype, "nom", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateMemberDto.prototype, "prenom", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateMemberDto.prototype, "email", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateMemberDto.prototype, "num", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateMemberDto.prototype, "password", void 0);
 //# sourceMappingURL=create-member.dto.js.map
