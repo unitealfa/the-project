@@ -22,7 +22,7 @@ let UserController = class UserController {
         this.authSvc = authSvc;
     }
     async login({ email, password }) {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f;
         const doc = await this.authSvc.validateUser(email, password);
         const { access_token } = await this.authSvc.login(doc);
         const obj = doc.toObject();
@@ -34,10 +34,10 @@ let UserController = class UserController {
                 prenom: obj.prenom,
                 email: obj.email,
                 role: obj.role,
-                company: (_b = (_a = obj.company) === null || _a === void 0 ? void 0 : _a._id) !== null && _b !== void 0 ? _b : null,
+                company: (_b = (_a = obj.company) === null || _a === void 0 ? void 0 : _a._id.toString()) !== null && _b !== void 0 ? _b : null,
                 companyName: (_d = (_c = obj.company) === null || _c === void 0 ? void 0 : _c.nom_company) !== null && _d !== void 0 ? _d : null,
+                depot: (_f = (_e = obj.depot) === null || _e === void 0 ? void 0 : _e.toString()) !== null && _f !== void 0 ? _f : null,
                 num: obj.num,
-                depot: (_e = obj.depot) !== null && _e !== void 0 ? _e : null,
             },
         };
     }

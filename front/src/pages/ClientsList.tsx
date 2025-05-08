@@ -1,15 +1,14 @@
+// 📁 src/pages/ClientsList.tsx
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
+import { useLocation, useNavigate }   from 'react-router-dom';
+import Header                         from '../components/Header';
 
 interface Client {
-  _id: string;
-  nom_client: string;
-  email: string;
-  contact: {
-    nom_gerant: string;
-    telephone: string;
-  };
+  _id:         string;
+  nom_client:  string;
+  email:       string;
+  contact:     { nom_gerant: string; telephone: string };
+  affectations:{ entreprise: string; depot: string }[];
 }
 
 function useQuery() {
@@ -18,21 +17,28 @@ function useQuery() {
 
 export default function ClientsList() {
   const [clients, setClients] = useState<Client[]>([]);
-  const [error, setError] = useState('');
+  const [error,   setError]   = useState('');
   const navigate = useNavigate();
-  const query = useQuery();
+  const query    = useQuery();
+
   const rawUser = localStorage.getItem('user');
-  const user = rawUser ? JSON.parse(rawUser) : null;
-  const depot = query.get('depot') || (user?.role === 'responsable depot' ? user?.depot : null);
-  const token = localStorage.getItem('token') || '';
+  const user    = rawUser ? JSON.parse(rawUser) : null;
+
+  // on choisit le dépôt depuis le query param ou le user
+  const depot = query.get('depot')
+    || (user?.role === 'responsable depot' ? user.depot : null);
+
+  const token   = localStorage.getItem('token') || '';
   const apiBase = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
+    // debug : on logge dépôt et company
+    console.log('➡️ Appel API clients pour dépôt:', depot);
+    console.log('➡️ Company du responsable       :', user?.company);
+
     const url = depot
       ? `${apiBase}/clients?depot=${depot}`
       : `${apiBase}/clients`;
-
-    console.log('➡️ Appel API clients pour dépôt:', depot); // DEBUG
 
     fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
@@ -43,7 +49,7 @@ export default function ClientsList() {
       })
       .then(setClients)
       .catch(err => setError(err.message));
-  }, [depot, apiBase, token]);
+  }, [depot, apiBase, token, user?.company]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Confirmer la suppression de ce client ?')) return;
@@ -59,11 +65,22 @@ export default function ClientsList() {
     }
   };
 
+  const th = { padding: '.75rem', textAlign: 'left' as const, borderBottom: '2px solid #ddd' };
+  const td = { padding: '.75rem' };
+  const actionBtn = {
+    marginRight: '0.5rem',
+    background: 'none',
+    border: 'none',
+    color: '#3b82f6',
+    cursor: 'pointer',
+    fontSize: '1rem',
+  };
+
   return (
     <>
       <Header />
       <main style={{ padding: '2rem' }}>
-        <h1>📋 Liste des clients {depot && 'du dépôt'}</h1>
+        <h1>📋 Liste des clients {depot && `du dépôt`}</h1>
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
         {user?.role === 'responsable depot' && (
@@ -91,6 +108,7 @@ export default function ClientsList() {
                 <th style={th}>Email</th>
                 <th style={th}>Gérant</th>
                 <th style={th}>Téléphone</th>
+                <th style={th}>Entreprise</th>
                 <th style={th}>Actions</th>
               </tr>
             </thead>
@@ -102,24 +120,18 @@ export default function ClientsList() {
                   <td style={td}>{client.contact.nom_gerant}</td>
                   <td style={td}>{client.contact.telephone}</td>
                   <td style={td}>
-                    <button
-                      onClick={() => navigate(`/clients/${client._id}`)}
-                      style={actionBtn}
-                    >
+                    {client.affectations[0]?.entreprise ?? '—'}
+                  </td>
+                  <td style={td}>
+                    <button onClick={() => navigate(`/clients/${client._id}`)} style={actionBtn}>
                       👁️ Voir
                     </button>
                     {user?.role === 'responsable depot' && (
                       <>
-                        <button
-                          onClick={() => navigate(`/clients/edit/${client._id}`)}
-                          style={actionBtn}
-                        >
+                        <button onClick={() => navigate(`/clients/edit/${client._id}`)} style={actionBtn}>
                           ✏️ Modifier
                         </button>
-                        <button
-                          onClick={() => handleDelete(client._id)}
-                          style={{ ...actionBtn, color: 'red' }}
-                        >
+                        <button onClick={() => handleDelete(client._id)} style={{ ...actionBtn, color: 'red' }}>
                           🗑️ Supprimer
                         </button>
                       </>
@@ -129,7 +141,7 @@ export default function ClientsList() {
               ))}
               {clients.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#999' }}>
+                  <td colSpan={6} style={{ padding: '1rem', textAlign: 'center', color: '#999' }}>
                     Aucun client trouvé.
                   </td>
                 </tr>
@@ -141,22 +153,3 @@ export default function ClientsList() {
     </>
   );
 }
-
-const th = {
-  padding: '0.75rem',
-  textAlign: 'left' as const,
-  borderBottom: '2px solid #ddd',
-};
-
-const td = {
-  padding: '0.75rem',
-};
-
-const actionBtn = {
-  marginRight: '0.5rem',
-  background: 'none',
-  border: 'none',
-  color: '#3b82f6',
-  cursor: 'pointer',
-  fontSize: '1rem',
-};

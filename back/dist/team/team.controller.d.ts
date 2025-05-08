@@ -48,7 +48,7 @@ export declare class TeamController {
         prenom: string;
         email: string;
         role: string;
-        poste: string;
+        poste?: string;
         company: import("mongoose").Types.ObjectId | null;
         depot: import("mongoose").Types.ObjectId | null;
         num: string;
@@ -70,7 +70,7 @@ export declare class TeamController {
         prenom: string;
         email: string;
         role: string;
-        poste: string;
+        poste?: string;
         company: import("mongoose").Types.ObjectId | null;
         depot: import("mongoose").Types.ObjectId | null;
         num: string;

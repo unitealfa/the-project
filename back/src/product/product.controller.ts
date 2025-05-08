@@ -1,4 +1,3 @@
-// back/src/product/product.controller.ts
 import {
   Controller,
   Get,
@@ -7,10 +6,15 @@ import {
   Param,
   Delete,
   Put,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @Controller('products')
 export class ProductController {
@@ -53,5 +57,14 @@ export class ProductController {
     @Body('quantite') quantite: number,
   ) {
     return this.productService.updateQuantiteParDepot(productId, depotId, quantite);
+  }
+
+  @Get('clients')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Client')
+  async getProduitsPourClient(@Req() req) {
+    const user = req.user;
+    const depots = user.affectations?.map((a) => a.depot) ?? [];
+    return this.productService.findByDepots(depots);
   }
 }

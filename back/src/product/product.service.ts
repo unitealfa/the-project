@@ -1,4 +1,3 @@
-// back/src/product/product.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -40,6 +39,17 @@ export class ProductService {
       disponibilite: {
         $elemMatch: {
           depot_id: new Types.ObjectId(depotId),
+        },
+      },
+    }).exec();
+  }
+
+  async findByDepots(depotIds: string[]): Promise<Product[]> {
+    const objectDepotIds = depotIds.map((id) => new Types.ObjectId(id));
+    return this.productModel.find({
+      disponibilite: {
+        $elemMatch: {
+          depot_id: { $in: objectDepotIds },
         },
       },
     }).exec();

@@ -35,6 +35,9 @@ __decorate([
     (0, mongoose_1.Prop)({
         required: true,
         enum: [
+            'Super Admin',
+            'Admin',
+            'responsable depot',
             'Administrateurs des ventes',
             'Livreurs',
             'Chauffeurs',
@@ -49,8 +52,20 @@ __decorate([
 ], User.prototype, "role", void 0);
 __decorate([
     (0, mongoose_1.Prop)({
-        required: true,
         enum: ['Livraison', 'Prévente', 'Entrepôt'],
+        required() {
+            const jobs = [
+                'Administrateurs des ventes',
+                'Livreurs',
+                'Chauffeurs',
+                'Superviseurs des ventes',
+                'Pré vendeurs',
+                'Gestionnaire de stock',
+                'Contrôleur',
+                'Manutentionnaire',
+            ];
+            return jobs.includes(this.role);
+        },
     }),
     __metadata("design:type", String)
 ], User.prototype, "poste", void 0);

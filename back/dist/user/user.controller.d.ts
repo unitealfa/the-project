@@ -17,8 +17,8 @@ export declare class UserController {
             role: any;
             company: any;
             companyName: any;
-            num: any;
             depot: any;
+            num: any;
         };
     }>;
 }

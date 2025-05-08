@@ -29,7 +29,7 @@ export declare class TeamService {
         prenom: string;
         email: string;
         role: string;
-        poste: string;
+        poste?: string;
         company: Types.ObjectId | null;
         depot: Types.ObjectId | null;
         num: string;
@@ -58,7 +58,7 @@ export declare class TeamService {
         prenom: string;
         email: string;
         role: string;
-        poste: string;
+        poste?: string;
         company: Types.ObjectId | null;
         depot: Types.ObjectId | null;
         num: string;

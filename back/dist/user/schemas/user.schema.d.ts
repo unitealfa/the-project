@@ -6,7 +6,7 @@ export declare class User {
     email: string;
     password: string;
     role: string;
-    poste: string;
+    poste?: string;
     company: Types.ObjectId | null;
     depot: Types.ObjectId | null;
     num: string;

@@ -5,15 +5,29 @@ export type UserDocument = User & Document;
 
 @Schema({ timestamps: true })
 export class User {
-  @Prop({ required: true })               nom    : string;
-  @Prop({ required: true })               prenom : string;
-  @Prop({ required: true, unique: true }) email  : string;
-  @Prop({ required: true, select: false })password: string;
+  @Prop({ required: true })
+  nom!: string;
 
-  /** Fonction précise stockée dans `role` */
+  @Prop({ required: true })
+  prenom!: string;
+
+  @Prop({ required: true, unique: true })
+  email!: string;
+
+  @Prop({ required: true, select: false })
+  password!: string;
+
+  /**
+   * Rôles globaux ET fonctions métiers
+   * - management : Admin, Super Admin, responsable depot
+   * - équipe    : fonctions métiers (job titles)
+   */
   @Prop({
     required: true,
     enum: [
+      'Super Admin',    // ← management
+      'Admin',          // ← management
+      'responsable depot', // ← management
       'Administrateurs des ventes',
       'Livreurs',
       'Chauffeurs',
@@ -26,17 +40,35 @@ export class User {
   })
   role!: string;
 
-  /** Catégorie d’équipe stockée dans `poste` */
+  /**
+   * Catégorie d’équipe (Livraison|Prévente|Entrepôt)
+   * – requise seulement pour les membres d’équipe (lorsque role est un job title)
+   */
   @Prop({
-    required: true,
     enum: ['Livraison', 'Prévente', 'Entrepôt'],
+    required(this: User) {
+      // si role est l’un des job titles, alors poste est obligatoire
+      const jobs = [
+        'Administrateurs des ventes',
+        'Livreurs',
+        'Chauffeurs',
+        'Superviseurs des ventes',
+        'Pré vendeurs',
+        'Gestionnaire de stock',
+        'Contrôleur',
+        'Manutentionnaire',
+      ];
+      return jobs.includes(this.role);
+    },
   })
-  poste!: string;
+  poste?: string;
 
   @Prop({ type: Types.ObjectId, ref: 'Company', default: null })
   company!: Types.ObjectId | null;
+
   @Prop({ type: Types.ObjectId, ref: 'Depot', default: null })
   depot!: Types.ObjectId | null;
+
   @Prop() num!: string;
 }
 
