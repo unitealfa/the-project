@@ -5,7 +5,7 @@ import * as bcrypt from 'bcrypt';
 
 import { Depot, DepotDocument } from '../depot/schemas/depot.schema';
 import { User, UserDocument }   from '../user/schemas/user.schema';
-import { CreateMemberDto }      from './dto/create-member.dto';
+import { CreateMemberDto, UpdateMemberDto } from './dto/create-member.dto';
 
 @Injectable()
 export class TeamService {
@@ -96,5 +96,33 @@ export class TeamService {
     }
 
     throw new ForbiddenException('Rôle non autorisé');
+  }
+
+  async findOneMember(memberId: string, userId: string) {
+    const member = await this.userModel.findById(memberId).select('-password').lean();
+    if (!member) throw new NotFoundException('Membre introuvable');
+    // Ensure the requesting user has access to this member's depot
+    await this.guardDepot(member.depot.toString(), userId);
+    return member;
+  }
+
+  async updateMember(memberId: string, dto: UpdateMemberDto, userId: string) {
+    const member = await this.userModel.findById(memberId);
+    if (!member) throw new NotFoundException('Membre introuvable');
+
+    // Ensure the requesting user has access to this member's depot
+    await this.guardDepot(member.depot.toString(), userId);
+
+    if (dto.password && dto.password.length >= 3) {
+      dto.password = await bcrypt.hash(dto.password, 10);
+    } else {
+      delete dto.password;
+    }
+
+    Object.assign(member, dto);
+    await member.save();
+
+    const { password, ...safe } = member.toObject();
+    return safe;
   }
 }

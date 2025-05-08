@@ -63,6 +63,16 @@ export default function EntrepotTeam() {
     return () => { cancel = true; };
   }, [loc.key, user.depot]);
 
+  const handleDelete = async (memberId: string) => {
+    if (!window.confirm('Supprimer ce membre ?')) return;
+    try {
+      await apiFetch(`/teams/members/${memberId}`, { method: 'DELETE' });
+      setList(list => list.filter(m => m._id !== memberId));
+    } catch {
+      setError('Erreur lors de la suppression');
+    }
+  };
+
   return (
     <>
       <Header />
@@ -94,7 +104,7 @@ export default function EntrepotTeam() {
           <table style={{ width:'100%', borderCollapse:'collapse', marginTop:'1rem' }}>
             <thead>
               <tr>
-                {['Nom','Prénom','Rôle'].map(h => (
+                {['Nom','Prénom','Rôle','Actions'].map(h => (
                   <th
                     key={h}
                     style={{ padding:'.5rem', borderBottom:'1px solid #ccc', textAlign:'left' }}
@@ -111,11 +121,31 @@ export default function EntrepotTeam() {
                     <td style={{ padding:'.5rem 0' }}>{m.nom}</td>
                     <td style={{ padding:'.5rem 0' }}>{m.prenom}</td>
                     <td style={{ padding:'.5rem 0' }}>{m.role}</td>
+                    <td>
+                      <button
+                        style={{ marginRight:8 }}
+                        onClick={() => nav(`/teams/members/${m._id}/detail-entrepot`)}
+                      >
+                        Détails
+                      </button>
+                      <button
+                        style={{ marginRight:8 }}
+                        onClick={() => nav(`/teams/members/${m._id}/edit-entrepot`)}
+                      >
+                        Éditer
+                      </button>
+                      <button
+                        style={{ color:'#fff', background:'#dc2626', border:'none', borderRadius:4, padding:'0.25rem 0.75rem' }}
+                        onClick={() => handleDelete(m._id)}
+                      >
+                        Supprimer
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={3} style={{ padding:'.75rem', fontStyle:'italic' }}>
+                  <td colSpan={4} style={{ padding:'.75rem', fontStyle:'italic' }}>
                     Aucun membre
                   </td>
                 </tr>

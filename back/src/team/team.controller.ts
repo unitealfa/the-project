@@ -1,12 +1,13 @@
 import {
-  Controller, Get, Post, Delete, Param, Body, Req, Query,
+  Controller, Get, Post, Put, Delete, Param, Body, Req, Query,
   UseGuards, Logger, BadRequestException, ForbiddenException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard }   from '../auth/roles.guard';
-import { Roles }        from '../auth/roles.decorator';
-import { TeamService }  from './team.service';
-import { CreateMemberDto } from './dto/create-member.dto';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { TeamService } from './team.service';
+import { CreateMemberDto, UpdateMemberDto } from './dto/create-member.dto';
+
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('teams')
@@ -37,7 +38,15 @@ export class TeamController {
     return this.svc.listByDepot(depotId, req.user.id, poste);
   }
 
-  /** Ajout d’un membre */
+  /** Récupérer un membre spécifique */
+  @Roles('Admin', 'responsable depot')
+  @Get('members/:memberId')
+  async getMember(@Param('memberId') memberId: string, @Req() req: any) {
+    this.logger.log(`${req.user.role} ${req.user.id} consulte le membre ${memberId}`);
+    return this.svc.findOneMember(memberId, req.user.id);
+  }
+
+  /** Ajout d'un membre */
   @Roles('Admin', 'responsable depot')
   @Post(':depotId/members')
   async addMember(
@@ -54,7 +63,24 @@ export class TeamController {
     }
   }
 
-  /** Suppression d’un membre */
+  /** Mise à jour d'un membre */
+  @Roles('Admin', 'responsable depot')
+  @Put('members/:memberId')
+  async updateMember(
+    @Param('memberId') memberId: string,
+    @Body() dto: UpdateMemberDto,
+    @Req() req: any,
+  ) {
+    try {
+      this.logger.log(`${req.user.role} ${req.user.id} met à jour le membre ${memberId}`);
+      return await this.svc.updateMember(memberId, dto, req.user.id);
+    } catch (e: any) {
+      this.logger.error('updateMember failed', e.stack || e.message);
+      throw new BadRequestException(e.message);
+    }
+  }
+
+  /** Suppression d'un membre */
   @Roles('Admin')
   @Delete('members/:memberId')
   async remove(@Param('memberId') memberId: string, @Req() req: any) {

@@ -11,3 +11,12 @@ export declare class CreateMemberDto {
     password: string;
     num: string;
 }
+export declare class UpdateMemberDto {
+    role?: JobTitle;
+    poste?: TeamCategory;
+    nom?: string;
+    prenom?: string;
+    email?: string;
+    num?: string;
+    password?: string;
+}

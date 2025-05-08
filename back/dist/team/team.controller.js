@@ -36,6 +36,10 @@ let TeamController = TeamController_1 = class TeamController {
         this.logger.log(`${req.user.role} ${req.user.id} liste ${poste !== null && poste !== void 0 ? poste : 'ALL'} pour dépôt ${depotId}`);
         return this.svc.listByDepot(depotId, req.user.id, poste);
     }
+    async getMember(memberId, req) {
+        this.logger.log(`${req.user.role} ${req.user.id} consulte le membre ${memberId}`);
+        return this.svc.findOneMember(memberId, req.user.id);
+    }
     async addMember(depotId, dto, req) {
         try {
             this.logger.log(`${req.user.role} ${req.user.id} - add member to ${depotId}`);
@@ -43,6 +47,16 @@ let TeamController = TeamController_1 = class TeamController {
         }
         catch (e) {
             this.logger.error('addMember failed', e.stack || e.message);
+            throw new common_1.BadRequestException(e.message);
+        }
+    }
+    async updateMember(memberId, dto, req) {
+        try {
+            this.logger.log(`${req.user.role} ${req.user.id} met à jour le membre ${memberId}`);
+            return await this.svc.updateMember(memberId, dto, req.user.id);
+        }
+        catch (e) {
+            this.logger.error('updateMember failed', e.stack || e.message);
             throw new common_1.BadRequestException(e.message);
         }
     }
@@ -73,6 +87,15 @@ __decorate([
 ], TeamController.prototype, "list", null);
 __decorate([
     (0, roles_decorator_1.Roles)('Admin', 'responsable depot'),
+    (0, common_1.Get)('members/:memberId'),
+    __param(0, (0, common_1.Param)('memberId')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], TeamController.prototype, "getMember", null);
+__decorate([
+    (0, roles_decorator_1.Roles)('Admin', 'responsable depot'),
     (0, common_1.Post)(':depotId/members'),
     __param(0, (0, common_1.Param)('depotId')),
     __param(1, (0, common_1.Body)()),
@@ -81,6 +104,16 @@ __decorate([
     __metadata("design:paramtypes", [String, create_member_dto_1.CreateMemberDto, Object]),
     __metadata("design:returntype", Promise)
 ], TeamController.prototype, "addMember", null);
+__decorate([
+    (0, roles_decorator_1.Roles)('Admin', 'responsable depot'),
+    (0, common_1.Put)('members/:memberId'),
+    __param(0, (0, common_1.Param)('memberId')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, create_member_dto_1.UpdateMemberDto, Object]),
+    __metadata("design:returntype", Promise)
+], TeamController.prototype, "updateMember", null);
 __decorate([
     (0, roles_decorator_1.Roles)('Admin'),
     (0, common_1.Delete)('members/:memberId'),
