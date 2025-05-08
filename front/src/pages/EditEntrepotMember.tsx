@@ -4,20 +4,26 @@ import Header from '@/components/Header';
 import { apiFetch } from '@/utils/api';
 import { JOB_TITLES, JobTitle } from '@/constants/team';
 
-interface Member {
-  _id: string;
+interface FormState {
   nom: string;
   prenom: string;
   email: string;
   num: string;
-  role: JobTitle;
-  poste?: string;
+  poste: 'Entrepôt';
+  role: string;
 }
 
-export default function EditEntrepotMember() {
+const ENTREPOT_ROLES = [
+  "Contrôleur",
+  "Manutentionnaire",
+  "Gestionnaire de stock"
+];
+
+
+export default function EditPreventeMember() {
   const { memberId = '' } = useParams<{ memberId: string }>();
   const nav = useNavigate();
-  const [f, setF] = useState<Member | null>(null);
+  const [f, setF] = useState<FormState | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -26,7 +32,15 @@ export default function EditEntrepotMember() {
       try {
         const res = await apiFetch(`/teams/members/${memberId}`);
         if (!res.ok) throw new Error('Erreur lors du chargement');
-        setF(await res.json());
+        const data = await res.json();
+        setF({
+          nom: data.nom,
+          prenom: data.prenom,
+          email: data.email,
+          num: data.num,
+          poste: 'Entrepôt',
+          role: ENTREPOT_ROLES.includes(data.role) ? data.role : ENTREPOT_ROLES[0],
+        });
       } catch (err: any) {
         setError(err.message || 'Erreur');
       }
@@ -39,7 +53,7 @@ export default function EditEntrepotMember() {
     setSaving(true);
     try {
       await apiFetch(`/teams/members/${memberId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         body: JSON.stringify(f),
       });
       nav(-1);
@@ -61,13 +75,13 @@ export default function EditEntrepotMember() {
         display: 'flex', flexDirection: 'column', gap: '.8rem',
         fontFamily: 'Arial, sans-serif'
       }}>
-        <h1>Éditer membre Entrepôt</h1>
+        <h1>Éditer membre Pré-vente</h1>
         <input placeholder="Nom" value={f.nom} onChange={e => setF({ ...f, nom: e.target.value })} required />
         <input placeholder="Prénom" value={f.prenom} onChange={e => setF({ ...f, prenom: e.target.value })} required />
         <input type="email" placeholder="Email" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} required />
         <input placeholder="Téléphone" value={f.num} onChange={e => setF({ ...f, num: e.target.value })} required />
-        <select value={f.role} onChange={e => setF({ ...f, role: e.target.value as JobTitle })} required>
-          {JOB_TITLES['Entrepôt'].map((jt: string) => (
+        <select value={f.role} onChange={e => setF({ ...f, role: e.target.value })} required>
+          {ENTREPOT_ROLES.map(jt => (
             <option key={jt} value={jt}>{jt}</option>
           ))}
         </select>

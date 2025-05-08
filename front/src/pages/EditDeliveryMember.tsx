@@ -5,42 +5,39 @@ import { apiFetch } from '../utils/api';
 
 const DELIVERY_ROLES = [
   "Administrateurs des ventes",
-  "livreurs",
-  "chauffeurs"
+  "livreur",
+  "chauffeur"
 ];
 
-interface Member {
-  _id: string;
+interface FormState {
   nom: string;
   prenom: string;
   email: string;
   num: string;
+  poste: 'Livraison';
   role: string;
-  poste?: string;
 }
 
-export default function EditDeliveryMember() {
+export default function EditPreventeMember() {
   const { memberId = '' } = useParams<{ memberId: string }>();
   const nav = useNavigate();
-  const [f, setF] = useState<Member | null>(null);
+  const [f, setF] = useState<FormState | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     (async () => {
       try {
         const res = await apiFetch(`/teams/members/${memberId}`);
-        if (!res.ok) throw new Error('Impossible de charger le membre');
+        if (!res.ok) throw new Error('Erreur lors du chargement');
         const data = await res.json();
         setF({
-          _id: data._id,
           nom: data.nom,
           prenom: data.prenom,
           email: data.email,
           num: data.num,
+          poste: 'Livraison',
           role: DELIVERY_ROLES.includes(data.role) ? data.role : DELIVERY_ROLES[0],
-          poste: data.poste,
         });
       } catch (err: any) {
         setError(err.message || 'Erreur');
@@ -51,18 +48,15 @@ export default function EditDeliveryMember() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!f) return;
-    setError('');
-    setSuccess('');
     setSaving(true);
     try {
       await apiFetch(`/teams/members/${memberId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         body: JSON.stringify(f),
       });
-      setSuccess('Membre modifié avec succès');
-      setTimeout(() => nav(-1), 1000);
-    } catch {
-      setError('Erreur lors de la modification');
+      nav(-1);
+    } catch (err: any) {
+      setError(err.message || 'Erreur');
     } finally {
       setSaving(false);
     }
@@ -79,7 +73,7 @@ export default function EditDeliveryMember() {
         display: 'flex', flexDirection: 'column', gap: '.8rem',
         fontFamily: 'Arial, sans-serif'
       }}>
-        <h1>Éditer membre Livraison</h1>
+        <h1>Éditer membre DELIVERY</h1>
         <input placeholder="Nom" value={f.nom} onChange={e => setF({ ...f, nom: e.target.value })} required />
         <input placeholder="Prénom" value={f.prenom} onChange={e => setF({ ...f, prenom: e.target.value })} required />
         <input type="email" placeholder="Email" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} required />
@@ -89,11 +83,9 @@ export default function EditDeliveryMember() {
             <option key={jt} value={jt}>{jt}</option>
           ))}
         </select>
-        <input placeholder="Poste" value={f.poste || ''} onChange={e => setF({ ...f, poste: e.target.value })} required />
         <button type="submit" disabled={saving} style={{ padding: '.6rem 1.4rem', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 8 }}>
           {saving ? 'Enregistrement…' : 'Enregistrer'}
         </button>
-        {success && <p style={{ color: 'green' }}>{success}</p>}
         {error && <p style={{ color: 'red' }}>{error}</p>}
       </form>
     </>

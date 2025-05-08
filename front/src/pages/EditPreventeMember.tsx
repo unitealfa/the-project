@@ -50,7 +50,7 @@ export default function EditPreventeMember() {
     setSaving(true);
     try {
       await apiFetch(`/teams/members/${memberId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         body: JSON.stringify(f),
       });
       nav(-1);
