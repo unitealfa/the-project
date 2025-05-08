@@ -7,6 +7,9 @@ node_modules/.vite/
 **/dist/
 *.log
 *.tsbuildinfo
+/back/dist/
+/front/dist/
+
 
 
 # Environnement
