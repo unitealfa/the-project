@@ -44,7 +44,8 @@ import DetailEntrepotMember from "./pages/DetailEntrepotMember";
 import EditEntrepotMember from "./pages/EditEntrepotMember";
 import EditPreventeMember from "./pages/EditPreventeMember";
 import DetailPreventeMember from "./pages/DetailPreventeMember";
-import ProductClient from "./pages/ProductClient"; // ✅ nouvelle page pour les clients
+import ProductClient from "./pages/ProductClient";
+import Cart from "./pages/Cart";
 
 export default function App() {
   return (
@@ -182,7 +183,6 @@ export default function App() {
           </RequireAuth>
         }
       />
-      {/* Ajoute ces routes pour les détails et l'édition d'un membre */}
       <Route
         path="/teams/members/:memberId/detail-delivery"
         element={
@@ -231,7 +231,6 @@ export default function App() {
           </RequireAuth>
         }
       />
-      {/* Routes pour les membres Pré-vente */}
       <Route
         path="/teams/members/:memberId/detail-prevente"
         element={
@@ -280,7 +279,6 @@ export default function App() {
           </RequireAuth>
         }
       />
-      {/* Routes pour les membres Entrepôt */}
       <Route
         path="/teams/members/:memberId/detail-entrepot"
         element={
@@ -372,12 +370,20 @@ export default function App() {
         }
       />
 
-      {/* ✅ Ajout route client pour voir les produits */}
       <Route
         path="/productclient"
         element={
           <RequireAuth allowedRoles={["client"]}>
             <ProductClient />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/cart"
+        element={
+          <RequireAuth allowedRoles={["client"]}>
+            <Cart />
           </RequireAuth>
         }
       />

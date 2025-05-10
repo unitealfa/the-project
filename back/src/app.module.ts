@@ -9,6 +9,7 @@ import { DepotModule }    from './depot/depot.module';
 import { TeamModule }     from './team/team.module';
 import { ClientModule }   from './client/client.module';
 import { ProductModule }  from './product/product.module';  // ← ajouté
+import { CartModule }     from './cart/cart.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ProductModule }  from './product/product.module';  // ← ajouté
     TeamModule,
     ClientModule,           // assure l'enregistrement de /clients
     ProductModule,          // assure l'enregistrement de /products
+    CartModule,             // assure l'enregistrement de /cart
   ],
 })
 export class AppModule {}

@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 
 import { Depot, DepotDocument } from './schemas/depot.schema';
 import { CreateDepotDto }       from './dto/create-depot.dto';
