@@ -27,8 +27,8 @@ import DashboardClient         from '../pages/DashboardClient';
 
 const mapping: Record<string, React.FC> = {
   /* Back-office */
-  'Super Admin': DashboardSuperAdmin,
-  'Admin'      : DashboardAdmin,
+  'super admin': DashboardSuperAdmin,
+  'admin'      : DashboardAdmin,
 
   /* Livraison */
   'administrateur des ventes': DashboardAdminVentes,
@@ -59,7 +59,9 @@ export default function RoleBasedDashboard() {
   if (!raw) return null;
 
   const { role } = JSON.parse(raw) as { role: string };
-  const Component = mapping[role];
+  // Normaliser la casse du rôle
+  const normalizedRole = role.toLowerCase();
+  const Component = mapping[normalizedRole];
 
   if (!Component) {
     return (

@@ -4,8 +4,9 @@ import Header from '../components/Header';
 
 export default function DashboardLivreur() {
   const raw = localStorage.getItem('user');
-  const u   = raw ? JSON.parse(raw) as { nom:string; prenom:string } : null;
+  const u = raw ? JSON.parse(raw) as { nom: string; prenom: string; role: string } : null;
   if (!u) return null;
+  if (u.role !== 'Livreur') return <div>Accès non autorisé</div>;
 
   return (
     <>
@@ -15,7 +16,7 @@ export default function DashboardLivreur() {
         <p>Rôle : <strong>Livreur</strong></p>
 
         <section style={{marginTop:'2rem'}}>
-          <h2>🚚  Tournées prévues aujourd’hui</h2>
+          <h2>🚚  Tournées prévues aujourd'hui</h2>
           <p style={{opacity:.7}}>Module en développement…</p>
         </section>
       </main>
