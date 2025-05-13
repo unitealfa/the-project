@@ -4,9 +4,9 @@ import Header from '../components/Header';
 import { apiFetch } from '../utils/api';
 
 const DELIVERY_ROLES = [
-  "Administrateurs des ventes",
-  "livreur",
-  "chauffeur"
+  "Administrateur des ventes",
+  "Livreur",
+  "Chauffeur"
 ];
 
 interface FormState {

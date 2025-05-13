@@ -37,7 +37,7 @@ const mapping: Record<string, React.FC> = {
 
   /* Pré-vente */
   'superviseur des ventes': DashboardSuperviseurVentes,
-  'prevendeur'            : DashboardPreVendeur,
+  'pré-vendeur'            : DashboardPreVendeur,
 
   /* Entrepôt / Gestion de stock */
   'entrepot'               : DashboardGestionStock,

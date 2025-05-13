@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   NotFoundException,
   Inject,
+  Logger,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -14,6 +15,8 @@ import { Client } from '../client/schemas/client.schema';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @InjectModel('Client') private readonly clientModel: Model<Client>,
@@ -31,6 +34,7 @@ export class AuthService {
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) throw new UnauthorizedException('Mot de passe invalide');
 
+    this.logger.log(`🔍 Rôle trouvé dans la base de données : ${user.role}`);
     return user;
   }
 
@@ -42,6 +46,8 @@ export class AuthService {
       depot: user.depot || null,
       entreprise: user.company || null,
     };
+    
+    this.logger.log(`🔐 Rôle stocké dans le JWT : ${payload.role}`);
     
     return {
       access_token: await this.jwtService.signAsync(payload),

@@ -11,9 +11,30 @@ export class RolesGuard implements CanActivate {
 
     const { user } = ctx.switchToHttp().getRequest();
 
-    console.log('🛡️ rôle reçu du JWT :', user?.role);
-    console.log('🔐 rôles attendus pour la route :', required);
+    console.log('🛡️ Détails du rôle reçu du JWT :', {
+      role: user?.role,
+      roleType: typeof user?.role,
+      roleLength: user?.role?.length,
+      roleChars: user?.role?.split('').map(c => `${c} (${c.charCodeAt(0)})`),
+    });
+    console.log('🔐 Rôles attendus pour la route :', required.map(r => ({
+      role: r,
+      roleType: typeof r,
+      roleLength: r.length,
+      roleChars: r.split('').map(c => `${c} (${c.charCodeAt(0)})`),
+    })));
 
-    return required.includes(user.role);
+    // Normaliser la casse des rôles
+    const userRole = user?.role?.toLowerCase();
+    const requiredRoles = required.map(r => r.toLowerCase());
+
+    const hasRole = requiredRoles.includes(userRole);
+    console.log('✅ Résultat de la vérification :', {
+      userRole,
+      requiredRoles,
+      hasRole
+    });
+
+    return hasRole;
   }
 }

@@ -13,8 +13,8 @@ interface FormState {
 }
 
 const PREVENTE_ROLES = [
-  "Superviseurs des ventes",
-  "Pré vendeurs"
+  "Superviseur des ventes",
+  "Pré-vendeur"
 ];
 
 export default function EditPreventeMember() {

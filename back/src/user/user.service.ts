@@ -23,4 +23,8 @@ export class UserService {
     if (!doc) throw new NotFoundException('Utilisateur introuvable');
     return doc;
   }
+
+  async findAll() {
+    return this.userModel.find().select('-password').exec();
+  }
 }

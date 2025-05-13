@@ -4,11 +4,11 @@ import {
 
 /** fonctions métiers possibles (→ role) */
 export const JOB_TITLES = [
-  'Administrateurs des ventes',
-  'Livreurs',
-  'Chauffeurs',
-  'Superviseurs des ventes',
-  'Pré vendeurs',
+  'Administrateur des ventes',
+  'Livreur',
+  'Chauffeur',
+  'Superviseur des ventes',
+  'Pré-vendeur',
   'Gestionnaire de stock',
   'Contrôleur',
   'Manutentionnaire',
@@ -21,7 +21,7 @@ export type TeamCategory = typeof TEAM_CATEGORIES[number];
 
 export class CreateMemberDto {
   @IsString() @IsIn(JOB_TITLES)
-  role!: JobTitle;            // ex. "Livreurs"
+  role!: JobTitle;            // ex. "Livreur"
 
   @IsString() @IsIn(TEAM_CATEGORIES)
   poste!: TeamCategory;       // ex. "Livraison"
@@ -34,7 +34,7 @@ export class CreateMemberDto {
 }
 export class UpdateMemberDto {
   @IsString() @IsIn(JOB_TITLES) @IsOptional()
-  role?: JobTitle;            // ex. "Livreurs"
+  role?: JobTitle;            // ex. "Livreur"
 
   @IsString() @IsIn(TEAM_CATEGORIES) @IsOptional()
   poste?: TeamCategory;       // ex. "Livraison"

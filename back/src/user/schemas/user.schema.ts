@@ -28,11 +28,11 @@ export class User {
       'Super Admin',    // ← management
       'Admin',          // ← management
       'responsable depot', // ← management
-      'Administrateurs des ventes',
-      'Livreurs',
-      'Chauffeurs',
-      'Superviseurs des ventes',
-      'Pré vendeurs',
+      'Administrateur des ventes',
+      'Livreur',
+      'Chauffeur',
+      'Superviseur des ventes',
+      'Pré-vendeur',
       'Gestionnaire de stock',
       'Contrôleur',
       'Manutentionnaire',
@@ -49,11 +49,11 @@ export class User {
     required(this: User) {
       // si role est l’un des job titles, alors poste est obligatoire
       const jobs = [
-        'Administrateurs des ventes',
-        'Livreurs',
-        'Chauffeurs',
-        'Superviseurs des ventes',
-        'Pré vendeurs',
+        'Administrateur des ventes',
+        'Livreur',
+        'Chauffeur',
+        'Superviseur des ventes',
+        'Pré-vendeur',
         'Gestionnaire de stock',
         'Contrôleur',
         'Manutentionnaire',
