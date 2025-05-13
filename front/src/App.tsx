@@ -46,6 +46,7 @@ import EditPreventeMember from "./pages/EditPreventeMember";
 import DetailPreventeMember from "./pages/DetailPreventeMember";
 import ProductClient from "./pages/ProductClient";
 import Cart from "./pages/Cart";
+import Wishlist from './pages/Wishlist';
 
 export default function App() {
   return (
@@ -384,6 +385,15 @@ export default function App() {
         element={
           <RequireAuth allowedRoles={["client"]}>
             <Cart />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/wishlist"
+        element={
+          <RequireAuth allowedRoles={["client"]}>
+            <Wishlist />
           </RequireAuth>
         }
       />

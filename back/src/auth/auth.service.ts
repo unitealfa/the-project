@@ -36,14 +36,13 @@ export class AuthService {
 
   async login(user: UserDocument): Promise<{ access_token: string }> {
     const payload = {
-      id: user._id,
+      id: user._id.toString(),
       email: user.email,
       role: user.role,
       depot: user.depot || null,
-      entreprise: user.company || null, // ✅ renommer pour cohérence côté client
+      entreprise: user.company || null,
     };
     
-  
     return {
       access_token: await this.jwtService.signAsync(payload),
     };
@@ -65,13 +64,13 @@ export class AuthService {
 
   async loginClient(client: any): Promise<{ access_token: string }> {
     const payload = {
-      id: client._id,
+      id: client._id.toString(),
       email: client.email,
       role: client.role,
-      affectations: client.affectations ?? [], // ✅ injecte les affectations
+      affectations: client.affectations ?? [],
     };
   
-    console.log('🔐 Payload JWT client:', payload); // ← debug pour vérifier les données
+    console.log('🔐 Payload JWT client:', payload);
   
     const access_token = this.jwtService.sign(payload);
     return { access_token };

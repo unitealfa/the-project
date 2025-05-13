@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import { AddToCartButton } from "@/components/AddToCartButton/AddToCartButton";
+import { AddToWishlistButton } from "@/components/AddToWishlistButton/AddToWishlistButton";
 
 interface Product {
   _id: string;
@@ -59,19 +60,34 @@ export default function ProductClient() {
       <main style={{ padding: "2rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
           <h2>Produits disponibles</h2>
-          <button 
-            onClick={() => navigate('/cart')}
-            style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: "#007bff",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer"
-            }}
-          >
-            Consulter mon panier
-          </button>
+          <div style={{ display: "flex", gap: "1rem" }}>
+            <button 
+              onClick={() => navigate('/wishlist')}
+              style={{
+                padding: "0.5rem 1rem",
+                backgroundColor: "#dc3545",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer"
+              }}
+            >
+              Consulter mes favoris
+            </button>
+            <button 
+              onClick={() => navigate('/cart')}
+              style={{
+                padding: "0.5rem 1rem",
+                backgroundColor: "#007bff",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer"
+              }}
+            >
+              Consulter mon panier
+            </button>
+          </div>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "2rem" }}>
@@ -93,7 +109,10 @@ export default function ProductClient() {
                 <h3 style={{ margin: 0 }}>{p.nom_product}</h3>
                 <p style={{ margin: 0 }}>{p.description}</p>
                 <p style={{ margin: 0, fontWeight: "bold" }}>Prix: {p.prix_detail} €</p>
-                <AddToCartButton productId={p._id} />
+                <div style={{ display: "flex", gap: "1rem" }}>
+                  <AddToCartButton productId={p._id} />
+                  <AddToWishlistButton productId={p._id} />
+                </div>
               </div>
             ))
           )}
