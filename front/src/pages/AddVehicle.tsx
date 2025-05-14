@@ -11,6 +11,19 @@ interface User {
   prenom: string;
   email: string;
   role: string;
+  depot?: string | null;
+}
+
+// Type pour l'utilisateur courant
+interface CurrentUser {
+  id: string;
+  nom: string;
+  prenom: string;
+  email: string;
+  role: string;
+  company?: string | null;
+  companyName?: string | null;
+  depot?: string | null;
 }
 
 const AddVehicle: React.FC = () => {
@@ -37,6 +50,25 @@ const AddVehicle: React.FC = () => {
   useEffect(() => {
     const fetchUsersByRole = async () => {
       try {
+        // Récupérer l'utilisateur courant
+        const userJson = localStorage.getItem('user');
+        if (!userJson) {
+          navigate('/', { replace: true });
+          return;
+        }
+        
+        const currentUser: CurrentUser = JSON.parse(userJson);
+        if (currentUser.role !== 'Administrateur des ventes' && currentUser.role !== 'Admin' && currentUser.role !== 'Super Admin') {
+          setError("Vous n'avez pas les autorisations nécessaires pour accéder à cette page.");
+          return;
+        }
+        
+        // Vérifier que l'administrateur des ventes a un dépôt assigné
+        if (currentUser.role === 'Administrateur des ventes' && !currentUser.depot) {
+          setError("Vous devez être assigné à un dépôt pour gérer les véhicules.");
+          return;
+        }
+        
         const token = localStorage.getItem('token');
         
         // Requête pour récupérer tous les utilisateurs
@@ -46,16 +78,32 @@ const AddVehicle: React.FC = () => {
           },
         });
         
-        // Filtrer les utilisateurs par rôle
+        // Filtrer les utilisateurs par rôle et par dépôt si c'est un administrateur des ventes
         const allUsers = response.data;
         
-        // Filtrer les chauffeurs
-        const fetchedChauffeurs = allUsers.filter((user: User) => user.role === 'Chauffeur');
-        setChauffeurs(fetchedChauffeurs);
-        
-        // Filtrer les livreurs
-        const fetchedLivreurs = allUsers.filter((user: User) => user.role === 'Livreur');
-        setLivreurs(fetchedLivreurs);
+        // Pour Admin et Super Admin, montrer tous les utilisateurs
+        // Pour Administrateur des ventes, ne montrer que les utilisateurs de son dépôt
+        if (currentUser.role === 'Admin' || currentUser.role === 'Super Admin') {
+          // Filtrer les chauffeurs
+          const fetchedChauffeurs = allUsers.filter((user: User) => user.role === 'Chauffeur');
+          setChauffeurs(fetchedChauffeurs);
+          
+          // Filtrer les livreurs
+          const fetchedLivreurs = allUsers.filter((user: User) => user.role === 'Livreur');
+          setLivreurs(fetchedLivreurs);
+        } else {
+          // Filtrer les chauffeurs du même dépôt
+          const fetchedChauffeurs = allUsers.filter(
+            (user: User) => user.role === 'Chauffeur' && user.depot === currentUser.depot
+          );
+          setChauffeurs(fetchedChauffeurs);
+          
+          // Filtrer les livreurs du même dépôt
+          const fetchedLivreurs = allUsers.filter(
+            (user: User) => user.role === 'Livreur' && user.depot === currentUser.depot
+          );
+          setLivreurs(fetchedLivreurs);
+        }
         
       } catch (err) {
         console.error('Erreur lors de la récupération des utilisateurs:', err);
@@ -64,7 +112,7 @@ const AddVehicle: React.FC = () => {
     };
     
     fetchUsersByRole();
-  }, []);
+  }, [navigate]);
   
   // Gestion de la soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {

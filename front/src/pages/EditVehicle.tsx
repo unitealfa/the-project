@@ -52,6 +52,7 @@ const EditVehicle: React.FC = () => {
   const [licensePlate, setLicensePlate] = useState<string>('');
   const [chauffeurId, setChauffeurId] = useState<string>('');
   const [livreurId, setLivreurId] = useState<string>('');
+  const [depotId, setDepotId] = useState<string>('');
   
   // États pour les listes d'utilisateurs par rôle
   const [chauffeurs, setChauffeurs] = useState<User[]>([]);
@@ -149,6 +150,10 @@ const EditVehicle: React.FC = () => {
         setChauffeurId(vehicule.chauffeur_id._id);
         setLivreurId(vehicule.livreur_id._id);
         
+        // Stocker l'ID du dépôt du véhicule
+        const vehicleDepotId = vehicule.depot_id._id || vehicule.depot_id;
+        setDepotId(vehicleDepotId);
+        
         // Récupérer la liste des utilisateurs
         const usersResponse = await axios.get(`${API_URL}/user/users`, {
           headers: {
@@ -159,14 +164,36 @@ const EditVehicle: React.FC = () => {
         console.log('Users data received:', usersResponse.data.length, 'users');
         const allUsers = usersResponse.data;
         
-        // Filtrer les chauffeurs et livreurs
-        const filteredChauffeurs = allUsers.filter((user: User) => user.role === 'Chauffeur');
-        console.log('Filtered chauffeurs:', filteredChauffeurs.length);
-        setChauffeurs(filteredChauffeurs);
-        
-        const filteredLivreurs = allUsers.filter((user: User) => user.role === 'Livreur');
-        console.log('Filtered livreurs:', filteredLivreurs.length);
-        setLivreurs(filteredLivreurs);
+        // Pour Admin et Super Admin, montrer tous les chauffeurs et livreurs
+        // Pour Administrateur des ventes, ne montrer que les chauffeurs et livreurs de son dépôt
+        if (currentUser.role === 'Admin' || currentUser.role === 'Super Admin') {
+          // Filtrer les chauffeurs
+          const filteredChauffeurs = allUsers.filter((user: User) => user.role === 'Chauffeur');
+          console.log('Filtered chauffeurs:', filteredChauffeurs.length);
+          setChauffeurs(filteredChauffeurs);
+          
+          // Filtrer les livreurs
+          const filteredLivreurs = allUsers.filter((user: User) => user.role === 'Livreur');
+          console.log('Filtered livreurs:', filteredLivreurs.length);
+          setLivreurs(filteredLivreurs);
+        } else {
+          // Pour l'administrateur des ventes, filtrer par son dépôt
+          // Filtrer les chauffeurs du même dépôt que le véhicule
+          const filteredChauffeurs = allUsers.filter(
+            (user: User) => user.role === 'Chauffeur' && 
+            (user.depot === vehicleDepotId || user.depot === currentUser.depot)
+          );
+          console.log('Filtered chauffeurs by depot:', filteredChauffeurs.length);
+          setChauffeurs(filteredChauffeurs);
+          
+          // Filtrer les livreurs du même dépôt que le véhicule
+          const filteredLivreurs = allUsers.filter(
+            (user: User) => user.role === 'Livreur' && 
+            (user.depot === vehicleDepotId || user.depot === currentUser.depot)
+          );
+          console.log('Filtered livreurs by depot:', filteredLivreurs.length);
+          setLivreurs(filteredLivreurs);
+        }
         
         setLoading(false);
       } catch (err: any) {
