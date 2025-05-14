@@ -7,6 +7,11 @@ import RoleBasedDashboard from "./components/RoleBasedDashboard";
 import DashboardResponsableDepot from "./pages/DashboardResponsableDepot";
 import DashboardAdmin from "./pages/DashboardAdmin";
 import DashboardGestionStock from "./pages/DashboardGestionStock";
+import DashboardAdminVentes from "./pages/DashboardAdminVentes";
+import VehiculesList from "./pages/VehiculesList";
+import AddVehicle from "./pages/AddVehicle";
+import VehicleDetail from "./pages/VehicleDetail";
+import EditVehicle from "./pages/EditVehicle";
 
 import CreateCompany from "./pages/CreateCompany";
 import CompaniesList from "./pages/CompaniesList";
@@ -394,6 +399,47 @@ export default function App() {
         element={
           <RequireAuth allowedRoles={["client"]}>
             <Wishlist />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/admin-ventes"
+        element={
+          <RequireAuth allowedRoles={["Administrateur des ventes"]}>
+            <DashboardAdminVentes />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin-ventes/vehicules"
+        element={
+          <RequireAuth allowedRoles={["Administrateur des ventes"]}>
+            <VehiculesList />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin-ventes/vehicules/ajouter"
+        element={
+          <RequireAuth allowedRoles={["Administrateur des ventes"]}>
+            <AddVehicle />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin-ventes/vehicules/:id"
+        element={
+          <RequireAuth allowedRoles={["Administrateur des ventes"]}>
+            <VehicleDetail />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin-ventes/vehicules/:id/modifier"
+        element={
+          <RequireAuth allowedRoles={["Administrateur des ventes"]}>
+            <EditVehicle />
           </RequireAuth>
         }
       />

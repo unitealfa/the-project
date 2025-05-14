@@ -45,8 +45,12 @@ const Login: React.FC = () => {
       if (!res.ok) throw new Error(payload.message || 'Échec de la connexion');
 
       const data = payload as LoginResponse;
+      console.log("Données utilisateur reçues:", data.user);
+      
+      // Stockage du token et des informations utilisateur
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('user', JSON.stringify(data.user));
+      
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
       alert(err.message || 'Erreur réseau');

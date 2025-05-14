@@ -9,6 +9,8 @@ export interface UserType {
   email: string;
   role: string;              // ex. 'Admin', 'responsable depot', …
   company?: string | null;
+  companyName?: string | null;
+  depot?: string | null;     // Ajout du champ depot qui est essentiel pour les autorisations
   num?: string;
 }
 
