@@ -51,7 +51,9 @@ import EditPreventeMember from "./pages/EditPreventeMember";
 import DetailPreventeMember from "./pages/DetailPreventeMember";
 import ProductClient from "./pages/ProductClient";
 import Cart from "./pages/Cart";
-import Wishlist from './pages/Wishlist';
+import Wishlist from "./pages/Wishlist";
+
+import Commandes from "@/pages/Commandes";
 
 export default function App() {
   return (
@@ -440,6 +442,14 @@ export default function App() {
         element={
           <RequireAuth allowedRoles={["Administrateur des ventes"]}>
             <EditVehicle />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/commandes"
+        element={
+          <RequireAuth allowedRoles={["Superviseur des ventes"]}>
+            <Commandes />
           </RequireAuth>
         }
       />

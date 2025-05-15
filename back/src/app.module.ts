@@ -12,6 +12,7 @@ import { ProductModule }  from './product/product.module';  // ← ajouté
 import { CartModule }     from './cart/cart.module';
 import { WishlistModule } from './wishlist/wishlist.module';
 import { VehicleModule } from './vehicle/vehicle.module'; // Add this line
+import { OrderModule } from './order/order.module';
 
 @Module({
   imports: [
@@ -31,7 +32,8 @@ import { VehicleModule } from './vehicle/vehicle.module'; // Add this line
     ProductModule,          // assure l'enregistrement de /products
     CartModule,             // assure l'enregistrement de /cart
     WishlistModule,         // assure l'enregistrement de /wishlist
-    VehicleModule, // Add this line
+    VehicleModule, 
+    OrderModule,// Add this line
   ],
 })
 export class AppModule {}

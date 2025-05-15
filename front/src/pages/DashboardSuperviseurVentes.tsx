@@ -1,5 +1,5 @@
-// front/src/pages/DashboardSuperviseurVentes.tsx
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 
 export default function DashboardSuperviseurVentes() {
@@ -9,14 +9,32 @@ export default function DashboardSuperviseurVentes() {
 
   return (
     <>
-      <Header/>
-      <main style={{padding:'2rem',fontFamily:'Arial, sans-serif'}}>
+      <Header />
+      <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
         <h1>Bonjour {u.prenom} {u.nom}</h1>
         <p>Rôle : <strong>Superviseur&nbsp;des&nbsp;ventes</strong></p>
 
-        <section style={{marginTop:'2rem'}}>
-          <h2>📊  KPI Pré-vente</h2>
-          <p style={{opacity:.7}}>Module en développement…</p>
+        <section style={{ marginTop: '2rem' }}>
+          <h2>📊 KPI Pré-vente</h2>
+          <p style={{ opacity: .7 }}>Module en développement…</p>
+        </section>
+
+        <section style={{ marginTop: '2rem' }}>
+          <h2>📦 Gestion des commandes</h2>
+          <Link
+            to="/commandes"
+            style={{
+              display: 'inline-block',
+              marginTop: '0.5rem',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#4f46e5',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '4px'
+            }}
+          >
+            Les commandes
+          </Link>
         </section>
       </main>
     </>
