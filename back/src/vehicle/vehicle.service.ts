@@ -39,28 +39,37 @@ export class VehicleService {
       throw new BadRequestException('Sales Administrator must be assigned to a depot.');
     }
 
-    const chauffeur = await this.userModel.findById(createVehicleDto.chauffeur_id);
-    if (!chauffeur || chauffeur.role !== 'Chauffeur') {
-      throw new BadRequestException('Invalid Chauffeur ID or user is not a Chauffeur.');
+    // Vérifier le chauffeur si fourni
+    if (createVehicleDto.chauffeur_id) {
+      const chauffeur = await this.userModel.findById(createVehicleDto.chauffeur_id);
+      if (!chauffeur || chauffeur.role !== 'Chauffeur') {
+        throw new BadRequestException('Invalid Chauffeur ID or user is not a Chauffeur.');
+      }
+
+      // Vérifier que le chauffeur appartient au même dépôt que l'admin
+      const adminDepotId = this.extractId(adminUser.depot);
+      const chauffeurDepotId = this.extractId(chauffeur.depot);
+      
+      if (chauffeurDepotId !== adminDepotId) {
+        throw new BadRequestException('Chauffeur must belong to the same depot as the Sales Administrator.');
+      }
     }
 
-    const livreur = await this.userModel.findById(createVehicleDto.livreur_id);
-    if (!livreur || livreur.role !== 'Livreur') {
-      throw new BadRequestException('Invalid Livreur ID or user is not a Livreur.');
-    }
+    // Vérifier le livreur si fourni
+    if (createVehicleDto.livreur_id) {
+      const livreur = await this.userModel.findById(createVehicleDto.livreur_id);
+      if (!livreur || livreur.role !== 'Livreur') {
+        throw new BadRequestException('Invalid Livreur ID or user is not a Livreur.');
+      }
 
-    // Ensure chauffeur and livreur belong to the same depot as the admin or a general pool if applicable
-    // This logic might need adjustment based on specific business rules
-    const adminDepotId = this.extractId(adminUser.depot);
-    const chauffeurDepotId = this.extractId(chauffeur.depot);
-    const livreurDepotId = this.extractId(livreur.depot);
-    
-    if (chauffeurDepotId !== adminDepotId || livreurDepotId !== adminDepotId) {
-        // Or handle cases where drivers might not be assigned to a depot yet / are part of a general pool
-        // For now, strict check:
-        throw new BadRequestException('Chauffeur and Livreur must belong to the same depot as the Sales Administrator.');
+      // Vérifier que le livreur appartient au même dépôt que l'admin
+      const adminDepotId = this.extractId(adminUser.depot);
+      const livreurDepotId = this.extractId(livreur.depot);
+      
+      if (livreurDepotId !== adminDepotId) {
+        throw new BadRequestException('Livreur must belong to the same depot as the Sales Administrator.');
+      }
     }
-
 
     const newVehicle = new this.vehicleModel({
       ...createVehicleDto,

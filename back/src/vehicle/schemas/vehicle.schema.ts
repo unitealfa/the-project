@@ -17,10 +17,10 @@ export class Vehicle {
   @Prop({ required: true, unique: true })
   license_plate: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: false })
   chauffeur_id: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: false })
   livreur_id: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Depot', required: true })

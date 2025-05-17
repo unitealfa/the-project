@@ -57,6 +57,7 @@ const EditVehicle: React.FC = () => {
   // États pour les listes d'utilisateurs par rôle
   const [chauffeurs, setChauffeurs] = useState<User[]>([]);
   const [livreurs, setLivreurs] = useState<User[]>([]);
+  const [assignedUsers, setAssignedUsers] = useState<{chauffeurs: string[], livreurs: string[]}>({ chauffeurs: [], livreurs: [] });
   
   // États pour la gestion du chargement et des erreurs
   const [loading, setLoading] = useState<boolean>(true);
@@ -132,7 +133,7 @@ const EditVehicle: React.FC = () => {
           // Continuons quand même avec la requête principale
         }
         
-        // Récupérer les détails du véhicule
+        // Récupérer les données du véhicule
         const vehicleResponse = await axios.get(`${API_URL}/vehicles/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -147,12 +148,29 @@ const EditVehicle: React.FC = () => {
         setModel(vehicule.model);
         setYear(vehicule.year);
         setLicensePlate(vehicule.license_plate);
-        setChauffeurId(vehicule.chauffeur_id._id);
-        setLivreurId(vehicule.livreur_id._id);
+        setChauffeurId(vehicule.chauffeur_id?._id || '');
+        setLivreurId(vehicule.livreur_id?._id || '');
         
         // Stocker l'ID du dépôt du véhicule
         const vehicleDepotId = vehicule.depot_id._id || vehicule.depot_id;
         setDepotId(vehicleDepotId);
+
+        // Récupérer la liste des véhicules pour obtenir les utilisateurs déjà affectés
+        const vehiclesResponse = await axios.get(`${API_URL}/vehicles`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        // Filtrer les véhicules pour exclure le véhicule actuel
+        const otherVehicles = vehiclesResponse.data.filter((v: any) => v._id !== id);
+        const assignedChauffeurs = otherVehicles
+          .map((v: any) => v.chauffeur_id?._id)
+          .filter((id: string | undefined | null): id is string => id !== undefined && id !== null);
+        const assignedLivreurs = otherVehicles
+          .map((v: any) => v.livreur_id?._id)
+          .filter((id: string | undefined | null): id is string => id !== undefined && id !== null);
+        setAssignedUsers({ chauffeurs: assignedChauffeurs, livreurs: assignedLivreurs });
         
         // Récupérer la liste des utilisateurs
         const usersResponse = await axios.get(`${API_URL}/user/users`, {
@@ -167,29 +185,37 @@ const EditVehicle: React.FC = () => {
         // Pour Admin et Super Admin, montrer tous les chauffeurs et livreurs
         // Pour Administrateur des ventes, ne montrer que les chauffeurs et livreurs de son dépôt
         if (currentUser.role === 'Admin' || currentUser.role === 'Super Admin') {
-          // Filtrer les chauffeurs
-          const filteredChauffeurs = allUsers.filter((user: User) => user.role === 'Chauffeur');
+          // Filtrer les chauffeurs non affectés ou le chauffeur actuel
+          const filteredChauffeurs = allUsers.filter((user: User) => 
+            user.role === 'Chauffeur' && 
+            (!assignedChauffeurs.includes(user._id) || user._id === vehicule.chauffeur_id?._id)
+          );
           console.log('Filtered chauffeurs:', filteredChauffeurs.length);
           setChauffeurs(filteredChauffeurs);
           
-          // Filtrer les livreurs
-          const filteredLivreurs = allUsers.filter((user: User) => user.role === 'Livreur');
+          // Filtrer les livreurs non affectés ou le livreur actuel
+          const filteredLivreurs = allUsers.filter((user: User) => 
+            user.role === 'Livreur' && 
+            (!assignedLivreurs.includes(user._id) || user._id === vehicule.livreur_id?._id)
+          );
           console.log('Filtered livreurs:', filteredLivreurs.length);
           setLivreurs(filteredLivreurs);
         } else {
           // Pour l'administrateur des ventes, filtrer par son dépôt
-          // Filtrer les chauffeurs du même dépôt que le véhicule
+          // Filtrer les chauffeurs du même dépôt non affectés ou le chauffeur actuel
           const filteredChauffeurs = allUsers.filter(
             (user: User) => user.role === 'Chauffeur' && 
-            (user.depot === vehicleDepotId || user.depot === currentUser.depot)
+            (user.depot === vehicleDepotId || user.depot === currentUser.depot) &&
+            (!assignedChauffeurs.includes(user._id) || user._id === vehicule.chauffeur_id?._id)
           );
           console.log('Filtered chauffeurs by depot:', filteredChauffeurs.length);
           setChauffeurs(filteredChauffeurs);
           
-          // Filtrer les livreurs du même dépôt que le véhicule
+          // Filtrer les livreurs du même dépôt non affectés ou le livreur actuel
           const filteredLivreurs = allUsers.filter(
             (user: User) => user.role === 'Livreur' && 
-            (user.depot === vehicleDepotId || user.depot === currentUser.depot)
+            (user.depot === vehicleDepotId || user.depot === currentUser.depot) &&
+            (!assignedLivreurs.includes(user._id) || user._id === vehicule.livreur_id?._id)
           );
           console.log('Filtered livreurs by depot:', filteredLivreurs.length);
           setLivreurs(filteredLivreurs);
@@ -201,17 +227,24 @@ const EditVehicle: React.FC = () => {
         console.error('Response status:', err.response?.status);
         console.error('Response data:', err.response?.data);
         
-        if (err.response && err.response.status === 403) {
-          // Si l'utilisateur est Administrateur des ventes, montrer un message spécifique
-          if (currentUser.role === 'Administrateur des ventes') {
-            setError("Ce véhicule n'appartient pas à votre dépôt. Vous ne pouvez modifier que les véhicules assignés à votre dépôt.");
+        if (err.response) {
+          if (err.response.status === 403) {
+            // Si l'utilisateur est Administrateur des ventes, montrer un message spécifique
+            if (currentUser.role === 'Administrateur des ventes') {
+              setError("Ce véhicule n'appartient pas à votre dépôt. Vous ne pouvez modifier que les véhicules assignés à votre dépôt.");
+            } else {
+              setError("Vous n'avez pas les autorisations nécessaires pour accéder à la liste des utilisateurs.");
+            }
+          } else if (err.response.status === 401) {
+            setError("Session expirée. Veuillez vous reconnecter.");
+            setTimeout(() => navigate('/'), 2000);
+          } else if (err.response.status === 404) {
+            setError("Ce véhicule n'existe pas ou a été supprimé.");
           } else {
-            setError("Vous n'avez pas les autorisations nécessaires pour modifier ce véhicule.");
+            setError(err.response.data?.message || 'Impossible de charger les données. Veuillez réessayer plus tard.');
           }
-        } else if (err.response && err.response.status === 404) {
-          setError("Ce véhicule n'existe pas ou a été supprimé.");
         } else {
-          setError('Impossible de charger les données. Veuillez réessayer plus tard.');
+          setError('Erreur de connexion au serveur. Veuillez vérifier votre connexion internet.');
         }
         
         setLoading(false);
@@ -225,9 +258,9 @@ const EditVehicle: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation des champs obligatoires
-    if (!make || !model || !year || !licensePlate || !chauffeurId || !livreurId) {
-      setError('Tous les champs sont obligatoires');
+    // Validation des champs obligatoires (sauf chauffeur et livreur)
+    if (!make || !model || !year || !licensePlate) {
+      setError('Les champs marque, modèle, année et plaque d\'immatriculation sont obligatoires');
       return;
     }
     
@@ -247,8 +280,8 @@ const EditVehicle: React.FC = () => {
         model,
         year,
         license_plate: licensePlate,
-        chauffeur_id: chauffeurId,
-        livreur_id: livreurId,
+        chauffeur_id: chauffeurId || null,
+        livreur_id: livreurId || null,
       };
       
       await axios.patch(`${API_URL}/vehicles/${id}`, vehicleData, {
@@ -433,9 +466,8 @@ const EditVehicle: React.FC = () => {
                 borderRadius: '4px', 
                 border: '1px solid #ccc' 
               }}
-              required
             >
-              <option value="">-- Sélectionner un chauffeur --</option>
+              <option value="">-- Aucun chauffeur --</option>
               {chauffeurs.map((chauffeur) => (
                 <option key={chauffeur._id} value={chauffeur._id}>
                   {chauffeur.prenom} {chauffeur.nom} ({chauffeur.email})
@@ -463,9 +495,8 @@ const EditVehicle: React.FC = () => {
                 borderRadius: '4px', 
                 border: '1px solid #ccc' 
               }}
-              required
             >
-              <option value="">-- Sélectionner un livreur --</option>
+              <option value="">-- Aucun livreur --</option>
               {livreurs.map((livreur) => (
                 <option key={livreur._id} value={livreur._id}>
                   {livreur.prenom} {livreur.nom} ({livreur.email})
