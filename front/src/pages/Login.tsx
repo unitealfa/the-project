@@ -1,4 +1,3 @@
-// front/src/pages/Login.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,6 +14,10 @@ interface LoginResponse {
     companyName?: string | null;
     num?: string;
     depot?: string | null;
+    depot_name?: string;
+    entreprise?: { nom_company?: string };
+    contact?: { telephone?: string };
+    // tout ce que tu mets côté back dans le user envoyé !
   };
 }
 
@@ -34,23 +37,36 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     try {
-      const res = await fetch(`${apiBase}/auth/login`, {
+      // On tente d'abord la connexion classique (utilisateur interne)
+      let res = await fetch(`${apiBase}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
-      const payload = await res.json();
-      if (!res.ok) throw new Error(payload.message || 'Échec de la connexion');
+      let payload = await res.json();
+
+      // Si échec (utilisateur inexistant OU mauvais mot de passe), on tente comme client
+      if (!res.ok) {
+        // On tente l'endpoint client si présent (exemple /auth/login-client)
+        res = await fetch(`${apiBase}/auth/login-client`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        payload = await res.json();
+        if (!res.ok) throw new Error(payload.message || 'Échec de la connexion');
+      }
 
       const data = payload as LoginResponse;
       console.log("Données utilisateur reçues:", data.user);
-      
-      // Stockage du token et des informations utilisateur
+
+      // Stocke token et user
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      
+
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
       alert(err.message || 'Erreur réseau');
