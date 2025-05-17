@@ -18,13 +18,13 @@ export class CreateVehicleDto {
   @IsString()
   license_plate: string;
 
+  @IsOptional()
   @IsMongoId()
-  @IsNotEmpty()
-  chauffeur_id: Types.ObjectId;
+  chauffeur_id?: Types.ObjectId;
 
+  @IsOptional()
   @IsMongoId()
-  @IsNotEmpty()
-  livreur_id: Types.ObjectId;
+  livreur_id?: Types.ObjectId;
 
   // depot_id will be automatically assigned based on the admin's depot
 }

@@ -40,6 +40,7 @@ const AddVehicle: React.FC = () => {
   // États pour les listes d'utilisateurs par rôle
   const [chauffeurs, setChauffeurs] = useState<User[]>([]);
   const [livreurs, setLivreurs] = useState<User[]>([]);
+  const [assignedUsers, setAssignedUsers] = useState<{chauffeurs: string[], livreurs: string[]}>({ chauffeurs: [], livreurs: [] });
   
   // États pour la gestion du chargement et des erreurs
   const [loading, setLoading] = useState<boolean>(false);
@@ -50,64 +51,83 @@ const AddVehicle: React.FC = () => {
   useEffect(() => {
     const fetchUsersByRole = async () => {
       try {
-        // Récupérer l'utilisateur courant
-        const userJson = localStorage.getItem('user');
-        if (!userJson) {
+        const token = localStorage.getItem('token');
+        if (!token) {
           navigate('/', { replace: true });
           return;
         }
-        
-        const currentUser: CurrentUser = JSON.parse(userJson);
-        if (currentUser.role !== 'Administrateur des ventes' && currentUser.role !== 'Admin' && currentUser.role !== 'Super Admin') {
-          setError("Vous n'avez pas les autorisations nécessaires pour accéder à cette page.");
-          return;
-        }
-        
-        // Vérifier que l'administrateur des ventes a un dépôt assigné
-        if (currentUser.role === 'Administrateur des ventes' && !currentUser.depot) {
-          setError("Vous devez être assigné à un dépôt pour gérer les véhicules.");
-          return;
-        }
-        
-        const token = localStorage.getItem('token');
-        
-        // Requête pour récupérer tous les utilisateurs
-        const response = await axios.get(`${API_URL}/user/users`, {
+
+        // Récupérer d'abord la liste des véhicules pour obtenir les utilisateurs déjà affectés
+        const vehiclesResponse = await axios.get(`${API_URL}/vehicles`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        
-        // Filtrer les utilisateurs par rôle et par dépôt si c'est un administrateur des ventes
-        const allUsers = response.data;
-        
+
+        const assignedChauffeurs = vehiclesResponse.data
+          .map((v: any) => v.chauffeur_id?._id)
+          .filter((id: string | undefined | null): id is string => id !== undefined && id !== null);
+        const assignedLivreurs = vehiclesResponse.data
+          .map((v: any) => v.livreur_id?._id)
+          .filter((id: string | undefined | null): id is string => id !== undefined && id !== null);
+        setAssignedUsers({ chauffeurs: assignedChauffeurs, livreurs: assignedLivreurs });
+
+        // Récupérer la liste des utilisateurs
+        const usersResponse = await axios.get(`${API_URL}/user/users`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const allUsers = usersResponse.data;
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
         // Pour Admin et Super Admin, montrer tous les utilisateurs
         // Pour Administrateur des ventes, ne montrer que les utilisateurs de son dépôt
         if (currentUser.role === 'Admin' || currentUser.role === 'Super Admin') {
-          // Filtrer les chauffeurs
-          const fetchedChauffeurs = allUsers.filter((user: User) => user.role === 'Chauffeur');
-          setChauffeurs(fetchedChauffeurs);
-          
-          // Filtrer les livreurs
-          const fetchedLivreurs = allUsers.filter((user: User) => user.role === 'Livreur');
-          setLivreurs(fetchedLivreurs);
-        } else {
-          // Filtrer les chauffeurs du même dépôt
-          const fetchedChauffeurs = allUsers.filter(
-            (user: User) => user.role === 'Chauffeur' && user.depot === currentUser.depot
+          // Filtrer les chauffeurs non affectés
+          const fetchedChauffeurs = allUsers.filter((user: User) => 
+            user.role === 'Chauffeur' && !assignedChauffeurs.includes(user._id)
           );
           setChauffeurs(fetchedChauffeurs);
           
-          // Filtrer les livreurs du même dépôt
+          // Filtrer les livreurs non affectés
+          const fetchedLivreurs = allUsers.filter((user: User) => 
+            user.role === 'Livreur' && !assignedLivreurs.includes(user._id)
+          );
+          setLivreurs(fetchedLivreurs);
+        } else {
+          // Filtrer les chauffeurs du même dépôt non affectés
+          const fetchedChauffeurs = allUsers.filter(
+            (user: User) => user.role === 'Chauffeur' && 
+            user.depot === currentUser.depot && 
+            !assignedChauffeurs.includes(user._id)
+          );
+          setChauffeurs(fetchedChauffeurs);
+          
+          // Filtrer les livreurs du même dépôt non affectés
           const fetchedLivreurs = allUsers.filter(
-            (user: User) => user.role === 'Livreur' && user.depot === currentUser.depot
+            (user: User) => user.role === 'Livreur' && 
+            user.depot === currentUser.depot && 
+            !assignedLivreurs.includes(user._id)
           );
           setLivreurs(fetchedLivreurs);
         }
         
-      } catch (err) {
+      } catch (err: any) {
         console.error('Erreur lors de la récupération des utilisateurs:', err);
-        setError('Impossible de charger les utilisateurs. Veuillez réessayer plus tard.');
+        if (err.response) {
+          if (err.response.status === 403) {
+            setError("Vous n'avez pas les autorisations nécessaires pour accéder à la liste des utilisateurs.");
+          } else if (err.response.status === 401) {
+            setError("Session expirée. Veuillez vous reconnecter.");
+            setTimeout(() => navigate('/'), 2000);
+          } else {
+            setError(err.response.data?.message || 'Impossible de charger les utilisateurs. Veuillez réessayer plus tard.');
+          }
+        } else {
+          setError('Erreur de connexion au serveur. Veuillez vérifier votre connexion internet.');
+        }
       }
     };
     
@@ -118,9 +138,9 @@ const AddVehicle: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation des champs obligatoires
-    if (!make || !model || !year || !licensePlate || !chauffeurId || !livreurId) {
-      setError('Tous les champs sont obligatoires');
+    // Validation des champs obligatoires (sauf chauffeur et livreur)
+    if (!make || !model || !year || !licensePlate) {
+      setError('Les champs marque, modèle, année et plaque d\'immatriculation sont obligatoires');
       return;
     }
     
@@ -135,8 +155,8 @@ const AddVehicle: React.FC = () => {
         model,
         year,
         license_plate: licensePlate,
-        chauffeur_id: chauffeurId,
-        livreur_id: livreurId,
+        chauffeur_id: chauffeurId || null,
+        livreur_id: livreurId || null,
       };
       
       await axios.post(`${API_URL}/vehicles`, vehicleData, {
@@ -293,9 +313,8 @@ const AddVehicle: React.FC = () => {
                 borderRadius: '4px', 
                 border: '1px solid #ccc' 
               }}
-              required
             >
-              <option value="">-- Sélectionner un chauffeur --</option>
+              <option value="">-- Aucun chauffeur --</option>
               {chauffeurs.map((chauffeur) => (
                 <option key={chauffeur._id} value={chauffeur._id}>
                   {chauffeur.prenom} {chauffeur.nom} ({chauffeur.email})
@@ -323,9 +342,8 @@ const AddVehicle: React.FC = () => {
                 borderRadius: '4px', 
                 border: '1px solid #ccc' 
               }}
-              required
             >
-              <option value="">-- Sélectionner un livreur --</option>
+              <option value="">-- Aucun livreur --</option>
               {livreurs.map((livreur) => (
                 <option key={livreur._id} value={livreur._id}>
                   {livreur.prenom} {livreur.nom} ({livreur.email})
