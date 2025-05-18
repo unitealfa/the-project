@@ -157,19 +157,34 @@ export default function Cart() {
           }}
         >
           <h2>Mon panier</h2>
-          <button
-            onClick={() => navigate("/productclient")}
-            style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: "#4f46e5",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-            }}
-          >
-            Retour aux produits
-          </button>
+          <div style={{ display: "flex", gap: "1rem" }}>
+            <button
+              onClick={() => navigate("/productclient")}
+              style={{
+                padding: "0.5rem 1rem",
+                backgroundColor: "#4f46e5",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Retour aux produits
+            </button>
+            <button
+              onClick={() => navigate("/historiqueorders")}
+              style={{
+                padding: "0.5rem 1rem",
+                backgroundColor: "#6366f1",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Historique des commandes
+            </button>
+          </div>
         </div>
 
         {cart.length === 0 ? (

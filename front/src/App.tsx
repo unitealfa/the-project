@@ -54,6 +54,7 @@ import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
 
 import Commandes from "@/pages/Commandes";
+import HistoriqueOrders from "./pages/HistoriqueOrders";
 
 export default function App() {
   return (
@@ -450,6 +451,15 @@ export default function App() {
         element={
           <RequireAuth allowedRoles={["Superviseur des ventes"]}>
             <Commandes />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/historiqueorders"
+        element={
+          <RequireAuth>
+            <HistoriqueOrders />
           </RequireAuth>
         }
       />
