@@ -4,7 +4,7 @@ import Header from '../components/Header';
 
 export default function DashboardSuperviseurVentes() {
   const raw = localStorage.getItem('user');
-  const u   = raw ? JSON.parse(raw) as { nom:string; prenom:string } : null;
+  const u   = raw ? JSON.parse(raw) as { nom:string; prenom:string; depot?: string } : null;
   if (!u) return null;
 
   return (
@@ -34,6 +34,24 @@ export default function DashboardSuperviseurVentes() {
             }}
           >
             Les commandes
+          </Link>
+        </section>
+
+        <section style={{ marginTop: '2rem' }}>
+          <h2>👥 Gestion des clients</h2>
+          <Link
+            to={`/clients?depot=${u.depot}`}
+            style={{
+              display: 'inline-block',
+              marginTop: '0.5rem',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#10b981',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '4px'
+            }}
+          >
+            Voir les clients du dépôt
           </Link>
         </section>
       </main>
