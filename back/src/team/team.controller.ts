@@ -26,6 +26,22 @@ export class TeamController {
     return this.svc.listByDepot(depotId, req.user.id);
   }
 
+  /** Liste des prévendeurs pour un superviseur des ventes */
+  @Roles('Superviseur des ventes')
+  @Get('prevente/:depotId')
+  async listPrevendeurs(
+    @Param('depotId') depotId: string,
+    @Req() req: any,
+  ) {
+    // Vérifier que le superviseur appartient bien à ce dépôt
+    if (req.user.depot !== depotId) {
+      throw new ForbiddenException('Vous n\'avez pas accès à ce dépôt');
+    }
+    
+    this.logger.log(`Superviseur ${req.user.id} liste les prévendeurs du dépôt ${depotId}`);
+    return this.svc.listPrevendeursForSuperviseur(depotId);
+  }
+
   /** Liste par dépôt, filtre sur `poste` (catégorie) */
   @Roles('Admin', 'responsable depot')
   @Get(':depotId')

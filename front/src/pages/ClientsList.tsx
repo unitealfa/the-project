@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate }   from 'react-router-dom';
 import Header                         from '../components/Header';
+import { apiFetch }                   from '../utils/api';
 
 interface Client {
   _id:         string;
@@ -11,6 +12,13 @@ interface Client {
   affectations:{ entreprise: string; depot: string }[];
 }
 
+interface Prevendeur {
+  _id: string;
+  nom: string;
+  prenom: string;
+  role: string;
+}
+
 function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
@@ -18,6 +26,9 @@ function useQuery() {
 export default function ClientsList() {
   const [clients, setClients] = useState<Client[]>([]);
   const [error,   setError]   = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [prevendeurs, setPrevendeurs] = useState<Prevendeur[]>([]);
+  const [loadingPrevendeurs, setLoadingPrevendeurs] = useState(false);
   const navigate = useNavigate();
   const query    = useQuery();
 
@@ -25,17 +36,12 @@ export default function ClientsList() {
   const user    = rawUser ? JSON.parse(rawUser) : null;
 
   // on choisit le dépôt depuis le query param ou le user
-  const depot = query.get('depot')
-    || (user?.role === 'responsable depot' ? user.depot : null);
+  const depot = user?.depot || query.get('depot') || (user?.role === 'responsable depot' ? user.depot : null);
 
   const token   = localStorage.getItem('token') || '';
   const apiBase = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    // debug : on logge dépôt et company
-    console.log('➡️ Appel API clients pour dépôt:', depot);
-    console.log('➡️ Company du responsable       :', user?.company);
-
     const url = depot
       ? `${apiBase}/clients?depot=${depot}`
       : `${apiBase}/clients`;
@@ -76,11 +82,94 @@ export default function ClientsList() {
     fontSize: '1rem',
   };
 
+  const loadPrevendeurs = async () => {
+    if (!depot) {
+      setError('Aucun dépôt associé à votre compte');
+      return;
+    }
+    setLoadingPrevendeurs(true);
+    try {
+      const response = await apiFetch(`/teams/prevente/${depot}`);
+      const data = await response.json();
+      
+      if (!data || !data.prevente) {
+        throw new Error('Format de réponse invalide');
+      }
+      
+      setPrevendeurs(data.prevente);
+      
+      if (data.prevente.length === 0) {
+        setError('Aucun prévendeur trouvé dans ce dépôt');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors du chargement des prévendeurs');
+    } finally {
+      setLoadingPrevendeurs(false);
+    }
+  };
+
+  const modalStyles = {
+    overlay: {
+      position: 'fixed' as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: isModalOpen ? 'flex' : 'none',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000,
+    },
+    content: {
+      position: 'relative' as const,
+      backgroundColor: 'white',
+      padding: '2rem',
+      borderRadius: '8px',
+      width: '80%',
+      maxWidth: '800px',
+      maxHeight: '80vh',
+      overflow: 'auto',
+    },
+    closeButton: {
+      position: 'absolute' as const,
+      top: '1rem',
+      right: '1rem',
+      background: 'none',
+      border: 'none',
+      fontSize: '1.5rem',
+      cursor: 'pointer',
+    }
+  };
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+    loadPrevendeurs();
+  };
+
   return (
     <>
       <Header />
       <main style={{ padding: '2rem' }}>
-        <h1>📋 Liste des clients {depot && `du dépôt`}</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h1>📋 Liste des clients {depot && `du dépôt`}</h1>
+          {user?.role === 'Superviseur des ventes' && (
+            <button
+              onClick={handleOpenModal}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#4f46e5',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                marginLeft: '1rem',
+              }}
+            >
+              👥 Voir les prévendeurs
+            </button>
+          )}
+        </div>
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
         {user?.role === 'responsable depot' && (
@@ -149,6 +238,51 @@ export default function ClientsList() {
             </tbody>
           </table>
         </div>
+
+        {/* Modal pour la liste des prévendeurs */}
+        {isModalOpen && (
+          <div style={modalStyles.overlay}>
+            <div style={modalStyles.content}>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                style={modalStyles.closeButton}
+              >
+                ✕
+              </button>
+              <h2 style={{ marginTop: 0 }}>Liste des prévendeurs du dépôt</h2>
+              
+              {loadingPrevendeurs ? (
+                <p>Chargement des prévendeurs...</p>
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+                  <thead>
+                    <tr>
+                      <th style={th}>Nom</th>
+                      <th style={th}>Prénom</th>
+                      <th style={th}>Rôle</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {prevendeurs.map(p => (
+                      <tr key={p._id} style={{ borderBottom: '1px solid #ddd' }}>
+                        <td style={td}>{p.nom}</td>
+                        <td style={td}>{p.prenom}</td>
+                        <td style={td}>{p.role}</td>
+                      </tr>
+                    ))}
+                    {prevendeurs.length === 0 && (
+                      <tr>
+                        <td colSpan={3} style={{ textAlign: 'center', padding: '1rem' }}>
+                          Aucun prévendeur trouvé dans ce dépôt.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        )}
       </main>
     </>
   );

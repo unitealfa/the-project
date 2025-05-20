@@ -14,6 +14,19 @@ export class TeamService {
     @InjectModel(User.name)  private readonly userModel: Model<UserDocument>,
   ) {}
 
+  async listPrevendeursForSuperviseur(depotId: string) {
+    const oid = new Types.ObjectId(depotId);
+    
+    // Récupérer uniquement les prévendeurs du dépôt
+    const prevendeurs = await this.userModel.find({
+      depot: oid,
+      role: 'Pré-vendeur',
+      poste: 'Prévente'
+    }).select('-password').lean();
+    
+    return { prevente: prevendeurs };
+  }
+
   async listByDepot(
     depotId: string,
     userId: string,
