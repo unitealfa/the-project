@@ -1,5 +1,5 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Document } from "mongoose";
 
 @Schema({ timestamps: true })
 export class Order extends Document {
@@ -8,18 +8,23 @@ export class Order extends Document {
   @Prop({ required: true }) telephone: string;
   @Prop({ required: true }) depot: string;
 
-  // AJOUT
+  // Optionnel mais initialisé à null ou chaîne vide
   @Prop() depot_name?: string;
-  @Prop() numero?: string;
+
+  // Numéro de commande attribué APRES confirmation
+  @Prop({ default: null }) numero?: string | null;
+
+  // Confirmation de la commande (false par défaut)
+  @Prop({ default: false }) confirmed: boolean;
 
   @Prop({
     type: {
       adresse: String,
       ville: String,
       code_postal: String,
-      region: String
+      region: String,
     },
-    default: null
+    default: null,
   })
   adresse_client?: {
     adresse?: string;
@@ -33,8 +38,8 @@ export class Order extends Document {
       productId: { type: String, required: true },
       quantity: { type: Number, required: true },
       productName: { type: String, required: true },
-      prix_detail: { type: Number, required: true }
-    }
+      prix_detail: { type: Number, required: true },
+    },
   ])
   items: Array<{
     productId: string;

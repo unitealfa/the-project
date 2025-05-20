@@ -23,6 +23,11 @@ export const orderService = {
   getOrders: async () => {
     const res = await apiFetch('/api/orders');
     return res.json();
+  },
+  confirmOrder: async (orderId: string) => {
+    const res = await apiFetch(`/api/orders/${orderId}/confirm`, {
+      method: "PATCH",
+    });
+    return res.json();
   }
 };
-

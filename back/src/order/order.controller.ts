@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Param,
   Body,
   UseGuards,
   UnauthorizedException,
@@ -26,11 +28,16 @@ export class OrderController {
 
   @Get()
   async getAllOrders(@GetUser() user: any) {
-    // ICI : on prend directement user.depot (car pas d'affectations dans le JWT)
     const depotId = user.depot;
     if (!depotId) {
       throw new UnauthorizedException("Aucun dépôt associé à cet utilisateur");
     }
     return this.orderService.findByDepot(depotId);
+  }
+
+  // ---- AJOUT POUR CONFIRMATION ----
+  @Patch(':id/confirm')
+  async confirmOrder(@Param('id') orderId: string) {
+    return this.orderService.confirmOrder(orderId);
   }
 }

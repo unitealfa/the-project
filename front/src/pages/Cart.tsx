@@ -5,6 +5,7 @@ import { cartService } from "@/services/cartService";
 import { orderService } from "@/services/orderService";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { Pencil } from "lucide-react";
 
 interface Product {
   _id: string;
@@ -26,10 +27,18 @@ export default function Cart() {
   const [sending, setSending] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
+
+  // ---- État pour édition quantité
+  const [editItemId, setEditItemId] = useState<string | null>(null);
+  const [editQty, setEditQty] = useState<number>(1);
+
+  // ---- Nouvel état : commande confirmée (retournée par backend)
+  const [confirmedOrder, setConfirmedOrder] = useState<any>(null);
+
   const navigate = useNavigate();
   const blRef = useRef<HTMLDivElement>(null);
 
-  // Récupérer l'utilisateur (client connecté) pour afficher ses infos
+  // ---- User depuis localStorage
   const user = (() => {
     try {
       const raw = localStorage.getItem("user");
@@ -40,19 +49,12 @@ export default function Cart() {
     }
   })();
 
-  useEffect(() => {
-    fetchCart();
-  }, []);
-
+  // ------------------ API ------------------
   const fetchCart = async () => {
     try {
       const data = await cartService.getCart();
-      if (data && data.items) {
-        setCart(data.items);
-      } else {
-        setCart([]);
-      }
-    } catch (error) {
+      setCart(data?.items ?? []);
+    } catch {
       setCart([]);
     } finally {
       setLoading(false);
@@ -67,29 +69,33 @@ export default function Cart() {
     try {
       await cartService.updateCartItem(productId, newQuantity);
       fetchCart();
-    } catch (error) {}
+    } catch {}
   };
 
   const handleRemoveItem = async (productId: string) => {
     try {
       await cartService.removeFromCart(productId);
       fetchCart();
-    } catch (error) {}
+    } catch {}
   };
 
   const handleClearCart = async () => {
     try {
       await cartService.clearCart();
       setCart([]);
-    } catch (error) {}
+    } catch {}
   };
+
+  useEffect(() => {
+    fetchCart();
+  }, []);
 
   const total = cart.reduce((sum, item) => {
     if (!item.product) return sum;
     return sum + item.product.prix_detail * item.quantity;
   }, 0);
 
-  // Export BL en PDF
+  // ----------- PDF BL (pour après confirmation) -----------
   const handleExportPDF = async () => {
     if (!blRef.current) return;
     const canvas = await html2canvas(blRef.current);
@@ -100,13 +106,12 @@ export default function Cart() {
       format: "a4",
     });
     const imgWidth = 500;
-    const pageHeight = 800;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     pdf.addImage(imgData, "PNG", 50, 40, imgWidth, imgHeight);
     pdf.save("bon-de-livraison.pdf");
   };
 
-  // Handler validation commande
+  // ------------- Confirmer la commande ----------------
   const handleSendOrder = async () => {
     setSending(true);
     setOrderError(null);
@@ -117,21 +122,27 @@ export default function Cart() {
         prix_detail: item.product?.prix_detail ?? 0,
         quantity: item.quantity,
       }));
-      await orderService.createOrder({
-        items: orderItems,
-        total,
-      });
+      // On récupère la commande créée (avec numéro et tout)
+      const res = await orderService.createOrder({ items: orderItems, total });
       await cartService.clearCart();
       setCart([]);
+      setConfirmedOrder(res); // <= stocke la commande complète
       setOrderSuccess("Commande envoyée avec succès !");
-      setShowModal(false);
-    } catch (err) {
+      // NE PAS fermer la modale ici, attends l'action du client
+    } catch {
       setOrderError("Erreur lors de la validation");
     } finally {
       setSending(false);
       setTimeout(() => setOrderSuccess(null), 3000);
     }
   };
+
+  // --------- Éditeur de quantité (local) -----------
+  const openEditor = (item: CartItem) => {
+    setEditItemId(item.productId);
+    setEditQty(item.quantity);
+  };
+  const closeEditor = () => setEditItemId(null);
 
   if (loading) {
     return (
@@ -148,6 +159,7 @@ export default function Cart() {
     <>
       <Header />
       <main style={{ padding: "2rem" }}>
+        {/* En-tête */}
         <div
           style={{
             display: "flex",
@@ -187,6 +199,7 @@ export default function Cart() {
           </div>
         </div>
 
+        {/* Contenu */}
         {cart.length === 0 ? (
           <div style={{ textAlign: "center", padding: "2rem" }}>
             <p>Votre panier est vide</p>
@@ -222,14 +235,14 @@ export default function Cart() {
                         gap: "1rem",
                       }}
                     >
+                      {/* Produit + prix */}
                       <div style={{ flex: 1 }}>
-                        <h3 style={{ margin: 0 }}>
-                          {item.product.nom_product}
-                        </h3>
+                        <h3 style={{ margin: 0 }}>{item.product.nom_product}</h3>
                         <p style={{ margin: "0.5rem 0" }}>
                           Prix unitaire : {item.product.prix_detail} €
                         </p>
                       </div>
+                      {/* Quantité + actions */}
                       <div
                         style={{
                           display: "flex",
@@ -237,49 +250,22 @@ export default function Cart() {
                           gap: "1rem",
                         }}
                       >
-                        <div
+                        <span style={{ minWidth: 24, textAlign: "center" }}>
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => openEditor(item)}
                           style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.5rem",
+                            padding: "0.5rem",
+                            backgroundColor: "#e5e7eb",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
                           }}
+                          title="Modifier la quantité"
                         >
-                          <button
-                            onClick={() =>
-                              handleQuantityChange(
-                                item.productId,
-                                item.quantity - 1
-                              )
-                            }
-                            style={{
-                              padding: "0.25rem 0.5rem",
-                              backgroundColor: "#e5e7eb",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            -
-                          </button>
-                          <span>{item.quantity}</span>
-                          <button
-                            onClick={() =>
-                              handleQuantityChange(
-                                item.productId,
-                                item.quantity + 1
-                              )
-                            }
-                            style={{
-                              padding: "0.25rem 0.5rem",
-                              backgroundColor: "#e5e7eb",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            +
-                          </button>
-                        </div>
+                          <Pencil size={16} />
+                        </button>
                         <button
                           onClick={() => handleRemoveItem(item.productId)}
                           style={{
@@ -299,6 +285,7 @@ export default function Cart() {
               )}
             </div>
 
+            {/* Total + actions */}
             <div
               style={{
                 display: "flex",
@@ -344,22 +331,22 @@ export default function Cart() {
           </>
         )}
 
-        {/* Modal de confirmation + BL */}
+        {/* --------  Modal Bon de Livraison (PRO) -------- */}
         {showModal && (
           <div
             style={{
               position: "fixed",
-              left: 0,
-              top: 0,
-              width: "100vw",
-              height: "100vh",
+              inset: 0,
               background: "rgba(0,0,0,0.5)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               zIndex: 1000,
             }}
-            onClick={() => setShowModal(false)}
+            onClick={() => {
+              setShowModal(false);
+              setConfirmedOrder(null);
+            }}
           >
             <div
               onClick={(e) => e.stopPropagation()}
@@ -381,133 +368,200 @@ export default function Cart() {
                   marginBottom: 20,
                 }}
               >
-                {/* AJOUT ICI */}
+                {/* --------- AVANT confirmation --------- */}
+                {!confirmedOrder && (
+                  <>
+                    <div style={{ marginBottom: 8 }}>
+                      <b>Client :</b> {user?.nom_client || "-"}
+                      <br />
+                      <b>Téléphone :</b> {user?.contact?.telephone || user?.num || "-"}
+                      <br />
+                      <b>Adresse :</b>{" "}
+                      {(user?.localisation?.adresse || "-") +
+                        (user?.localisation?.ville ? ", " + user?.localisation?.ville : "") +
+                        (user?.localisation?.code_postal ? ", " + user?.localisation?.code_postal : "")}
+                      <br />
+                      <b>Date :</b> {new Date().toLocaleString()}
+                      <br />
+                      <b>Nom du dépôt :</b> {user?.depot_name || user?.depot || "-"}
+                      <br />
+                    </div>
+                    <div style={{ marginBottom: 8 }}>
+                      <b>Entreprise :</b> {user?.entreprise?.nom_company || "-"}
+                      <br />
+                    </div>
+                    <table
+                      style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        marginBottom: 8,
+                      }}
+                    >
+                      <thead>
+                        <tr>
+                          <th style={{ border: "1px solid #ddd", padding: 4 }}>Produit</th>
+                          <th style={{ border: "1px solid #ddd", padding: 4 }}>Quantité</th>
+                          <th style={{ border: "1px solid #ddd", padding: 4 }}>Prix unitaire</th>
+                          <th style={{ border: "1px solid #ddd", padding: 4 }}>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {cart.map(
+                          (item) =>
+                            item.product && (
+                              <tr key={item.productId}>
+                                <td style={{ border: "1px solid #ddd", padding: 4 }}>
+                                  {item.product.nom_product}
+                                </td>
+                                <td style={{ border: "1px solid #ddd", padding: 4, textAlign: "center" }}>
+                                  {item.quantity}
+                                </td>
+                                <td style={{ border: "1px solid #ddd", padding: 4 }}>
+                                  {item.product.prix_detail.toFixed(2)} €
+                                </td>
+                                <td style={{ border: "1px solid #ddd", padding: 4 }}>
+                                  {(item.product.prix_detail * item.quantity).toFixed(2)} €
+                                </td>
+                              </tr>
+                            )
+                        )}
+                      </tbody>
+                    </table>
+                    <div style={{ textAlign: "right", fontWeight: "bold" }}>
+                      Total général : {total.toFixed(2)} €
+                    </div>
+                  </>
+                )}
 
-                <div style={{ marginBottom: 8 }}>
-                  <b>Numéro de commande :</b> {user?.numero || "-"}
-                  <br />
-                  <b>Client :</b> {user?.nom_client || "-"}
-                  <br />
-                  <b>Téléphone :</b>{" "}
-                  {user?.contact?.telephone || user?.num || "-"}
-                  <br />
-                  <b>Adresse :</b>{" "}
-                  {(user?.localisation?.adresse || "-") +
-                    (user?.localisation?.ville
-                      ? ", " + user?.localisation?.ville
-                      : "") +
-                    (user?.localisation?.code_postal
-                      ? ", " + user?.localisation?.code_postal
-                      : "")}
-                  <br />
-                  <b>Date :</b> {new Date().toLocaleString()}
-                  <br />
-                  <b>Nom du dépôt :</b> {user?.depot_name || user?.depot || "-"}
-                  <br />
-                </div>
-
-                {/* ...Reste inchangé... */}
-                <div style={{ marginBottom: 8 }}>
-                  <b>Entreprise :</b> {user?.entreprise?.nom_company || "-"}
-                  <br />
-                </div>
-                <table
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    marginBottom: 8,
-                  }}
-                >
-                  <thead>
-                    <tr>
-                      <th style={{ border: "1px solid #ddd", padding: 4 }}>
-                        Produit
-                      </th>
-                      <th style={{ border: "1px solid #ddd", padding: 4 }}>
-                        Quantité
-                      </th>
-                      <th style={{ border: "1px solid #ddd", padding: 4 }}>
-                        Prix unitaire
-                      </th>
-                      <th style={{ border: "1px solid #ddd", padding: 4 }}>
-                        Total
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cart.map(
-                      (item) =>
-                        item.product && (
-                          <tr key={item.productId}>
-                            <td
-                              style={{ border: "1px solid #ddd", padding: 4 }}
-                            >
-                              {item.product.nom_product}
-                            </td>
-                            <td
-                              style={{
-                                border: "1px solid #ddd",
-                                padding: 4,
-                                textAlign: "center",
-                              }}
-                            >
-                              {item.quantity}
-                            </td>
-                            <td
-                              style={{ border: "1px solid #ddd", padding: 4 }}
-                            >
-                              {item.product.prix_detail.toFixed(2)} €
-                            </td>
-                            <td
-                              style={{ border: "1px solid #ddd", padding: 4 }}
-                            >
-                              {(
-                                item.product.prix_detail * item.quantity
-                              ).toFixed(2)}{" "}
-                              €
-                            </td>
-                          </tr>
-                        )
-                    )}
-                  </tbody>
-                </table>
-                <div style={{ textAlign: "right", fontWeight: "bold" }}>
-                  Total général : {total.toFixed(2)} €
-                </div>
+                {/* --------- APRÈS confirmation --------- */}
+                {confirmedOrder && (
+                  <>
+                    <div style={{ marginBottom: 8 }}>
+                      <b>Numéro de commande :</b> {confirmedOrder.numero || confirmedOrder._id?.slice(-6).toUpperCase() || "-"}
+                      <br />
+                      <b>Client :</b> {confirmedOrder.nom_client || "-"}
+                      <br />
+                      <b>Téléphone :</b> {confirmedOrder.telephone || "-"}
+                      <br />
+                      <b>Adresse :</b>{" "}
+                      {(confirmedOrder.adresse_client?.adresse || "-") +
+                        (confirmedOrder.adresse_client?.ville ? ", " + confirmedOrder.adresse_client.ville : "") +
+                        (confirmedOrder.adresse_client?.code_postal ? ", " + confirmedOrder.adresse_client.code_postal : "")}
+                      <br />
+                      <b>Date :</b> {new Date(confirmedOrder.createdAt).toLocaleString()}
+                      <br />
+                      <b>Nom du dépôt :</b> {confirmedOrder.depot_name || "-"}
+                      <br />
+                    </div>
+                    <div style={{ marginBottom: 8 }}>
+                      <b>Entreprise :</b> {confirmedOrder.entreprise?.nom_company || "-"}
+                      <br />
+                    </div>
+                    <table
+                      style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        marginBottom: 8,
+                      }}
+                    >
+                      <thead>
+                        <tr>
+                          <th style={{ border: "1px solid #ddd", padding: 4 }}>Produit</th>
+                          <th style={{ border: "1px solid #ddd", padding: 4 }}>Quantité</th>
+                          <th style={{ border: "1px solid #ddd", padding: 4 }}>Prix unitaire</th>
+                          <th style={{ border: "1px solid #ddd", padding: 4 }}>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {confirmedOrder.items?.map(
+                          (item: any, idx: number) =>
+                            item && (
+                              <tr key={idx}>
+                                <td style={{ border: "1px solid #ddd", padding: 4 }}>
+                                  {item.productName}
+                                </td>
+                                <td style={{ border: "1px solid #ddd", padding: 4, textAlign: "center" }}>
+                                  {item.quantity}
+                                </td>
+                                <td style={{ border: "1px solid #ddd", padding: 4 }}>
+                                  {item.prix_detail?.toFixed(2)} €
+                                </td>
+                                <td style={{ border: "1px solid #ddd", padding: 4 }}>
+                                  {(item.prix_detail * item.quantity).toFixed(2)} €
+                                </td>
+                              </tr>
+                            )
+                        )}
+                      </tbody>
+                    </table>
+                    <div style={{ textAlign: "right", fontWeight: "bold" }}>
+                      Total général : {confirmedOrder.total?.toFixed(2)} €
+                    </div>
+                  </>
+                )}
               </div>
-              <button
-                onClick={handleExportPDF}
-                style={{
-                  background: "#1c1917",
-                  color: "white",
-                  padding: "0.5rem 1rem",
-                  border: "none",
-                  borderRadius: 4,
-                  marginRight: 8,
-                }}
-              >
-                Exporter le BL en PDF
-              </button>
-              <button
-                onClick={handleSendOrder}
-                style={{
-                  background: "#10b981",
-                  color: "white",
-                  padding: "0.5rem 1rem",
-                  border: "none",
-                  borderRadius: 4,
-                  marginRight: 8,
-                }}
-                disabled={sending}
-              >
-                {sending ? "Envoi..." : "Confirmer la commande"}
-              </button>
-              <button
-                onClick={() => setShowModal(false)}
-                style={{ padding: "0.5rem 1rem" }}
-              >
-                Annuler
-              </button>
+              {/* ----------- BOUTONS MODAL ----------- */}
+              {!confirmedOrder ? (
+                <>
+                  {/* PAS DE bouton PDF ici */}
+                  <button
+                    onClick={handleSendOrder}
+                    style={{
+                      background: "#10b981",
+                      color: "white",
+                      padding: "0.5rem 1rem",
+                      border: "none",
+                      borderRadius: 4,
+                      marginRight: 8,
+                    }}
+                    disabled={sending}
+                  >
+                    {sending ? "Envoi..." : "Confirmer la commande"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowModal(false);
+                      setConfirmedOrder(null);
+                    }}
+                    style={{ padding: "0.5rem 1rem" }}
+                  >
+                    Annuler
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* Bouton PDF après confirmation */}
+                  <button
+                    onClick={handleExportPDF}
+                    style={{
+                      background: "#1c1917",
+                      color: "white",
+                      padding: "0.5rem 1rem",
+                      border: "none",
+                      borderRadius: 4,
+                      marginRight: 8,
+                    }}
+                  >
+                    Exporter le BL en PDF
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowModal(false);
+                      setConfirmedOrder(null);
+                    }}
+                    style={{
+                      background: "#6366f1",
+                      color: "white",
+                      padding: "0.5rem 1rem",
+                      border: "none",
+                      borderRadius: 4,
+                      marginRight: 8,
+                    }}
+                  >
+                    Fermer
+                  </button>
+                </>
+              )}
               {orderError && (
                 <div style={{ color: "red", marginTop: 12 }}>{orderError}</div>
               )}
@@ -515,6 +569,95 @@ export default function Cart() {
           </div>
         )}
 
+        {/* --------  Modal Édition quantité -------- */}
+        {editItemId && (
+          <div
+            onClick={closeEditor}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,.4)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1100,
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "white",
+                borderRadius: 8,
+                padding: "1.5rem",
+                width: 300,
+                textAlign: "center",
+              }}
+            >
+              <h4 style={{ marginBottom: 16 }}>Modifier la quantité</h4>
+              <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
+                <button
+                  onClick={() => setEditQty(Math.max(1, editQty - 1))}
+                  style={{ padding: ".25rem .6rem" }}
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  min={1}
+                  value={editQty}
+                  onChange={(e) =>
+                    setEditQty(Math.max(1, Number(e.target.value)))
+                  }
+                  style={{
+                    width: 60,
+                    textAlign: "center",
+                    padding: ".25rem",
+                    border: "1px solid #d1d5db",
+                    borderRadius: 4,
+                  }}
+                />
+                <button
+                  onClick={() => setEditQty(editQty + 1)}
+                  style={{ padding: ".25rem .6rem" }}
+                >
+                  +
+                </button>
+              </div>
+              <div
+                style={{
+                  marginTop: 24,
+                  display: "flex",
+                  gap: 12,
+                  justifyContent: "center",
+                }}
+              >
+                <button
+                  onClick={async () => {
+                    await handleQuantityChange(editItemId!, editQty);
+                    closeEditor();
+                  }}
+                  style={{
+                    backgroundColor: "#4f46e5",
+                    color: "white",
+                    padding: "0.5rem 1rem",
+                    border: "none",
+                    borderRadius: 4,
+                  }}
+                >
+                  OK
+                </button>
+                <button
+                  onClick={closeEditor}
+                  style={{ padding: "0.5rem 1rem" }}
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Toast succès */}
         {orderSuccess && (
           <div
             style={{

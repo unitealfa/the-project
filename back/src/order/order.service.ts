@@ -16,13 +16,11 @@ export class OrderService {
     const client = await this.clientModel.findById(userId);
     if (!client) throw new NotFoundException("Client not found");
 
-    // Adresse
     const adresseClient = client.localisation?.adresse || "";
     const ville = client.localisation?.ville || "";
     const codePostal = client.localisation?.code_postal || "";
     const region = client.localisation?.region || "";
 
-    // Ajout depot_name
     const depotId = client.affectations?.[0]?.depot?.toString() || "";
     let depot_name = "";
     if (
@@ -36,15 +34,13 @@ export class OrderService {
       }
     }
 
-    // Numéro unique pour chaque commande
-    const numero = "CMD-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
-
+    // Ici, pas de numéro de commande généré tout de suite, il sera ajouté à la confirmation
     const order = new this.orderModel({
       clientId: client._id,
       nom_client: client.nom_client,
       telephone: client.contact?.telephone || "",
       depot: depotId,
-      depot_name, // Ajouté
+      depot_name,
       adresse_client: {
         adresse: adresseClient,
         ville,
@@ -53,13 +49,23 @@ export class OrderService {
       },
       items: dto.items,
       total: dto.total,
-      numero, // Ajouté
+      confirmed: false, // <-- important
+      numero: null // <-- important
     });
 
     return order.save();
   }
 
-  // Filtrer les commandes pour ne prendre que celles des clients du même dépôt
+  // Confirmation (génère numéro et passe confirmed à true)
+  async confirmOrder(orderId: string) {
+    const numero = "CMD-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+    return this.orderModel.findByIdAndUpdate(
+      orderId,
+      { confirmed: true, numero },
+      { new: true }
+    );
+  }
+
   async findByDepot(depotId: string) {
     return this.orderModel.find({ depot: depotId }).sort({ createdAt: -1 });
   }
