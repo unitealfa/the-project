@@ -19,6 +19,16 @@ interface Prevendeur {
   role: string;
 }
 
+interface Vehicle {
+  _id: string;
+  make: string;
+  model: string;
+  year: string;
+  license_plate: string;
+  chauffeur_id: { _id: string; nom: string; prenom: string };
+  livreur_id: { _id: string; nom: string; prenom: string };
+}
+
 function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
@@ -29,6 +39,10 @@ export default function ClientsList() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [prevendeurs, setPrevendeurs] = useState<Prevendeur[]>([]);
   const [loadingPrevendeurs, setLoadingPrevendeurs] = useState(false);
+  const [isVehiculesModalOpen, setIsVehiculesModalOpen] = useState(false);
+  const [vehicules, setVehicules] = useState<Vehicle[]>([]);
+  const [loadingVehicules, setLoadingVehicules] = useState(false);
+  const [vehiculesError, setVehiculesError] = useState('');
   const navigate = useNavigate();
   const query    = useQuery();
 
@@ -43,26 +57,23 @@ export default function ClientsList() {
 
   useEffect(() => {
     const url = depot
-      ? `${apiBase}/clients?depot=${depot}`
-      : `${apiBase}/clients`;
+      ? `/clients?depot=${depot}`
+      : `/clients`;
 
-    fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    apiFetch(url)
       .then(res => {
         if (!res.ok) throw new Error(`Erreur ${res.status}`);
         return res.json();
       })
       .then(setClients)
       .catch(err => setError(err.message));
-  }, [depot, apiBase, token, user?.company]);
+  }, [depot, user?.company]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Confirmer la suppression de ce client ?')) return;
     try {
-      const res = await fetch(`${apiBase}/clients/${id}`, {
+      const res = await apiFetch(`/clients/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Erreur lors de la suppression');
       setClients(prev => prev.filter(c => c._id !== id));
@@ -105,6 +116,29 @@ export default function ClientsList() {
       setError(err.message || 'Erreur lors du chargement des prévendeurs');
     } finally {
       setLoadingPrevendeurs(false);
+    }
+  };
+
+  const loadVehiculesWithPersonnel = async () => {
+    if (!depot) {
+      setVehiculesError('Aucun dépôt associé à votre compte');
+      return;
+    }
+    setLoadingVehicules(true);
+    try {
+      const response = await apiFetch(`/vehicles?depot=${depot}`);
+      const data = await response.json();
+      const filtered = data.filter((v: Vehicle) => v.chauffeur_id && v.livreur_id);
+      setVehicules(filtered);
+      if (filtered.length === 0) {
+        setVehiculesError('Aucun véhicule avec chauffeur et livreur trouvé dans ce dépôt');
+      } else {
+        setVehiculesError('');
+      }
+    } catch (err: any) {
+      setVehiculesError(err.message || 'Erreur lors du chargement des véhicules');
+    } finally {
+      setLoadingVehicules(false);
     }
   };
 
@@ -167,6 +201,22 @@ export default function ClientsList() {
               }}
             >
               👥 Voir les prévendeurs
+            </button>
+          )}
+          {user?.role === 'Administrateur des ventes' && (
+            <button
+              onClick={() => { setIsVehiculesModalOpen(true); loadVehiculesWithPersonnel(); }}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#4f46e5',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                marginLeft: '1rem',
+              }}
+            >
+              🚚 Voir les véhicules dispo
             </button>
           )}
         </div>
@@ -274,6 +324,54 @@ export default function ClientsList() {
                       <tr>
                         <td colSpan={3} style={{ textAlign: 'center', padding: '1rem' }}>
                           Aucun prévendeur trouvé dans ce dépôt.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        )}
+
+        {isVehiculesModalOpen && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
+          }}>
+            <div style={{
+              position: 'relative', backgroundColor: 'white', padding: '2rem', borderRadius: '8px', width: '80%', maxWidth: '800px', maxHeight: '80vh', overflow: 'auto'
+            }}>
+              <button
+                onClick={() => setIsVehiculesModalOpen(false)}
+                style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}
+              >✕</button>
+              <h2 style={{ marginTop: 0 }}>Véhicules avec chauffeur et livreur</h2>
+              {loadingVehicules ? (
+                <p>Chargement des véhicules...</p>
+              ) : vehiculesError ? (
+                <p style={{ color: 'red' }}>{vehiculesError}</p>
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ padding: '12px 15px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Véhicule</th>
+                      <th style={{ padding: '12px 15px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Chauffeur</th>
+                      <th style={{ padding: '12px 15px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Livreur</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {vehicules.map(v => (
+                      <tr key={v._id} style={{ borderBottom: '1px solid #ddd' }}>
+                        <td style={{ padding: '12px 15px' }}>{v.make} {v.model} ({v.license_plate})</td>
+                        <td style={{ padding: '12px 15px' }}>{v.chauffeur_id.prenom} {v.chauffeur_id.nom}</td>
+                        <td style={{ padding: '12px 15px' }}>{v.livreur_id.prenom} {v.livreur_id.nom}</td>
+                      </tr>
+                    ))}
+                    {vehicules.length === 0 && !vehiculesError && (
+                      <tr>
+                        <td colSpan={3} style={{ textAlign: 'center', padding: '1rem' }}>
+                          Aucun véhicule avec chauffeur et livreur trouvé.
                         </td>
                       </tr>
                     )}

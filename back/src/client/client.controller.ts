@@ -26,10 +26,10 @@ export class ClientController {
   ) {}
 
   @Get()
-  @Roles('Admin', 'responsable depot', 'superviseur des ventes')
+  @Roles('Admin', 'responsable depot', 'superviseur des ventes', 'Administrateur des ventes')
   async getClients(@Req() req, @Query('depot') depotId?: string) {
     const user = req.user;
-    if (user.role === 'responsable depot' || user.role === 'superviseur des ventes') {
+    if (user.role === 'responsable depot' || user.role === 'superviseur des ventes' || user.role === 'Administrateur des ventes') {
       return this.clientService.findByDepot(user.depot);
     }
     return depotId

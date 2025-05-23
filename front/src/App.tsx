@@ -316,7 +316,7 @@ export default function App() {
       <Route
         path="/clients"
         element={
-          <RequireAuth allowedRoles={["admin", "responsable depot", "superviseur des ventes"]}>
+          <RequireAuth allowedRoles={["admin", "responsable depot", "superviseur des ventes", "Administrateur des ventes"]}>
             <ClientsList />
           </RequireAuth>
         }
@@ -340,7 +340,7 @@ export default function App() {
       <Route
         path="/clients/:id"
         element={
-          <RequireAuth allowedRoles={["admin", "responsable depot", "superviseur des ventes"]}>
+          <RequireAuth allowedRoles={["admin", "responsable depot", "superviseur des ventes", "Administrateur des ventes"]}>
             <ClientDetail />
           </RequireAuth>
         }
