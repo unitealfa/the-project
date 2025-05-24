@@ -3,18 +3,18 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { VehicleService } from './vehicle.service';
 import { VehicleController } from './vehicle.controller';
 import { Vehicle, VehicleSchema } from './schemas/vehicle.schema';
-import { User, UserSchema } from '../user/schemas/user.schema'; // Adjust path if needed
-import { Depot, DepotSchema } from '../depot/schemas/depot.schema'; // Adjust path if needed
-import { AuthModule } from '../auth/auth.module'; // Import AuthModule for guards
+import { User, UserSchema } from '../user/schemas/user.schema';
+import { Depot, DepotSchema } from '../depot/schemas/depot.schema';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Vehicle.name, schema: VehicleSchema },
-      { name: User.name, schema: UserSchema }, // Needed for user role checks in service
-      { name: Depot.name, schema: DepotSchema }, // Needed for depot checks in service
+      { name: User.name, schema: UserSchema },
+      { name: Depot.name, schema: DepotSchema },
     ]),
-    AuthModule, // Provide JwtAuthGuard and potentially RolesGuard if it's exported from AuthModule
+    AuthModule,
   ],
   controllers: [VehicleController],
   providers: [VehicleService],

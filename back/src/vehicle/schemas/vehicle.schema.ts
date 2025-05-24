@@ -25,6 +25,23 @@ export class Vehicle {
 
   @Prop({ type: Types.ObjectId, ref: 'Depot', required: true })
   depot_id: Types.ObjectId;
+
+  /** Horaires de travail du conducteur par jour de la semaine. */
+  @Prop({
+    type: [{
+      _id: false,
+      day: { type: String, enum: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'], required: true },
+      shift: {
+        start: { type: String, required: true }, // "HH:MM"
+        end:   { type: String, required: true }
+      }
+    }],
+    default: []
+  })
+  working_days: {
+    day: string,
+    shift: { start: string, end: string }
+  }[];
 }
 
 export const VehicleSchema = SchemaFactory.createForClass(Vehicle);

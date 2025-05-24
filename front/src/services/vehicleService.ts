@@ -1,9 +1,6 @@
-// front/src/services/vehicleService.ts
 import axios from 'axios';
 
 // Define your types (example)
-// Ensure this Vehicle type matches what your backend sends,
-// especially the populated fields like chauffeur_id, livreur_id, and depot_id.
 export interface UserReference {
   _id: string;
   nom: string;
@@ -16,6 +13,16 @@ export interface DepotReference {
   nom_depot: string;
 }
 
+// ----- AJOUT POUR WORKING_DAYS -----
+export interface WorkingDay {
+  day: string; // 'Monday', 'Tuesday', etc.
+  shift: {
+    start: string; // format "HH:MM"
+    end: string;   // format "HH:MM"
+  };
+}
+// -----------------------------------
+
 export interface Vehicle {
   _id: string;
   make: string;
@@ -25,6 +32,7 @@ export interface Vehicle {
   chauffeur_id: UserReference | string; // Can be populated or just an ID
   livreur_id: UserReference | string;
   depot_id: DepotReference | string;
+  working_days?: WorkingDay[]; // <-- Ajouté pour les horaires
   createdAt?: string;
   updatedAt?: string;
 }
@@ -35,7 +43,8 @@ export interface CreateVehicleData {
   year: string;
   license_plate: string;
   chauffeur_id: string; 
-  livreur_id: string; 
+  livreur_id: string;
+  working_days?: WorkingDay[]; // <-- Ajouté (optionnel)
 }
 
 export interface UpdateVehicleData {
@@ -45,6 +54,7 @@ export interface UpdateVehicleData {
   license_plate?: string;
   chauffeur_id?: string;
   livreur_id?: string;
+  working_days?: WorkingDay[]; // <-- Ajouté (optionnel)
 }
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
@@ -79,7 +89,6 @@ const deleteVehicle = async (id: string): Promise<{ deleted: boolean; message?: 
   const response = await axios.delete(`${API_URL}/vehicles/${id}`, { headers: getAuthHeaders() });
   return response.data;
 };
-
 
 export default {
   getVehicles,

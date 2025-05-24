@@ -74,23 +74,36 @@ export class VehicleService {
     const newVehicle = new this.vehicleModel({
       ...createVehicleDto,
       depot_id: adminUser.depot, // Assign vehicle to the admin's depot
+      // working_days automatiquement inclus si présent dans createVehicleDto
     });
     return newVehicle.save();
   }
 
   async findAll(adminUser: UserDocument): Promise<Vehicle[]> {
     if (adminUser.role === 'Administrateur des ventes' && adminUser.depot) {
-      return this.vehicleModel.find({ depot_id: adminUser.depot }).populate('chauffeur_id', 'nom prenom email').populate('livreur_id', 'nom prenom email').populate('depot_id', 'nom_depot').exec();
+      return this.vehicleModel.find({ depot_id: adminUser.depot })
+        .populate('chauffeur_id', 'nom prenom email')
+        .populate('livreur_id', 'nom prenom email')
+        .populate('depot_id', 'nom_depot')
+        .exec();
     }
     // Add more role-based access if needed, e.g., Super Admin sees all
     if (adminUser.role === 'Super Admin' || adminUser.role === 'Admin') {
-        return this.vehicleModel.find().populate('chauffeur_id', 'nom prenom email').populate('livreur_id', 'nom prenom email').populate('depot_id', 'nom_depot').exec();
+      return this.vehicleModel.find()
+        .populate('chauffeur_id', 'nom prenom email')
+        .populate('livreur_id', 'nom prenom email')
+        .populate('depot_id', 'nom_depot')
+        .exec();
     }
     throw new ForbiddenException('Access denied.');
   }
 
   async findOne(id: string, adminUser: UserDocument): Promise<Vehicle> {
-    const vehicle = await this.vehicleModel.findById(id).populate('chauffeur_id', 'nom prenom email').populate('livreur_id', 'nom prenom email').populate('depot_id', 'nom_depot').exec();
+    const vehicle = await this.vehicleModel.findById(id)
+      .populate('chauffeur_id', 'nom prenom email')
+      .populate('livreur_id', 'nom prenom email')
+      .populate('depot_id', 'nom_depot')
+      .exec();
     if (!vehicle) {
       throw new NotFoundException(`Vehicle with ID "${id}" not found`);
     }
@@ -100,18 +113,12 @@ export class VehicleService {
       const vehicleDepotId = this.extractId(vehicle.depot_id);
       const userDepotId = this.extractId(adminUser.depot);
       
-      console.log('Comparaison des dépôts:', {
-        vehicleDepotId,
-        userDepotId,
-        vehicle_depot_id_type: typeof vehicle.depot_id,
-        user_depot_id_type: typeof adminUser.depot
-      });
       
       if (vehicleDepotId !== userDepotId) {
         throw new ForbiddenException('Access to this vehicle is restricted.');
       }
     } else if (adminUser.role !== 'Super Admin' && adminUser.role !== 'Admin') {
-        throw new ForbiddenException('Access denied.');
+      throw new ForbiddenException('Access denied.');
     }
     return vehicle;
   }
@@ -124,11 +131,9 @@ export class VehicleService {
       if (!chauffeur || chauffeur.role !== 'Chauffeur') {
         throw new BadRequestException('Invalid Chauffeur ID or user is not a Chauffeur.');
       }
-      
       // Utilisation de la méthode extractId
       const vehicleDepotId = this.extractId(existingVehicle.depot_id);
       const chauffeurDepotId = this.extractId(chauffeur.depot);
-      
       if (chauffeurDepotId !== vehicleDepotId) {
         throw new BadRequestException('New Chauffeur must belong to the same depot as the vehicle.');
       }
@@ -139,16 +144,15 @@ export class VehicleService {
       if (!livreur || livreur.role !== 'Livreur') {
         throw new BadRequestException('Invalid Livreur ID or user is not a Livreur.');
       }
-      
       // Utilisation de la méthode extractId
       const vehicleDepotId = this.extractId(existingVehicle.depot_id);
       const livreurDepotId = this.extractId(livreur.depot);
-      
       if (livreurDepotId !== vehicleDepotId) {
         throw new BadRequestException('New Livreur must belong to the same depot as the vehicle.');
       }
     }
 
+    // working_days accepté ici sans traitement particulier : il sera modifié si envoyé dans updateVehicleDto
     const updatedVehicle = await this.vehicleModel.findByIdAndUpdate(id, updateVehicleDto, { new: true }).exec();
     if (!updatedVehicle) {
       throw new NotFoundException(`Vehicle with ID "${id}" not found during update`);
