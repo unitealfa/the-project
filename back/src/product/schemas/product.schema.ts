@@ -28,6 +28,9 @@ export class Product extends Document {
   @Prop({ required: true })
   categorie: string;
 
+  @Prop({ required: true, type: [String], enum: ['normal', 'frigorifique'] })
+  type: string[];
+
   @Prop({ type: [String], default: [] })
   images: string[];
 

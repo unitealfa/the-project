@@ -47,6 +47,8 @@ interface WorkingDay {
     start: string; // "08:00"
     end: string;   // "16:00"
   };
+  capacity: number;
+  type: string[];
 }
 
 interface User {
@@ -295,6 +297,18 @@ const VehicleDetail: React.FC = () => {
               <div>
                 <p style={{ margin: '0.5rem 0', color: '#666' }}>Plaque d'immatriculation:</p>
                 <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{vehicule.license_plate}</p>
+              </div>
+
+              <div>
+                <p style={{ margin: '0.5rem 0', color: '#666' }}>Capacité:</p>
+                <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{vehicule.capacity}</p>
+              </div>
+
+              <div>
+                <p style={{ margin: '0.5rem 0', color: '#666' }}>Type:</p>
+                <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+                  {vehicule.type.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')}
+                </p>
               </div>
             </div>
           </div>

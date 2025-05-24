@@ -16,6 +16,7 @@ export default function AddProduct() {
     poids: "",
     volume: "",
     imageUrl: "",
+    type: ["normal"],
   });
 
   const handleChange = (
@@ -23,6 +24,10 @@ export default function AddProduct() {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, type: [e.target.value] }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,13 +41,14 @@ export default function AddProduct() {
       prix_detail: parseFloat(formData.prix_detail),
       description: formData.description,
       categorie: formData.categorie,
+      type: formData.type,
       images: [formData.imageUrl],
       specifications: {
         poids: formData.poids,
         volume: formData.volume,
       },
       disponibilite: depotId ? [{ depot_id: depotId, quantite: 0 }] : [],
-      company_id: user.company, // ✅ ajoute automatiquement l'entreprise liée
+      company_id: user.company,
     };
 
     try {
@@ -98,6 +104,32 @@ export default function AddProduct() {
         onChange={handleChange}
         required
       />
+      <div style={{ margin: "1rem 0" }}>
+        <label>Type de produit :</label>
+        <div>
+          <label>
+            <input
+              type="radio"
+              name="type"
+              value="normal"
+              checked={formData.type.includes("normal")}
+              onChange={handleTypeChange}
+              required
+            />
+            Normal
+          </label>
+          <label style={{ marginLeft: "1rem" }}>
+            <input
+              type="radio"
+              name="type"
+              value="frigorifique"
+              checked={formData.type.includes("frigorifique")}
+              onChange={handleTypeChange}
+            />
+            Frigorifique
+          </label>
+        </div>
+      </div>
       <input
         type="text"
         name="poids"

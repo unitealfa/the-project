@@ -1,4 +1,4 @@
-import { IsMongoId, IsString, IsOptional, IsArray, IsIn, IsMilitaryTime, ValidateNested, IsDefined, IsNotEmptyObject } from 'class-validator';
+import { IsMongoId, IsString, IsOptional } from 'class-validator';
 import { Types } from 'mongoose';
 import { Type } from 'class-transformer';
 
@@ -42,6 +42,15 @@ export class UpdateVehicleDto {
   @IsOptional()
   @IsString()
   license_plate?: string;
+
+  @IsOptional()
+  @IsNumber()
+  capacity?: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsEnum(['normal', 'frigorifique'], { each: true })
+  type?: string[];
 
   @IsOptional()
   @IsMongoId()

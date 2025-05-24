@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsArray, IsOptional, ValidateNested } from 'class-validator';
+import { IsString, IsNumber, IsArray, IsOptional, ValidateNested, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class SpecificationDto {
@@ -32,6 +32,10 @@ export class CreateProductDto {
 
   @IsString()
   categorie: string;
+
+  @IsArray()
+  @IsEnum(['normal', 'frigorifique'], { each: true })
+  type: string[];
 
   @IsArray()
   images: string[];

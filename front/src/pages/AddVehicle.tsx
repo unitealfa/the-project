@@ -48,6 +48,8 @@ const AddVehicle: React.FC = () => {
   const [model, setModel] = useState<string>('');
   const [year, setYear] = useState<string>('');
   const [licensePlate, setLicensePlate] = useState<string>('');
+  const [capacity, setCapacity] = useState<number>(0);
+  const [type, setType] = useState<string[]>(['normal']);
   const [chauffeurId, setChauffeurId] = useState<string>('');
   const [livreurId, setLivreurId] = useState<string>('');
   const [workingDays, setWorkingDays] = useState(DEFAULT_WORKING_DAYS);
@@ -151,6 +153,8 @@ const AddVehicle: React.FC = () => {
         model,
         year,
         license_plate: licensePlate,
+        capacity,
+        type,
         chauffeur_id: chauffeurId || null,
         livreur_id: livreurId || null,
       };
@@ -227,7 +231,7 @@ const AddVehicle: React.FC = () => {
             <input type="text" id="licensePlate" value={licensePlate} onChange={e => setLicensePlate(e.target.value)}
               style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid #ccc' }} required />
           </div>
-          {/* Chauffeur */}
+          
           <div style={{ marginBottom: '1rem' }}>
             <label htmlFor="chauffeurId" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Chauffeur:</label>
             <select id="chauffeurId" value={chauffeurId} onChange={e => setChauffeurId(e.target.value)}

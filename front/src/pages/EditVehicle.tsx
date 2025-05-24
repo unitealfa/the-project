@@ -53,15 +53,17 @@ function buildWorkingDays(rawWorkingDays?: WorkingDay[]) {
 const EditVehicle: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
-  const [make, setMake] = useState<string>("");
-  const [model, setModel] = useState<string>("");
-  const [year, setYear] = useState<string>("");
-  const [licensePlate, setLicensePlate] = useState<string>("");
-  const [chauffeurId, setChauffeurId] = useState<string>("");
-  const [livreurId, setLivreurId] = useState<string>("");
-  const [depotId, setDepotId] = useState<string>("");
-  const [workingDays, setWorkingDays] = useState(buildWorkingDays());
+  
+  // États pour les données du formulaire
+  const [make, setMake] = useState<string>('');
+  const [model, setModel] = useState<string>('');
+  const [year, setYear] = useState<string>('');
+  const [licensePlate, setLicensePlate] = useState<string>('');
+  const [chauffeurId, setChauffeurId] = useState<string>('');
+  const [livreurId, setLivreurId] = useState<string>('');
+  const [depotId, setDepotId] = useState<string>('');
+  
+  // États pour les listes d'utilisateurs par rôle
   const [chauffeurs, setChauffeurs] = useState<User[]>([]);
   const [livreurs, setLivreurs] = useState<User[]>([]);
   const [assignedUsers, setAssignedUsers] = useState<{ chauffeurs: string[]; livreurs: string[]; }>({ chauffeurs: [], livreurs: [] });
@@ -124,12 +126,11 @@ const EditVehicle: React.FC = () => {
         setModel(vehicule.model);
         setYear(vehicule.year);
         setLicensePlate(vehicule.license_plate);
-        setChauffeurId(vehicule.chauffeur_id?._id || "");
-        setLivreurId(vehicule.livreur_id?._id || "");
-        const vehicleDepotId = typeof vehicule.depot_id === "string"
-          ? vehicule.depot_id
-          : vehicule.depot_id && typeof vehicule.depot_id === "object"
-            ? vehicule.depot_id._id : "";
+        setChauffeurId(vehicule.chauffeur_id?._id || '');
+        setLivreurId(vehicule.livreur_id?._id || '');
+        
+        // Stocker l'ID du dépôt du véhicule
+        const vehicleDepotId = vehicule.depot_id._id || vehicule.depot_id;
         setDepotId(vehicleDepotId);
 
         setWorkingDays(buildWorkingDays(vehicule.working_days));
@@ -185,6 +186,8 @@ const EditVehicle: React.FC = () => {
         model,
         year,
         license_plate: licensePlate,
+        capacity,
+        type,
         chauffeur_id: chauffeurId || null,
         livreur_id: livreurId || null,
         working_days: WEEKDAYS_FR
@@ -278,11 +281,22 @@ const EditVehicle: React.FC = () => {
             <input type="text" id="licensePlate" value={licensePlate} onChange={e => setLicensePlate(e.target.value)}
               style={{ width: "100%", padding: "8px 12px", borderRadius: "4px", border: "1px solid #ccc" }} required />
           </div>
-          {/* Chauffeur */}
-          <div style={{ marginBottom: "1rem" }}>
-            <label htmlFor="chauffeurId" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>Chauffeur:</label>
-            <select id="chauffeurId" value={chauffeurId} onChange={e => setChauffeurId(e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", borderRadius: "4px", border: "1px solid #ccc" }}>
+          
+          <div style={{ marginBottom: '1rem' }}>
+            <label htmlFor="chauffeurId" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              Chauffeur:
+            </label>
+            <select
+              id="chauffeurId"
+              value={chauffeurId}
+              onChange={(e) => setChauffeurId(e.target.value)}
+              style={{ 
+                width: '100%', 
+                padding: '8px 12px', 
+                borderRadius: '4px', 
+                border: '1px solid #ccc' 
+              }}
+            >
               <option value="">-- Aucun chauffeur --</option>
               {chauffeurs.map(chauffeur => (
                 <option key={chauffeur._id} value={chauffeur._id}>

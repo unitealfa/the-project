@@ -1,5 +1,4 @@
-import { IsNotEmpty, IsMongoId, IsString, IsOptional, IsArray, IsIn, IsMilitaryTime, ValidateNested, IsDefined, IsNotEmptyObject } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsNotEmpty, IsMongoId, IsString, IsOptional } from 'class-validator';
 import { Types } from 'mongoose';
 
 // Sous-objet shift
@@ -42,6 +41,15 @@ export class CreateVehicleDto {
   @IsNotEmpty()
   @IsString()
   license_plate: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  capacity: number;
+
+  @IsNotEmpty()
+  @IsArray()
+  @IsEnum(['normal', 'frigorifique'], { each: true })
+  type: string[];
 
   @IsOptional()
   @IsMongoId()
