@@ -19,6 +19,7 @@ export default function ProductDetail() {
       <h2>Détails du produit : {product.nom_product}</h2>
       <p><strong>Description :</strong> {product.description}</p>
       <p><strong>Catégorie :</strong> {product.categorie}</p>
+      <p><strong>Type :</strong> {product.type?.join(', ')}</p>
       <p><strong>Prix de gros :</strong> {product.prix_gros}</p>
       <p><strong>Prix de détail :</strong> {product.prix_detail}</p>
       <p><strong>Poids :</strong> {product.specifications?.poids}</p>

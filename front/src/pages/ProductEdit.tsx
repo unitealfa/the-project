@@ -19,6 +19,7 @@ export default function ProductEdit() {
     poids: "",
     volume: "",
     images: [""],
+    type: ["normal"],
   });
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export default function ProductEdit() {
         poids: prod.specifications?.poids || "",
         volume: prod.specifications?.volume || "",
         images: prod.images || [""],
+        type: prod.type || ["normal"],
       });
     });
   }, [id]);
@@ -42,6 +44,10 @@ export default function ProductEdit() {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, type: [e.target.value] }));
   };
 
   const handleImageChange = (index: number, value: string) => {
@@ -63,6 +69,7 @@ export default function ProductEdit() {
       prix_detail: parseFloat(formData.prix_detail),
       description: formData.description,
       categorie: formData.categorie,
+      type: formData.type,
       images: formData.images,
       specifications: {
         poids: formData.poids,
@@ -105,6 +112,33 @@ export default function ProductEdit() {
           Catégorie
           <input type="text" name="categorie" value={formData.categorie} onChange={handleChange} required />
         </label>
+
+        <div>
+          <label>Type de produit :</label>
+          <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
+            <label>
+              <input
+                type="radio"
+                name="type"
+                value="normal"
+                checked={formData.type.includes("normal")}
+                onChange={handleTypeChange}
+                required
+              />
+              Normal
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="type"
+                value="frigorifique"
+                checked={formData.type.includes("frigorifique")}
+                onChange={handleTypeChange}
+              />
+              Frigorifique
+            </label>
+          </div>
+        </div>
 
         <label>
           Poids (kg)

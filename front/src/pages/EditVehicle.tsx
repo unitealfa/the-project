@@ -50,6 +50,8 @@ const EditVehicle: React.FC = () => {
   const [model, setModel] = useState<string>('');
   const [year, setYear] = useState<string>('');
   const [licensePlate, setLicensePlate] = useState<string>('');
+  const [capacity, setCapacity] = useState<number>(0);
+  const [type, setType] = useState<string[]>(['normal']);
   const [chauffeurId, setChauffeurId] = useState<string>('');
   const [livreurId, setLivreurId] = useState<string>('');
   const [depotId, setDepotId] = useState<string>('');
@@ -148,6 +150,8 @@ const EditVehicle: React.FC = () => {
         setModel(vehicule.model);
         setYear(vehicule.year);
         setLicensePlate(vehicule.license_plate);
+        setCapacity(vehicule.capacity);
+        setType(vehicule.type);
         setChauffeurId(vehicule.chauffeur_id?._id || '');
         setLivreurId(vehicule.livreur_id?._id || '');
         
@@ -280,6 +284,8 @@ const EditVehicle: React.FC = () => {
         model,
         year,
         license_plate: licensePlate,
+        capacity,
+        type,
         chauffeur_id: chauffeurId || null,
         livreur_id: livreurId || null,
       };
@@ -450,6 +456,54 @@ const EditVehicle: React.FC = () => {
               }}
               required
             />
+          </div>
+          
+          <div style={{ marginBottom: '1rem' }}>
+            <label htmlFor="capacity" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              Capacité:
+            </label>
+            <input
+              type="number"
+              id="capacity"
+              value={capacity}
+              onChange={(e) => setCapacity(Number(e.target.value))}
+              style={{ 
+                width: '100%', 
+                padding: '8px 12px', 
+                borderRadius: '4px', 
+                border: '1px solid #ccc' 
+              }}
+              required
+              min="0"
+            />
+          </div>
+
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              Type de véhicule:
+            </label>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input
+                  type="radio"
+                  name="type"
+                  value="normal"
+                  checked={type.includes('normal')}
+                  onChange={(e) => setType([e.target.value])}
+                />
+                Normal
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input
+                  type="radio"
+                  name="type"
+                  value="frigorifique"
+                  checked={type.includes('frigorifique')}
+                  onChange={(e) => setType([e.target.value])}
+                />
+                Frigorifique
+              </label>
+            </div>
           </div>
           
           <div style={{ marginBottom: '1rem' }}>

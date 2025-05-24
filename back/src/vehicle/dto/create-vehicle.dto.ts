@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsMongoId, IsString, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsMongoId, IsString, IsOptional, IsNumber, IsArray, IsEnum } from 'class-validator';
 import { Types } from 'mongoose';
 
 export class CreateVehicleDto {
@@ -17,6 +17,15 @@ export class CreateVehicleDto {
   @IsNotEmpty()
   @IsString()
   license_plate: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  capacity: number;
+
+  @IsNotEmpty()
+  @IsArray()
+  @IsEnum(['normal', 'frigorifique'], { each: true })
+  type: string[];
 
   @IsOptional()
   @IsMongoId()

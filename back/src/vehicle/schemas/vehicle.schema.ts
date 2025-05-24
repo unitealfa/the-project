@@ -17,6 +17,12 @@ export class Vehicle {
   @Prop({ required: true, unique: true })
   license_plate: string;
 
+  @Prop({ required: true })
+  capacity: number;
+
+  @Prop({ required: true, type: [String], enum: ['normal', 'frigorifique'] })
+  type: string[];
+
   @Prop({ type: Types.ObjectId, ref: 'User', required: false })
   chauffeur_id: Types.ObjectId;
 

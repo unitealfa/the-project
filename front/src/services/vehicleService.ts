@@ -22,6 +22,8 @@ export interface Vehicle {
   model: string;
   year: string;
   license_plate: string;
+  capacity: number;
+  type: string[];
   chauffeur_id: UserReference | string; // Can be populated or just an ID
   livreur_id: UserReference | string;
   depot_id: DepotReference | string;
@@ -34,6 +36,8 @@ export interface CreateVehicleData {
   model: string;
   year: string;
   license_plate: string;
+  capacity: number;
+  type: string[];
   chauffeur_id: string; 
   livreur_id: string; 
 }
@@ -43,6 +47,8 @@ export interface UpdateVehicleData {
   model?: string;
   year?: string;
   license_plate?: string;
+  capacity?: number;
+  type?: string[];
   chauffeur_id?: string;
   livreur_id?: string;
 }
