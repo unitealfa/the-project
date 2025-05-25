@@ -35,7 +35,8 @@ export default function ProductClient() {
   // Fonction utilitaire pour l'URL d'image
   const resolveImageUrl = (img?: string) => {
     if (!img) return "/default-product.jpg";
-    return img.startsWith("http") ? img : `${API_URL}${img}`;
+    if (img.startsWith("http")) return img;
+    return `${API_URL}${img}`;
   };
 
   return (
@@ -135,7 +136,7 @@ export default function ProductClient() {
                         border: "1px solid #eee"
                       }}
                     >
-                      Pas d’image
+                      Pas d'image
                     </div>
                   )}
                 </div>

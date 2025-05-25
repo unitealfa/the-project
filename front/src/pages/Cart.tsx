@@ -26,12 +26,10 @@ export interface CartItem {
 // ----------- Utilitaire anti-clignotement -----------
 function resolveImageUrl(url: string | undefined) {
   if (!url) return "/default-product.jpg";
-  // Si ça vient du backend (genre "/uploads/products/xxx.jpg")
-  if (url.startsWith("/uploads/products/")) return `${API_URL}${url}`;
-  // Si c’est un lien http(s)
+  // Si c'est un lien http(s)
   if (url.startsWith("http")) return url;
-  // Sinon fallback
-  return "/default-product.jpg";
+  // Si ça vient du backend
+  return `${API_URL}${url}`;
 }
 
 export default function Cart() {
@@ -253,7 +251,7 @@ export default function Cart() {
                             border: "1px solid #e5e7eb",
                             background: "#fafafa",
                           }}
-                          // Pour éviter clignotement, désactive l’onerror après set (sinon boucle infinie)
+                          // Pour éviter clignotement, désactive l'onerror après set (sinon boucle infinie)
                           onError={e => {
                             e.currentTarget.onerror = null;
                             e.currentTarget.src = "/default-product.jpg";

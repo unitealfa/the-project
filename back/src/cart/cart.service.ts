@@ -91,6 +91,7 @@ export class CartService {
             _id: product._id,
             nom_product: product.nom_product,
             prix_detail: product.prix_detail,
+            images: product.images,
           } : null,
         };
         if (!product) {

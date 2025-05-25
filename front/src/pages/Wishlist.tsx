@@ -34,10 +34,11 @@ export default function Wishlist() {
     fetchWishlist();
   }, []);
 
-  // Centralise la gestion de l’URL de l’image (externe ou backend)
+  // Centralise la gestion de l'URL de l'image (externe ou backend)
   const resolveImageUrl = (img?: string) => {
     if (!img) return "/default-product.jpg";
-    return img.startsWith("http") ? img : `${API_URL}${img}`;
+    if (img.startsWith("http")) return img;
+    return `${API_URL}${img}`;
   };
 
   if (loading) {
@@ -145,7 +146,7 @@ export default function Wishlist() {
                         border: "1px solid #eee"
                       }}
                     >
-                      Pas d’image
+                      Pas d'image
                     </div>
                   )}
                 </div>
