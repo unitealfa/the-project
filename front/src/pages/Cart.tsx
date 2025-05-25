@@ -6,14 +6,14 @@ import { orderService } from "@/services/orderService";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { Pencil } from "lucide-react";
-import { API_URL } from "@/constants"; // Ajoute ça si pas déjà importé
+import { API_URL } from "@/constants";
 
 // Types
 export interface Product {
   _id: string;
   nom_product: string;
   prix_detail: number;
-  images?: string[]; // Ajoute ce champ si tu veux le typage images
+  images?: string[];
 }
 
 export interface CartItem {
@@ -21,6 +21,17 @@ export interface CartItem {
   productId: string;
   quantity: number;
   product: Product | null;
+}
+
+// ----------- Utilitaire anti-clignotement -----------
+function resolveImageUrl(url: string | undefined) {
+  if (!url) return "/default-product.jpg";
+  // Si ça vient du backend (genre "/uploads/products/xxx.jpg")
+  if (url.startsWith("/uploads/products/")) return `${API_URL}${url}`;
+  // Si c’est un lien http(s)
+  if (url.startsWith("http")) return url;
+  // Sinon fallback
+  return "/default-product.jpg";
 }
 
 export default function Cart() {
@@ -60,10 +71,7 @@ export default function Cart() {
     }
   };
 
-  const handleQuantityChange = async (
-    productId: string,
-    newQuantity: number
-  ) => {
+  const handleQuantityChange = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     try {
       await cartService.updateCartItem(productId, newQuantity);
@@ -234,42 +242,23 @@ export default function Cart() {
                     >
                       {/* ========== IMAGE PRODUIT ========== */}
                       <div style={{ minWidth: 64, minHeight: 64 }}>
-                        {item.product.images && item.product.images.length > 0 ? (
-                          <img
-                            src={
-                              item.product.images[0].startsWith("http")
-                                ? item.product.images[0]
-                                : `${API_URL}${item.product.images[0]}`
-                            }
-                            alt={item.product.nom_product}
-                            style={{
-                              width: 64,
-                              height: 64,
-                              objectFit: "cover",
-                              borderRadius: 8,
-                              border: "1px solid #e5e7eb",
-                              background: "#fafafa",
-                            }}
-                            onError={e => (e.currentTarget.src = "/default-product.jpg")}
-                          />
-                        ) : (
-                          <div
-                            style={{
-                              width: 64,
-                              height: 64,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              background: "#ececec",
-                              borderRadius: 8,
-                              fontSize: 12,
-                              color: "#bbb",
-                              border: "1px solid #e5e7eb"
-                            }}
-                          >
-                            Pas d'image
-                          </div>
-                        )}
+                        <img
+                          src={resolveImageUrl(item.product.images?.[0])}
+                          alt={item.product.nom_product}
+                          style={{
+                            width: 64,
+                            height: 64,
+                            objectFit: "cover",
+                            borderRadius: 8,
+                            border: "1px solid #e5e7eb",
+                            background: "#fafafa",
+                          }}
+                          // Pour éviter clignotement, désactive l’onerror après set (sinon boucle infinie)
+                          onError={e => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = "/default-product.jpg";
+                          }}
+                        />
                       </div>
                       {/* Produit + prix */}
                       <div style={{ flex: 1 }}>
@@ -366,7 +355,8 @@ export default function Cart() {
             </div>
           </>
         )}
-        {/* --------  Modal Bon de Livraison (PRO) -------- */}
+
+        {/* --------  Modal Bon de Livraison -------- */}
         {showModal && (
           <div
             style={{
@@ -538,7 +528,6 @@ export default function Cart() {
               {/* ----------- BOUTONS MODAL ----------- */}
               {!confirmedOrder ? (
                 <>
-                  {/* PAS DE bouton PDF ici */}
                   <button
                     onClick={handleSendOrder}
                     style={{
@@ -565,7 +554,6 @@ export default function Cart() {
                 </>
               ) : (
                 <>
-                  {/* Bouton PDF après confirmation */}
                   <button
                     onClick={handleExportPDF}
                     style={{
