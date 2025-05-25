@@ -6,20 +6,31 @@ export class Company {
   @Prop({ required: true })
   nom_company: string;
 
+  @Prop({ required: true })
+  gerant_company: string;
+
   @Prop({
     type: {
-      rue: String,
-      ville: String,
-      code_postal: String,
-      pays: String,
+      telephone: String,
+      email: String,
+      adresse: {
+        rue: String,
+        ville: String,
+        code_postal: String,
+        pays: String,
+      },
     },
     required: true,
   })
-  adresse: {
-    rue: string;
-    ville: string;
-    code_postal: string;
-    pays: string;
+  contact: {
+    telephone: string;
+    email: string;
+    adresse: {
+      rue: string;
+      ville: string;
+      code_postal: string;
+      pays: string;
+    };
   };
 }
 

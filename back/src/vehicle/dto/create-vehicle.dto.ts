@@ -1,13 +1,12 @@
-import { IsNotEmpty, IsMongoId, IsString, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsMongoId, IsString, IsOptional, IsNumber, IsArray, IsEnum, IsDefined, IsNotEmptyObject, ValidateNested, IsIn, IsMilitaryTime } from 'class-validator';
 import { Types } from 'mongoose';
+import { Type } from 'class-transformer';
 
 // Sous-objet shift
 export class ShiftDto {
-  @IsString()
   @IsMilitaryTime()
   start: string;
 
-  @IsString()
   @IsMilitaryTime()
   end: string;
 }
@@ -28,19 +27,19 @@ export class WorkingDayDto {
 export class CreateVehicleDto {
   @IsNotEmpty()
   @IsString()
-  make: string;
+  marque: string;
 
   @IsNotEmpty()
   @IsString()
-  model: string;
+  modele: string;
 
   @IsNotEmpty()
   @IsString()
-  year: string;
+  matricule: string;
 
   @IsNotEmpty()
   @IsString()
-  license_plate: string;
+  chauffeur: string;
 
   @IsNotEmpty()
   @IsNumber()
@@ -64,5 +63,5 @@ export class CreateVehicleDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => WorkingDayDto)
-  working_days?: WorkingDayDto[];
+  workingDays: WorkingDayDto[];
 }

@@ -1,14 +1,12 @@
-import { IsMongoId, IsString, IsOptional } from 'class-validator';
-import { Types } from 'mongoose';
+import { IsString, IsNumber, IsArray, IsEnum, IsDefined, IsNotEmptyObject, ValidateNested, IsIn, IsMilitaryTime, IsOptional, IsMongoId } from 'class-validator';
 import { Type } from 'class-transformer';
+import { Types } from 'mongoose';
 
 // ShiftDto pour une plage horaire
 export class ShiftDto {
-  @IsString()
   @IsMilitaryTime()
   start: string;
 
-  @IsString()
   @IsMilitaryTime()
   end: string;
 }
@@ -29,19 +27,19 @@ export class WorkingDayDto {
 export class UpdateVehicleDto {
   @IsOptional()
   @IsString()
-  make?: string;
+  marque?: string;
 
   @IsOptional()
   @IsString()
-  model?: string;
+  modele?: string;
 
   @IsOptional()
   @IsString()
-  year?: string;
+  matricule?: string;
 
   @IsOptional()
   @IsString()
-  license_plate?: string;
+  chauffeur?: string;
 
   @IsOptional()
   @IsNumber()
@@ -64,5 +62,5 @@ export class UpdateVehicleDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => WorkingDayDto)
-  working_days?: WorkingDayDto[];
+  workingDays?: WorkingDayDto[];
 }
