@@ -1,4 +1,18 @@
-import { IsNotEmpty, IsMongoId, IsString, IsOptional } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsMongoId,
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsArray,
+  IsEnum,
+  IsIn,
+  IsMilitaryTime,
+  ValidateNested,
+  IsDefined,
+  IsNotEmptyObject,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 import { Types } from 'mongoose';
 
 // Sous-objet shift
@@ -15,7 +29,7 @@ export class ShiftDto {
 // Sous-objet working_days
 export class WorkingDayDto {
   @IsString()
-  @IsIn(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'])
+  @IsIn(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
   day: string;
 
   @IsDefined()

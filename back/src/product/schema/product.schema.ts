@@ -1,11 +1,20 @@
-// BACKEND - Schéma Mongoose du produit
+// src/product/schema/product.schema.ts
+
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Document, Schema as MongooseSchema, Types } from 'mongoose';
 
-export type ProductDocument = Product & Document;
+interface Specification {
+  poids?: string;
+  volume?: string;
+}
 
-@Schema()
-export class Product {
+interface Disponibilite {
+  depot_id: Types.ObjectId;
+  quantite: number;
+}
+
+@Schema({ timestamps: true })
+export class Product extends Document {
   @Prop({ required: true })
   nom_product: string;
 
@@ -15,31 +24,27 @@ export class Product {
   @Prop({ required: true })
   prix_detail: number;
 
-  @Prop()
+  @Prop({ required: true })
   description: string;
 
-  @Prop()
+  @Prop({ required: true })
   categorie: string;
 
-  @Prop([String])
+  @Prop({ required: true, type: [String], enum: ['normal', 'frigorifique'] })
+  type: string[];
+
+  @Prop({ type: [String], default: [] })
   images: string[];
 
   @Prop({ type: Object })
-  specifications: {
-    poids: string;
-    volume: string;
-  };
+  specifications: Specification;
 
-  @Prop({ type: Types.ObjectId, ref: 'Company' })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Company' })
   company_id: Types.ObjectId;
 
-  @Prop([
-    {
-      depot_id: { type: Types.ObjectId, ref: 'Depot' },
-      quantite: Number,
-    },
-  ])
-  disponibilite: { depot_id: Types.ObjectId; quantite: number }[];
+  @Prop({ type: [{ depot_id: { type: MongooseSchema.Types.ObjectId, ref: 'Depot' }, quantite: Number }], default: [] })
+  disponibilite: Disponibilite[];
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
+export type ProductDocument = Product & Document;

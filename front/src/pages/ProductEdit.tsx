@@ -1,7 +1,7 @@
-// FRONTEND - ProductEdit.tsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { API_URL } from "@/constants";
 
 export default function ProductEdit() {
   const { id } = useParams<{ id: string }>();
@@ -18,9 +18,11 @@ export default function ProductEdit() {
     categorie: "",
     poids: "",
     volume: "",
-    images: [""],
     type: ["normal"],
   });
+
+  const [imageUrl, setImageUrl] = useState<string>(""); // Lien de l'image (upload ou URL)
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     axios.get(`/api/products/${id}`).then((res) => {
@@ -33,9 +35,9 @@ export default function ProductEdit() {
         categorie: prod.categorie,
         poids: prod.specifications?.poids || "",
         volume: prod.specifications?.volume || "",
-        images: prod.images || [""],
         type: prod.type || ["normal"],
       });
+      setImageUrl(prod.images?.[0] || "");
     });
   }, [id]);
 
@@ -50,32 +52,59 @@ export default function ProductEdit() {
     setFormData((prev) => ({ ...prev, type: [e.target.value] }));
   };
 
-  const handleImageChange = (index: number, value: string) => {
-    const updated = [...formData.images];
-    updated[index] = value;
-    setFormData((prev) => ({ ...prev, images: updated }));
+  // Coller un lien d’image
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setImageUrl(e.target.value.trim());
   };
 
-  const handleAddImage = () => {
-    setFormData((prev) => ({ ...prev, images: [...prev.images, ""] }));
+  // Upload image depuis appareil
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    const formDataFile = new FormData();
+    formDataFile.append("file", file);
+    try {
+      const token = localStorage.getItem("token");
+      const { data } = await axios.post("/api/products/upload", formDataFile, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      setImageUrl(data.url); // Lien statique du backend
+    } catch {
+      alert("Erreur lors de l'upload de l'image");
+    }
+    setIsUploading(false);
+  };
+
+  const handleRemoveImage = () => {
+    setImageUrl("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    await axios.put(`/api/products/${id}`, {
-      nom_product: formData.nom_product,
-      prix_gros: parseFloat(formData.prix_gros),
-      prix_detail: parseFloat(formData.prix_detail),
-      description: formData.description,
-      categorie: formData.categorie,
-      type: formData.type,
-      images: formData.images,
-      specifications: {
-        poids: formData.poids,
-        volume: formData.volume,
+    const token = localStorage.getItem("token");
+    await axios.put(
+      `/api/products/${id}`,
+      {
+        nom_product: formData.nom_product,
+        prix_gros: parseFloat(formData.prix_gros),
+        prix_detail: parseFloat(formData.prix_detail),
+        description: formData.description,
+        categorie: formData.categorie,
+        type: formData.type,
+        images: imageUrl ? [imageUrl] : [],
+        specifications: {
+          poids: formData.poids,
+          volume: formData.volume,
+        },
       },
-    });
+      {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }
+    );
 
     if (fromDepot) {
       navigate(`/gestion-depot/${fromDepot}`);
@@ -84,33 +113,72 @@ export default function ProductEdit() {
     }
   };
 
+  // Résolution du src pour image backend OU url web
+  const resolveImageUrl = (img: string) => {
+    if (!img) return "/default-product.jpg";
+    return img.startsWith("http") ? img : `${API_URL}${img}`;
+  };
+
   return (
     <div style={{ padding: "2rem", maxWidth: "600px", margin: "auto" }}>
       <h2 style={{ marginBottom: "1.5rem" }}>Modifier le produit</h2>
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+      >
         <label>
           Nom du produit
-          <input type="text" name="nom_product" value={formData.nom_product} onChange={handleChange} required />
+          <input
+            type="text"
+            name="nom_product"
+            value={formData.nom_product}
+            onChange={handleChange}
+            required
+          />
         </label>
 
         <label>
           Prix de gros (DA)
-          <input type="number" name="prix_gros" value={formData.prix_gros} onChange={handleChange} required />
+          <input
+            type="number"
+            name="prix_gros"
+            value={formData.prix_gros}
+            onChange={handleChange}
+            required
+          />
         </label>
 
         <label>
           Prix de détail (DA)
-          <input type="number" name="prix_detail" value={formData.prix_detail} onChange={handleChange} required />
+          <input
+            type="number"
+            name="prix_detail"
+            value={formData.prix_detail}
+            onChange={handleChange}
+            required
+          />
         </label>
 
         <label>
           Description
-          <textarea name="description" value={formData.description} onChange={handleChange} rows={3} required />
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            rows={3}
+            required
+          />
         </label>
 
         <label>
           Catégorie
-          <input type="text" name="categorie" value={formData.categorie} onChange={handleChange} required />
+          <input
+            type="text"
+            name="categorie"
+            value={formData.categorie}
+            onChange={handleChange}
+            required
+          />
         </label>
 
         <div>
@@ -142,32 +210,86 @@ export default function ProductEdit() {
 
         <label>
           Poids (kg)
-          <input type="text" name="poids" value={formData.poids} onChange={handleChange} />
+          <input
+            type="text"
+            name="poids"
+            value={formData.poids}
+            onChange={handleChange}
+          />
         </label>
 
         <label>
           Volume (L)
-          <input type="text" name="volume" value={formData.volume} onChange={handleChange} />
+          <input
+            type="text"
+            name="volume"
+            value={formData.volume}
+            onChange={handleChange}
+          />
         </label>
 
         <div>
-          <h4>Images</h4>
-          {formData.images.map((img, index) => (
-            <div key={index} style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-              <input
-                type="text"
-                value={img}
-                onChange={(e) => handleImageChange(index, e.target.value)}
-                placeholder={`URL image ${index + 1}`}
+          <h4>Image du produit</h4>
+          {/* Champ pour coller un lien */}
+          <input
+            type="text"
+            placeholder="Lien direct de l'image (http...)"
+            value={imageUrl}
+            onChange={handleImageUrlChange}
+            style={{ marginBottom: 8 }}
+          />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {/* Bouton upload fichier */}
+            <input
+              type="file"
+              accept="image/*"
+              style={{ width: "auto" }}
+              onChange={handleFileChange}
+              disabled={isUploading}
+            />
+            {/* Aperçu de l'image */}
+            {imageUrl && (
+              <img
+                src={resolveImageUrl(imageUrl)}
+                alt="Aperçu"
+                style={{
+                  width: 70,
+                  height: 70,
+                  objectFit: "cover",
+                  borderRadius: 6,
+                  border: "1px solid #eee",
+                  marginLeft: 8,
+                }}
+                onError={e => (e.currentTarget.src = "/default-product.jpg")}
               />
-              {img && <img src={img} alt={`img-${index}`} style={{ width: "50px", height: "50px", objectFit: "cover" }} />}
-            </div>
-          ))}
-          <button type="button" onClick={handleAddImage}>+ Ajouter une image</button>
+            )}
+            {imageUrl && (
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                style={{
+                  background: "#ef4444",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 5,
+                  padding: "0.2rem 0.6rem",
+                  marginLeft: 8,
+                }}
+              >
+                ✖
+              </button>
+            )}
+          </div>
+          <small>
+            Vous pouvez coller un lien direct <b>OU</b> uploader une image depuis votre appareil.<br />
+            (jpg, png, webp, gif...)
+          </small>
         </div>
 
         <div style={{ textAlign: "right" }}>
-          <button type="submit">Enregistrer</button>
+          <button type="submit" disabled={isUploading}>
+            {isUploading ? "Upload..." : "Enregistrer"}
+          </button>
         </div>
       </form>
     </div>

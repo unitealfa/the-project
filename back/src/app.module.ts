@@ -8,32 +8,32 @@ import { CompanyModule }  from './company/company.module';
 import { DepotModule }    from './depot/depot.module';
 import { TeamModule }     from './team/team.module';
 import { ClientModule }   from './client/client.module';
-import { ProductModule }  from './product/product.module';  // ← ajouté
+import { ProductModule }  from './product/product.module';
 import { CartModule }     from './cart/cart.module';
 import { WishlistModule } from './wishlist/wishlist.module';
-import { VehicleModule } from './vehicle/vehicle.module'; // Add this line
-import { OrderModule } from './order/order.module';
+import { VehicleModule }  from './vehicle/vehicle.module';
+import { OrderModule }    from './order/order.module';
 
 @Module({
   imports: [
-    /* charge les variables .env dans tout le projet */
+    // Charge les variables .env dans tout le projet
     ConfigModule.forRoot({ isGlobal: true }),
 
-    /* connexion MongoDB */
+    // Connexion MongoDB
     MongooseModule.forRoot(process.env.MONGO_URI),
 
-    /* modules fonctionnels */
+    // Modules fonctionnels
     AuthModule,
     UserModule,
     CompanyModule,
     DepotModule,
     TeamModule,
-    ClientModule,           // assure l'enregistrement de /clients
-    ProductModule,          // assure l'enregistrement de /products
-    CartModule,             // assure l'enregistrement de /cart
-    WishlistModule,         // assure l'enregistrement de /wishlist
-    VehicleModule, 
-    OrderModule,// Add this line
+    ClientModule,      // /clients
+    ProductModule,     // /products
+    CartModule,        // /cart
+    WishlistModule,    // /wishlist
+    VehicleModule,     // /vehicles
+    OrderModule,       // /orders
   ],
 })
 export class AppModule {}

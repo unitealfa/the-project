@@ -24,6 +24,8 @@ interface Vehicule {
   model: string;
   year: string;
   license_plate: string;
+  capacity: number;
+  type: string[];
   chauffeur_id: { _id: string; nom: string; prenom: string; email: string; };
   livreur_id: { _id: string; nom: string; prenom: string; email: string; };
   depot_id: { _id: string; nom_depot: string; };
@@ -53,16 +55,19 @@ function buildWorkingDays(rawWorkingDays?: WorkingDay[]) {
 const EditVehicle: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+
   // États pour les données du formulaire
   const [make, setMake] = useState<string>('');
   const [model, setModel] = useState<string>('');
   const [year, setYear] = useState<string>('');
   const [licensePlate, setLicensePlate] = useState<string>('');
+  const [capacity, setCapacity] = useState<number>(0);
+  const [type, setType] = useState<string[]>(['normal']);
   const [chauffeurId, setChauffeurId] = useState<string>('');
   const [livreurId, setLivreurId] = useState<string>('');
   const [depotId, setDepotId] = useState<string>('');
-  
+  const [workingDays, setWorkingDays] = useState<{ [day: string]: { enabled: boolean, start: string, end: string } }>(buildWorkingDays());
+
   // États pour les listes d'utilisateurs par rôle
   const [chauffeurs, setChauffeurs] = useState<User[]>([]);
   const [livreurs, setLivreurs] = useState<User[]>([]);
@@ -126,11 +131,17 @@ const EditVehicle: React.FC = () => {
         setModel(vehicule.model);
         setYear(vehicule.year);
         setLicensePlate(vehicule.license_plate);
+        setCapacity(vehicule.capacity);
+        setType(vehicule.type || ['normal']);
         setChauffeurId(vehicule.chauffeur_id?._id || '');
         setLivreurId(vehicule.livreur_id?._id || '');
-        
-        // Stocker l'ID du dépôt du véhicule
-        const vehicleDepotId = vehicule.depot_id._id || vehicule.depot_id;
+        // Stocker l'ID du dépôt du véhicule (attention: objet ou string !)
+        let vehicleDepotId = "";
+        if (vehicule.depot_id && typeof vehicule.depot_id === "object" && "_id" in vehicule.depot_id) {
+          vehicleDepotId = vehicule.depot_id._id;
+        } else if (typeof vehicule.depot_id === "string") {
+          vehicleDepotId = vehicule.depot_id;
+        }
         setDepotId(vehicleDepotId);
 
         setWorkingDays(buildWorkingDays(vehicule.working_days));
@@ -168,6 +179,7 @@ const EditVehicle: React.FC = () => {
       }
     };
     fetchData();
+    // eslint-disable-next-line
   }, [id, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -260,7 +272,7 @@ const EditVehicle: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit} style={{ maxWidth: "700px" }}>
-          {/* ... les champs classiques ... */}
+          {/* Champs classiques */}
           <div style={{ marginBottom: "1rem" }}>
             <label htmlFor="make" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>Marque:</label>
             <input type="text" id="make" value={make} onChange={e => setMake(e.target.value)}
@@ -281,7 +293,52 @@ const EditVehicle: React.FC = () => {
             <input type="text" id="licensePlate" value={licensePlate} onChange={e => setLicensePlate(e.target.value)}
               style={{ width: "100%", padding: "8px 12px", borderRadius: "4px", border: "1px solid #ccc" }} required />
           </div>
-          
+          <div style={{ marginBottom: "1rem" }}>
+            <label htmlFor="capacity" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              Capacité:
+            </label>
+            <input
+              type="number"
+              id="capacity"
+              value={capacity}
+              onChange={(e) => setCapacity(Number(e.target.value))}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                border: '1px solid #ccc'
+              }}
+              required
+              min="0"
+            />
+          </div>
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              Type de véhicule:
+            </label>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input
+                  type="radio"
+                  name="type"
+                  value="normal"
+                  checked={type.includes('normal')}
+                  onChange={() => setType(['normal'])}
+                />
+                Normal
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input
+                  type="radio"
+                  name="type"
+                  value="frigorifique"
+                  checked={type.includes('frigorifique')}
+                  onChange={() => setType(['frigorifique'])}
+                />
+                Frigorifique
+              </label>
+            </div>
+          </div>
           <div style={{ marginBottom: '1rem' }}>
             <label htmlFor="chauffeurId" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
               Chauffeur:
@@ -290,11 +347,11 @@ const EditVehicle: React.FC = () => {
               id="chauffeurId"
               value={chauffeurId}
               onChange={(e) => setChauffeurId(e.target.value)}
-              style={{ 
-                width: '100%', 
-                padding: '8px 12px', 
-                borderRadius: '4px', 
-                border: '1px solid #ccc' 
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                border: '1px solid #ccc'
               }}
             >
               <option value="">-- Aucun chauffeur --</option>

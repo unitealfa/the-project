@@ -1,3 +1,4 @@
+// back/src/product/dto/create-product.dto.ts
 import { IsString, IsNumber, IsArray, IsOptional, ValidateNested, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -37,8 +38,11 @@ export class CreateProductDto {
   @IsEnum(['normal', 'frigorifique'], { each: true })
   type: string[];
 
+  // images devient optionnel (car géré par upload Multer)
+  @IsOptional()
   @IsArray()
-  images: string[];
+  @IsString({ each: true })
+  images?: string[];
 
   @ValidateNested()
   @Type(() => SpecificationDto)

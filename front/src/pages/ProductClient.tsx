@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import { AddToCartButton } from "@/components/AddToCartButton/AddToCartButton";
 import { AddToWishlistButton } from "@/components/AddToWishlistButton/AddToWishlistButton";
+import { API_URL } from "@/constants";
 
 interface Product {
   _id: string;
   nom_product: string;
   description: string;
   prix_detail: number;
+  images?: string[];
 }
 
 export default function ProductClient() {
@@ -29,6 +31,12 @@ export default function ProductClient() {
     };
     fetchProduits();
   }, []);
+
+  // Fonction utilitaire pour l'URL d'image
+  const resolveImageUrl = (img?: string) => {
+    if (!img) return "/default-product.jpg";
+    return img.startsWith("http") ? img : `${API_URL}${img}`;
+  };
 
   return (
     <>
@@ -93,15 +101,50 @@ export default function ProductClient() {
                   display: "flex",
                   flexDirection: "column",
                   gap: "1rem",
+                  background: "#fff"
                 }}
               >
+                {/* Affichage photo principale du produit */}
+                <div style={{ width: 120, height: 120, margin: "0 auto" }}>
+                  {p.images && p.images.length > 0 && p.images[0] ? (
+                    <img
+                      src={resolveImageUrl(p.images[0])}
+                      alt={p.nom_product}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        borderRadius: 10,
+                        border: "1px solid #eee",
+                        background: "#f8f9fa"
+                      }}
+                      onError={e => (e.currentTarget.src = "/default-product.jpg")}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "#eee",
+                        borderRadius: 10,
+                        color: "#bbb",
+                        fontSize: 13,
+                        border: "1px solid #eee"
+                      }}
+                    >
+                      Pas d’image
+                    </div>
+                  )}
+                </div>
                 <h3 style={{ margin: 0 }}>{p.nom_product}</h3>
                 <p style={{ margin: 0 }}>{p.description}</p>
                 <p style={{ margin: 0, fontWeight: "bold" }}>
                   Prix : {p.prix_detail} €
                 </p>
 
-                {/* Le AddToCartButton gère la quantité lui-même */}
                 <div style={{ display: "flex", gap: "1rem" }}>
                   <AddToCartButton productId={p._id} />
                   <AddToWishlistButton productId={p._id} />

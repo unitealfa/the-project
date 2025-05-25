@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
+import { API_URL } from "@/constants";
 
 interface Disponibilite {
   depot_id: string;
@@ -12,6 +13,7 @@ interface Product {
   nom_product: string;
   categorie: string;
   disponibilite: Disponibilite[];
+  images?: string[]; // <-- nouvelle propriété pour image
 }
 
 export default function GestionDepot() {
@@ -28,12 +30,16 @@ export default function GestionDepot() {
     const fetchData = async () => {
       try {
         const res = await axios.get(`/api/products/by-depot/${depotId}`);
+        console.log("Produits reçus pour dépôt :", res.data);
         if (Array.isArray(res.data)) {
           setProducts(res.data);
+        } else {
+          setProducts([]);
+          setError("Aucun produit trouvé.");
         }
-      } catch (err) {
+      } catch (err: any) {
         setError("Erreur lors du chargement des produits");
-        console.error(err);
+        console.error("Erreur Axios:", err?.response || err);
       } finally {
         setLoading(false);
       }
@@ -60,6 +66,12 @@ export default function GestionDepot() {
     } catch (err) {
       console.error("Erreur lors de la suppression", err);
     }
+  };
+
+  // Pour avoir le lien image (depuis le backend ou absolu)
+  const resolveImageUrl = (img?: string) => {
+    if (!img) return "/default-product.jpg"; // image par défaut
+    return img.startsWith("http") ? img : `${API_URL}${img}`;
   };
 
   if (loading) return <p>Chargement…</p>;
@@ -98,6 +110,7 @@ export default function GestionDepot() {
         >
           <thead>
             <tr>
+              <th>Image</th>
               <th>Nom</th>
               <th>Catégorie</th>
               <th>Quantité</th>
@@ -109,8 +122,27 @@ export default function GestionDepot() {
               const dispo = product.disponibilite.find(
                 (d) => d.depot_id === depotId
               );
+              const imageUrl = resolveImageUrl(product.images?.[0]);
               return (
                 <tr key={product._id}>
+                  <td>
+                    <img
+                      src={imageUrl}
+                      alt={product.nom_product}
+                      style={{
+                        width: 50,
+                        height: 50,
+                        objectFit: "cover",
+                        borderRadius: 8,
+                        border: "1px solid #eee",
+                        background: "#f3f3f3",
+                      }}
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src =
+                          "/default-product.jpg";
+                      }}
+                    />
+                  </td>
                   <td>{product.nom_product}</td>
                   <td>{product.categorie}</td>
                   <td>
@@ -148,7 +180,6 @@ export default function GestionDepot() {
                       <button type="submit">💾</button>
                     </form>
                   </td>
-
                   <td>
                     <button
                       onClick={() => navigate(`/product-detail/${product._id}`)}

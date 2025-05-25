@@ -1,6 +1,18 @@
-import { IsMongoId, IsString, IsOptional } from 'class-validator';
-import { Types } from 'mongoose';
+import {
+  IsMongoId,
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsArray,
+  IsEnum,
+  IsIn,
+  IsMilitaryTime,
+  ValidateNested,
+  IsDefined,
+  IsNotEmptyObject,
+} from 'class-validator';
 import { Type } from 'class-transformer';
+import { Types } from 'mongoose';
 
 // ShiftDto pour une plage horaire
 export class ShiftDto {
@@ -16,7 +28,7 @@ export class ShiftDto {
 // WorkingDayDto pour un jour de travail
 export class WorkingDayDto {
   @IsString()
-  @IsIn(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'])
+  @IsIn(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
   day: string;
 
   @IsDefined()
