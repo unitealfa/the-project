@@ -1,57 +1,22 @@
-import {
-  IsMongoId,
-  IsString,
-  IsOptional,
-  IsNumber,
-  IsArray,
-  IsEnum,
-  IsIn,
-  IsMilitaryTime,
-  ValidateNested,
-  IsDefined,
-  IsNotEmptyObject,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsMongoId, IsString, IsOptional, IsNumber, IsArray, IsEnum } from 'class-validator';
 import { Types } from 'mongoose';
-
-// ShiftDto pour une plage horaire
-export class ShiftDto {
-  @IsMilitaryTime()
-  start: string;
-
-  @IsMilitaryTime()
-  end: string;
-}
-
-// WorkingDayDto pour un jour de travail
-export class WorkingDayDto {
-  @IsString()
-  @IsIn(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
-  day: string;
-
-  @IsDefined()
-  @ValidateNested()
-  @Type(() => ShiftDto)
-  @IsNotEmptyObject()
-  shift: ShiftDto;
-}
 
 export class UpdateVehicleDto {
   @IsOptional()
   @IsString()
-  marque?: string;
+  make?: string;
 
   @IsOptional()
   @IsString()
-  modele?: string;
+  model?: string;
 
   @IsOptional()
   @IsString()
-  matricule?: string;
+  year?: string;
 
   @IsOptional()
   @IsString()
-  chauffeur?: string;
+  license_plate?: string;
 
   @IsOptional()
   @IsNumber()
@@ -69,10 +34,4 @@ export class UpdateVehicleDto {
   @IsOptional()
   @IsMongoId()
   livreur_id?: Types.ObjectId;
-
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => WorkingDayDto)
-  workingDays?: WorkingDayDto[];
 }

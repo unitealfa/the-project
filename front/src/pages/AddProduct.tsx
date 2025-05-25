@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 
-const API_URL = "http://localhost:5000"; // ⚠️ adapte selon ton env prod/dev
-
 export default function AddProduct() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,21 +15,9 @@ export default function AddProduct() {
     categorie: "",
     poids: "",
     volume: "",
+    imageUrl: "",
     type: ["normal"],
   });
-
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageUrl, setImageUrl] = useState<string>(""); // Peut être un lien ou un chemin backend
-  const [imageInput, setImageInput] = useState<string>(""); // Pour le champ texte URL
-  const [isUploading, setIsUploading] = useState(false);
-
-  // Convertit image backend en chemin absolu, sinon direct
-  function resolveImageUrl(url: string) {
-    if (!url) return "";
-    if (url.startsWith("/uploads/products/")) return `${API_URL}${url}`;
-    if (url.startsWith("http")) return url;
-    return "";
-  }
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -44,54 +30,10 @@ export default function AddProduct() {
     setFormData((prev) => ({ ...prev, type: [e.target.value] }));
   };
 
-  // Upload file to backend
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    setIsUploading(true);
-
-    const formDataFile = new FormData();
-    formDataFile.append("file", file);
-
-    // ✅ Ajoute l'Authorization si besoin
-    const token = localStorage.getItem("token");
-    try {
-      const { data } = await axios.post(
-        "/api/products/upload",
-        formDataFile,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        }
-      );
-      setImageUrl(data.url); // Chemin backend (ex: /uploads/products/xxx.jpg)
-      setImageInput(""); // Efface le champ texte s’il y avait un lien
-    } catch (err) {
-      alert("Erreur lors de l'upload du fichier.");
-      setImageFile(null);
-    }
-    setIsUploading(false);
-  };
-
-  // Coller une URL d'image
-  const handleImageInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.trim();
-    setImageInput(value);
-    setImageUrl(value);
-    setImageFile(null);
-  };
-
-  // Soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!imageUrl) {
-      alert("Veuillez ajouter une image (upload ou lien URL) !");
-      return;
-    }
 
     const newProduct = {
       nom_product: formData.nom_product,
@@ -100,7 +42,7 @@ export default function AddProduct() {
       description: formData.description,
       categorie: formData.categorie,
       type: formData.type,
-      images: imageUrl ? [imageUrl] : [],
+      images: [formData.imageUrl],
       specifications: {
         poids: formData.poids,
         volume: formData.volume,
@@ -110,10 +52,7 @@ export default function AddProduct() {
     };
 
     try {
-      const token = localStorage.getItem("token");
-      await axios.post("/api/products", newProduct, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
+      await axios.post("/api/products", newProduct);
       if (depotId) {
         navigate(`/gestion-depot/${depotId}`);
       } else {
@@ -124,8 +63,6 @@ export default function AddProduct() {
       alert("Échec de l'ajout du produit.");
     }
   };
-
-  const imagePreview = resolveImageUrl(imageUrl);
 
   return (
     <form
@@ -207,50 +144,14 @@ export default function AddProduct() {
         onChange={handleChange}
         required
       />
-      <div style={{ margin: "1rem 0" }}>
-        <label>
-          Image du produit <span style={{ color: "red" }}>*</span> :
-        </label>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            disabled={isUploading}
-            style={{ flex: 1 }}
-          />
-          <span style={{ fontWeight: 600 }}>ou</span>
-          <input
-            type="text"
-            placeholder="Coller un lien URL d'image"
-            value={imageInput}
-            onChange={handleImageInputChange}
-            style={{ flex: 2 }}
-          />
-        </div>
-        {isUploading && <div>Upload en cours...</div>}
-        {imagePreview && (
-          <div style={{ marginTop: 8 }}>
-            <img
-              src={imagePreview}
-              alt="Aperçu"
-              style={{
-                maxWidth: 150,
-                maxHeight: 150,
-                borderRadius: 8,
-                boxShadow: "0 2px 5px #ccc",
-              }}
-              onError={e => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = "/default-product.jpg";
-              }}
-            />
-          </div>
-        )}
-      </div>
-      <button type="submit" disabled={isUploading || !imageUrl}>
-        {isUploading ? "Upload en cours..." : "Ajouter"}
-      </button>
+      <input
+        type="text"
+        name="imageUrl"
+        placeholder="Image URL"
+        onChange={handleChange}
+        required
+      />
+      <button type="submit">Ajouter</button>
     </form>
   );
 }
