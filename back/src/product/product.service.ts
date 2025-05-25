@@ -7,7 +7,10 @@ import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
 export class ProductService {
-  constructor(@InjectModel(Product.name) private productModel: Model<ProductDocument>) {}
+  constructor(
+    @InjectModel(Product.name)
+    private productModel: Model<ProductDocument>,
+  ) {}
 
   async create(dto: CreateProductDto): Promise<Product> {
     return new this.productModel(dto).save();
@@ -46,21 +49,14 @@ export class ProductService {
 
   async findByDepots(depotIds: string[]): Promise<Product[]> {
     const objectDepotIds = depotIds.map((id) => new Types.ObjectId(id));
-
-    console.log('🔍 Recherche de produits pour les dépôts :', objectDepotIds); // Debug
-
-    const results = await this.productModel.find({
+    return this.productModel.find({
       disponibilite: {
         $elemMatch: {
           depot_id: { $in: objectDepotIds },
-          quantite: { $gt: 0 }, // filtre les produits avec stock uniquement
+          quantite: { $gt: 0 },
         },
       },
     }).exec();
-
-    console.log("🎯 Résultats trouvés :", results.length); // Debug
-
-    return results;
   }
 
   async updateQuantiteParDepot(productId: string, depotId: string, quantite: number): Promise<Product> {

@@ -6,14 +6,17 @@ import { orderService } from "@/services/orderService";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { Pencil } from "lucide-react";
+import { API_URL } from "@/constants"; // Ajoute ça si pas déjà importé
 
-interface Product {
+// Types
+export interface Product {
   _id: string;
   nom_product: string;
   prix_detail: number;
+  images?: string[]; // Ajoute ce champ si tu veux le typage images
 }
 
-interface CartItem {
+export interface CartItem {
   _id: string;
   productId: string;
   quantity: number;
@@ -27,18 +30,14 @@ export default function Cart() {
   const [sending, setSending] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
-
-  // ---- État pour édition quantité
   const [editItemId, setEditItemId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState<number>(1);
-
-  // ---- Nouvel état : commande confirmée (retournée par backend)
   const [confirmedOrder, setConfirmedOrder] = useState<any>(null);
 
   const navigate = useNavigate();
   const blRef = useRef<HTMLDivElement>(null);
 
-  // ---- User depuis localStorage
+  // User depuis localStorage
   const user = (() => {
     try {
       const raw = localStorage.getItem("user");
@@ -49,7 +48,7 @@ export default function Cart() {
     }
   })();
 
-  // ------------------ API ------------------
+  // API
   const fetchCart = async () => {
     try {
       const data = await cartService.getCart();
@@ -95,7 +94,7 @@ export default function Cart() {
     return sum + item.product.prix_detail * item.quantity;
   }, 0);
 
-  // ----------- PDF BL (pour après confirmation) -----------
+  // PDF BL
   const handleExportPDF = async () => {
     if (!blRef.current) return;
     const canvas = await html2canvas(blRef.current);
@@ -111,7 +110,7 @@ export default function Cart() {
     pdf.save("bon-de-livraison.pdf");
   };
 
-  // ------------- Confirmer la commande ----------------
+  // Commande
   const handleSendOrder = async () => {
     setSending(true);
     setOrderError(null);
@@ -122,13 +121,11 @@ export default function Cart() {
         prix_detail: item.product?.prix_detail ?? 0,
         quantity: item.quantity,
       }));
-      // On récupère la commande créée (avec numéro et tout)
       const res = await orderService.createOrder({ items: orderItems, total });
       await cartService.clearCart();
       setCart([]);
-      setConfirmedOrder(res); // <= stocke la commande complète
+      setConfirmedOrder(res);
       setOrderSuccess("Commande envoyée avec succès !");
-      // NE PAS fermer la modale ici, attends l'action du client
     } catch {
       setOrderError("Erreur lors de la validation");
     } finally {
@@ -137,7 +134,7 @@ export default function Cart() {
     }
   };
 
-  // --------- Éditeur de quantité (local) -----------
+  // Éditeur quantité (local)
   const openEditor = (item: CartItem) => {
     setEditItemId(item.productId);
     setEditQty(item.quantity);
@@ -235,6 +232,45 @@ export default function Cart() {
                         gap: "1rem",
                       }}
                     >
+                      {/* ========== IMAGE PRODUIT ========== */}
+                      <div style={{ minWidth: 64, minHeight: 64 }}>
+                        {item.product.images && item.product.images.length > 0 ? (
+                          <img
+                            src={
+                              item.product.images[0].startsWith("http")
+                                ? item.product.images[0]
+                                : `${API_URL}${item.product.images[0]}`
+                            }
+                            alt={item.product.nom_product}
+                            style={{
+                              width: 64,
+                              height: 64,
+                              objectFit: "cover",
+                              borderRadius: 8,
+                              border: "1px solid #e5e7eb",
+                              background: "#fafafa",
+                            }}
+                            onError={e => (e.currentTarget.src = "/default-product.jpg")}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: 64,
+                              height: 64,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              background: "#ececec",
+                              borderRadius: 8,
+                              fontSize: 12,
+                              color: "#bbb",
+                              border: "1px solid #e5e7eb"
+                            }}
+                          >
+                            Pas d'image
+                          </div>
+                        )}
+                      </div>
                       {/* Produit + prix */}
                       <div style={{ flex: 1 }}>
                         <h3 style={{ margin: 0 }}>{item.product.nom_product}</h3>
@@ -330,7 +366,6 @@ export default function Cart() {
             </div>
           </>
         )}
-
         {/* --------  Modal Bon de Livraison (PRO) -------- */}
         {showModal && (
           <div

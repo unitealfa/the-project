@@ -22,6 +22,8 @@ interface Vehicule {
   model: string;
   year: string;
   license_plate: string;
+  capacity: number;          // AJOUTÉ
+  type: string[];            // AJOUTÉ
   chauffeur_id?: {
     _id: string;
     nom: string;
@@ -298,16 +300,14 @@ const VehicleDetail: React.FC = () => {
                 <p style={{ margin: '0.5rem 0', color: '#666' }}>Plaque d'immatriculation:</p>
                 <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{vehicule.license_plate}</p>
               </div>
-
               <div>
                 <p style={{ margin: '0.5rem 0', color: '#666' }}>Capacité:</p>
                 <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{vehicule.capacity}</p>
               </div>
-
               <div>
                 <p style={{ margin: '0.5rem 0', color: '#666' }}>Type:</p>
                 <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
-                  {vehicule.type.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')}
+                  {vehicule.type.map((t: string) => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')}
                 </p>
               </div>
             </div>
