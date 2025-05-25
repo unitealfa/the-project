@@ -11,6 +11,7 @@ interface Product {
   _id: string;
   nom_product: string;
   prix_detail: number;
+  images: string[];
 }
 
 interface CartItem {
@@ -53,6 +54,7 @@ export default function Cart() {
   const fetchCart = async () => {
     try {
       const data = await cartService.getCart();
+      console.log('Données du panier:', data);
       setCart(data?.items ?? []);
     } catch {
       setCart([]);
@@ -236,11 +238,25 @@ export default function Cart() {
                       }}
                     >
                       {/* Produit + prix */}
-                      <div style={{ flex: 1 }}>
-                        <h3 style={{ margin: 0 }}>{item.product.nom_product}</h3>
-                        <p style={{ margin: "0.5rem 0" }}>
-                          Prix unitaire : {item.product.prix_detail} €
-                        </p>
+                      <div style={{ flex: 1, display: "flex", gap: "1rem", alignItems: "center" }}>
+                        {item.product.images && item.product.images.length > 0 && (
+                          <img
+                            src={item.product.images[0]}
+                            alt={item.product.nom_product}
+                            style={{
+                              width: "100px",
+                              height: "100px",
+                              objectFit: "cover",
+                              borderRadius: "8px",
+                            }}
+                          />
+                        )}
+                        <div>
+                          <h3 style={{ margin: 0 }}>{item.product.nom_product}</h3>
+                          <p style={{ margin: "0.5rem 0" }}>
+                            Prix unitaire : {item.product.prix_detail} €
+                          </p>
+                        </div>
                       </div>
                       {/* Quantité + actions */}
                       <div

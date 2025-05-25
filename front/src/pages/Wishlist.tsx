@@ -10,6 +10,7 @@ interface Product {
   nom_product: string;
   description: string;
   prix_detail: number;
+  images: string[];
 }
 
 export default function Wishlist() {
@@ -96,6 +97,18 @@ export default function Wishlist() {
                   gap: '1rem'
                 }}
               >
+                {product.images && product.images.length > 0 && (
+                  <img
+                    src={product.images[0]}
+                    alt={product.nom_product}
+                    style={{
+                      width: "100%",
+                      height: "200px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
+                    }}
+                  />
+                )}
                 <h3 style={{ margin: 0 }}>{product.nom_product}</h3>
                 <p style={{ margin: 0 }}>{product.description}</p>
                 <p style={{ margin: 0, fontWeight: 'bold' }}>Prix: {product.prix_detail} €</p>

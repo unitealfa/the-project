@@ -1,6 +1,8 @@
 import { Module }         from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule }   from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 import { AuthModule }     from './auth/auth.module';
 import { UserModule }     from './user/user.module';
@@ -13,6 +15,7 @@ import { CartModule }     from './cart/cart.module';
 import { WishlistModule } from './wishlist/wishlist.module';
 import { VehicleModule } from './vehicle/vehicle.module'; // Add this line
 import { OrderModule } from './order/order.module';
+import { ImageUploadModule } from './upload/image-upload.module';
 
 @Module({
   imports: [
@@ -21,6 +24,11 @@ import { OrderModule } from './order/order.module';
 
     /* connexion MongoDB */
     MongooseModule.forRoot(process.env.MONGO_URI),
+
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+    }),
 
     /* modules fonctionnels */
     AuthModule,
@@ -34,6 +42,7 @@ import { OrderModule } from './order/order.module';
     WishlistModule,         // assure l'enregistrement de /wishlist
     VehicleModule, 
     OrderModule,// Add this line
+    ImageUploadModule,
   ],
 })
 export class AppModule {}

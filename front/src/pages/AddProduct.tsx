@@ -15,9 +15,11 @@ export default function AddProduct() {
     categorie: "",
     poids: "",
     volume: "",
-    imageUrl: "",
+    images: [] as string[],
     type: ["normal"],
   });
+
+  const [uploading, setUploading] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -28,6 +30,35 @@ export default function AddProduct() {
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, type: [e.target.value] }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', files[0]);
+
+      const token = localStorage.getItem('token');
+      const response = await axios.post('/api/upload/image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        },
+      });
+
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, `http://localhost:5000${response.data.path}`]
+      }));
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Erreur lors de l\'upload de l\'image');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,7 +73,7 @@ export default function AddProduct() {
       description: formData.description,
       categorie: formData.categorie,
       type: formData.type,
-      images: [formData.imageUrl],
+      images: Array.isArray(formData.images) ? formData.images : [],
       specifications: {
         poids: formData.poids,
         volume: formData.volume,
@@ -70,88 +101,173 @@ export default function AddProduct() {
       style={{ padding: "2rem", maxWidth: "600px", margin: "auto" }}
     >
       <h2>Ajouter un produit {depotId && `(pour le dépôt ${depotId})`}</h2>
-      <input
-        type="text"
-        name="nom_product"
-        placeholder="Nom"
-        onChange={handleChange}
-        required
-      />
-      <input
-        type="number"
-        name="prix_gros"
-        placeholder="Prix de gros"
-        onChange={handleChange}
-        required
-      />
-      <input
-        type="number"
-        name="prix_detail"
-        placeholder="Prix de détail"
-        onChange={handleChange}
-        required
-      />
-      <textarea
-        name="description"
-        placeholder="Description"
-        onChange={handleChange}
-        required
-      />
-      <input
-        type="text"
-        name="categorie"
-        placeholder="Catégorie"
-        onChange={handleChange}
-        required
-      />
-      <div style={{ margin: "1rem 0" }}>
-        <label>Type de produit :</label>
-        <div>
-          <label>
-            <input
-              type="radio"
-              name="type"
-              value="normal"
-              checked={formData.type.includes("normal")}
-              onChange={handleTypeChange}
-              required
-            />
-            Normal
-          </label>
-          <label style={{ marginLeft: "1rem" }}>
-            <input
-              type="radio"
-              name="type"
-              value="frigorifique"
-              checked={formData.type.includes("frigorifique")}
-              onChange={handleTypeChange}
-            />
-            Frigorifique
-          </label>
+      
+      <div style={{ marginBottom: "1rem" }}>
+        <label>
+          Nom du produit
+          <input
+            type="text"
+            name="nom_product"
+            value={formData.nom_product}
+            onChange={handleChange}
+            required
+          />
+        </label>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <label>
+          Prix de gros
+          <input
+            type="number"
+            name="prix_gros"
+            value={formData.prix_gros}
+            onChange={handleChange}
+            required
+          />
+        </label>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <label>
+          Prix de détail
+          <input
+            type="number"
+            name="prix_detail"
+            value={formData.prix_detail}
+            onChange={handleChange}
+            required
+          />
+        </label>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <label>
+          Description
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            required
+          />
+        </label>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <label>
+          Catégorie
+          <input
+            type="text"
+            name="categorie"
+            value={formData.categorie}
+            onChange={handleChange}
+            required
+          />
+        </label>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <label>
+          Poids
+          <input
+            type="text"
+            name="poids"
+            value={formData.poids}
+            onChange={handleChange}
+          />
+        </label>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <label>
+          Volume
+          <input
+            type="text"
+            name="volume"
+            value={formData.volume}
+            onChange={handleChange}
+          />
+        </label>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <label>
+          Type de produit
+          <div>
+            <label>
+              <input
+                type="radio"
+                name="type"
+                value="normal"
+                checked={formData.type.includes("normal")}
+                onChange={handleTypeChange}
+              />
+              Normal
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="type"
+                value="frigorifique"
+                checked={formData.type.includes("frigorifique")}
+                onChange={handleTypeChange}
+              />
+              Frigorifique
+            </label>
+          </div>
+        </label>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <label>
+          Images
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            disabled={uploading}
+          />
+        </label>
+        {uploading && <p>Upload en cours...</p>}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "1rem" }}>
+          {formData.images.map((image, index) => (
+            <div key={index} style={{ position: "relative" }}>
+              <img
+                src={image}
+                alt={`Product ${index + 1}`}
+                style={{ width: "100px", height: "100px", objectFit: "cover" }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData(prev => ({
+                    ...prev,
+                    images: prev.images.filter((_, i) => i !== index)
+                  }));
+                }}
+                style={{
+                  position: "absolute",
+                  top: "-10px",
+                  right: "-10px",
+                  background: "red",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "50%",
+                  width: "20px",
+                  height: "20px",
+                  cursor: "pointer"
+                }}
+              >
+                ×
+              </button>
+            </div>
+          ))}
         </div>
       </div>
-      <input
-        type="text"
-        name="poids"
-        placeholder="Poids (kg)"
-        onChange={handleChange}
-        required
-      />
-      <input
-        type="text"
-        name="volume"
-        placeholder="Volume (L)"
-        onChange={handleChange}
-        required
-      />
-      <input
-        type="text"
-        name="imageUrl"
-        placeholder="Image URL"
-        onChange={handleChange}
-        required
-      />
-      <button type="submit">Ajouter</button>
+
+      <button type="submit" disabled={uploading}>
+        Ajouter le produit
+      </button>
     </form>
   );
 }

@@ -9,6 +9,7 @@ interface Product {
   nom_product: string;
   description: string;
   prix_detail: number;
+  images: string[];
 }
 
 export default function ProductClient() {
@@ -95,6 +96,18 @@ export default function ProductClient() {
                   gap: "1rem",
                 }}
               >
+                {p.images && p.images.length > 0 && (
+                  <img
+                    src={p.images[0]}
+                    alt={p.nom_product}
+                    style={{
+                      width: "100%",
+                      height: "200px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
+                    }}
+                  />
+                )}
                 <h3 style={{ margin: 0 }}>{p.nom_product}</h3>
                 <p style={{ margin: 0 }}>{p.description}</p>
                 <p style={{ margin: 0, fontWeight: "bold" }}>
