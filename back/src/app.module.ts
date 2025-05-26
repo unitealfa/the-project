@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule }   from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { TourneeModule } from './tournee/tournee.module';
 
 import { AuthModule }     from './auth/auth.module';
 import { UserModule }     from './user/user.module';
@@ -43,6 +44,7 @@ import { ImageUploadModule } from './upload/image-upload.module';
     VehicleModule, 
     OrderModule,// Add this line
     ImageUploadModule,
+    TourneeModule,
   ],
 })
 export class AppModule {}

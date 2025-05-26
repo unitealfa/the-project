@@ -56,6 +56,8 @@ import Wishlist from "./pages/Wishlist";
 import Commandes from "@/pages/Commandes";
 import HistoriqueOrders from "./pages/HistoriqueOrders";
 
+import PlanifierTournee from "./pages/PlanifierTournee";
+
 export default function App() {
   return (
     <Routes>
@@ -316,7 +318,14 @@ export default function App() {
       <Route
         path="/clients"
         element={
-          <RequireAuth allowedRoles={["admin", "responsable depot", "superviseur des ventes", "Administrateur des ventes"]}>
+          <RequireAuth
+            allowedRoles={[
+              "admin",
+              "responsable depot",
+              "superviseur des ventes",
+              "Administrateur des ventes",
+            ]}
+          >
             <ClientsList />
           </RequireAuth>
         }
@@ -340,7 +349,14 @@ export default function App() {
       <Route
         path="/clients/:id"
         element={
-          <RequireAuth allowedRoles={["admin", "responsable depot", "superviseur des ventes", "Administrateur des ventes"]}>
+          <RequireAuth
+            allowedRoles={[
+              "admin",
+              "responsable depot",
+              "superviseur des ventes",
+              "Administrateur des ventes",
+            ]}
+          >
             <ClientDetail />
           </RequireAuth>
         }
@@ -463,6 +479,19 @@ export default function App() {
           </RequireAuth>
         }
       />
+
+      {/* … vos routes admin-ventes existantes … */}
+
+      <Route
+        path="/admin-ventes/planifier-tournee"
+        element={
+          <RequireAuth allowedRoles={["Administrateur des ventes"]}>
+            <PlanifierTournee />
+          </RequireAuth>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
