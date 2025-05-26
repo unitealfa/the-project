@@ -7,22 +7,27 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class ClientService {
-  constructor(@InjectModel('Client') private readonly clientModel: Model<Client>) {}
+  constructor(
+    @InjectModel('Client') private readonly clientModel: Model<Client>,
+  ) {}
 
+  /* ───────────── CRÉATION ───────────── */
   async create(dto: CreateClientDto): Promise<Client> {
     const existing = await this.clientModel.findOne({ email: dto.email });
+
     const hashed = await bcrypt.hash(dto.password, 10);
-    const affectations = dto.affectations?.map((a) => ({
-      entreprise: new Types.ObjectId(a.entreprise),
-      depot: new Types.ObjectId(a.depot),
-    })) ?? [];
+    const affectations =
+      dto.affectations?.map((a) => ({
+        entreprise: new Types.ObjectId(a.entreprise),
+        depot: new Types.ObjectId(a.depot),
+      })) ?? [];
 
     if (existing) {
       const newAffectations = affectations.filter(
         (a) =>
           !existing.affectations.some(
-            (e) => e.depot.toString() === a.depot.toString()
-          )
+            (e) => e.depot.toString() === a.depot.toString(),
+          ),
       );
       if (newAffectations.length > 0) {
         existing.affectations.push(...newAffectations);
@@ -39,19 +44,21 @@ export class ClientService {
     return created.save();
   }
 
+  /* ───────────── LECTURE ───────────── */
   async findAll(): Promise<Client[]> {
     return this.clientModel.find().lean();
   }
 
   async findByDepot(depotId: string): Promise<Client[]> {
-    return this.clientModel.find({
-      $or: [
-        { 'affectations.depot': depotId }, // si c'est une string
-        { 'affectations.depot': new Types.ObjectId(depotId) }, // si c'est un ObjectId
-      ],
-    }).lean();
+    return this.clientModel
+      .find({
+        $or: [
+          { 'affectations.depot': depotId }, // string
+          { 'affectations.depot': new Types.ObjectId(depotId) }, // ObjectId
+        ],
+      })
+      .lean();
   }
-  
 
   async findById(id: string): Promise<Client | null> {
     return this.clientModel.findById(id).lean();
@@ -61,14 +68,18 @@ export class ClientService {
     return this.clientModel.findOne({ email }).lean();
   }
 
-  async addAffectation(clientId: string, entrepriseId: string, depotId: string) {
+  /* ───────────── AFFECTATION ───────────── */
+  async addAffectation(
+    clientId: string,
+    entrepriseId: string,
+    depotId: string,
+  ) {
     const client = await this.clientModel.findById(clientId);
     if (!client) return null;
 
     const exists = client.affectations.some(
-      (a) => a.depot.toString() === depotId
+      (a) => a.depot.toString() === depotId,
     );
-
     if (exists) {
       throw new Error('Ce client est déjà affecté à ce dépôt.');
     }
@@ -81,6 +92,7 @@ export class ClientService {
     return client.save();
   }
 
+  /* ───────────── MISE À JOUR ───────────── */
   async update(id: string, dto: Partial<CreateClientDto>) {
     if (dto.password) {
       dto.password = await bcrypt.hash(dto.password, 10);
@@ -88,6 +100,7 @@ export class ClientService {
     return this.clientModel.findByIdAndUpdate(id, dto, { new: true }).lean();
   }
 
+  /* ───────────── SUPPRESSION ───────────── */
   async delete(id: string) {
     return this.clientModel.findByIdAndDelete(id).lean();
   }

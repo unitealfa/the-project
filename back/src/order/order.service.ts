@@ -49,14 +49,13 @@ export class OrderService {
       },
       items: dto.items,
       total: dto.total,
-      confirmed: false, // <-- important
-      numero: null // <-- important
+      confirmed: false,
+      numero: null
     });
 
     return order.save();
   }
 
-  // Confirmation (génère numéro et passe confirmed à true)
   async confirmOrder(orderId: string) {
     const numero = "CMD-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
     return this.orderModel.findByIdAndUpdate(
@@ -66,7 +65,28 @@ export class OrderService {
     );
   }
 
+  // --- MODIFIE ICI POUR JOINDRE LES COORDONNÉES DU CLIENT ---
   async findByDepot(depotId: string) {
-    return this.orderModel.find({ depot: depotId }).sort({ createdAt: -1 });
+    // 1. Récupère les commandes
+    const orders = await this.orderModel.find({ depot: depotId }).lean();
+
+    // 2. Récupère tous les clients nécessaires en une seule fois
+    const clientIds = [...new Set(orders.map(o => o.clientId))];
+    const clients = await this.clientModel.find({ _id: { $in: clientIds } }).lean();
+    const clientMap = Object.fromEntries(clients.map(c => [c._id.toString(), c]));
+
+    // 3. Ajoute les infos clients à chaque commande (latitude, longitude, nom, téléphone)
+    return orders.map(order => {
+      const client = clientMap[order.clientId?.toString()];
+      const coord = client?.localisation?.coordonnees || { latitude: 0, longitude: 0 };
+      return {
+        ...order,
+        client_latitude: coord.latitude,
+        client_longitude: coord.longitude,
+        client_nom: client?.nom_client || '',
+        client_telephone: client?.contact?.telephone || '',
+        // Tu peux aussi ajouter ici d'autres infos si tu veux
+      };
+    });
   }
 }
