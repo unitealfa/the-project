@@ -72,6 +72,7 @@ export class DepotService {
     let objId: Types.ObjectId;
     try {
       objId = new Types.ObjectId(id);
+      console.log("[DEBUG] ObjectId créé avec succès:", objId);
     } catch (err) {
       console.error("[❌] id n'est pas un ObjectId MongoDB:", id);
       throw new NotFoundException("Dépôt introuvable (id incorrect)");
@@ -79,6 +80,7 @@ export class DepotService {
 
     // Gestion responsable depot (user lié)
     if (user.role === "responsable depot") {
+      console.log("[DEBUG] Utilisateur est responsable depot");
       if (!user.depot || user.depot != id) {
         console.error("[❌] Responsable depot sans droit sur ce dépôt :", user.depot, id);
         throw new NotFoundException("Accès interdit ou introuvable");
@@ -96,6 +98,7 @@ export class DepotService {
 
     // Gestion admin/super admin/administrateur des ventes
     const ADMIN_ROLES = ["admin", "super admin", "administrateur des ventes"];
+    console.log("[DEBUG] Rôle utilisateur:", user.role);
     if (!ADMIN_ROLES.includes((user.role || "").toLowerCase())) {
       console.error("[❌] Rôle interdit :", user.role);
       throw new ForbiddenException("Accès non autorisé");
@@ -103,6 +106,7 @@ export class DepotService {
 
     // Récupère l'admin
     const admin = await this.userModel.findById(user.id).lean();
+    console.log("[DEBUG] Admin trouvé:", admin);
     if (!admin) {
       console.error("[❌] Admin introuvable par son id:", user.id);
       throw new ForbiddenException("Utilisateur administrateur introuvable");
@@ -116,13 +120,13 @@ export class DepotService {
     let adminCompany;
     try {
       adminCompany = new Types.ObjectId(admin.company);
+      console.log("[DEBUG] Company ObjectId créé:", adminCompany);
     } catch (err) {
       console.error("[❌] company n'est pas un ObjectId MongoDB:", admin.company);
       throw new ForbiddenException("L'entreprise de l'admin n'est pas valide");
     }
 
-    console.log('ADMIN:', admin, 'company_id type:', typeof admin.company, admin.company instanceof Types.ObjectId);
-    console.log('FIND:', { _id: objId, company_id: adminCompany });
+    console.log('[DEBUG] Recherche dépôt avec:', { _id: objId, company_id: adminCompany });
 
     // Recherche "béton" : jamais de string, TOUJOURS ObjectId
     const dp = await this.depotModel
@@ -135,7 +139,7 @@ export class DepotService {
       throw new NotFoundException("Dépôt introuvable");
     }
 
-    console.log('[DEBUG findOne DEPOT]', dp);
+    console.log('[DEBUG] Dépôt trouvé:', dp);
     return dp;
   }
 

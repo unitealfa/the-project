@@ -16,7 +16,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 
-@Controller('depots')
+@Controller('api/depots')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class DepotController {
   constructor(private readonly depotService: DepotService) {}
@@ -31,13 +31,13 @@ export class DepotController {
   }
 
   @Get()
-  @Roles('Admin')
+  @Roles('Admin', 'Administrateur des ventes')
   findAll(@Req() req: Request & { user: any }) {
     return this.depotService.findAllForCompany(req.user.id);
   }
 
   @Get(':id')
-  @Roles('Admin', 'responsable depot')
+  @Roles('Admin', 'responsable depot', 'Administrateur des ventes')
   findOne(
     @Param('id') id: string,
     @Req() req: Request & { user: any },
