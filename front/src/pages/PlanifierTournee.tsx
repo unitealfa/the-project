@@ -156,7 +156,7 @@ const PlanifierTournee: React.FC = () => {
         );
 
         // 4. liste clients
-        let list: ClientWithWeight[] = Object.entries(map).map(([id, c]) => {
+        const list: ClientWithWeight[] = Object.entries(map).map(([id, c]) => {
           const w = c.items.reduce(
             (s, it) => s + (pMap[it.productId] || 0) * it.quantity,
             0
@@ -173,32 +173,28 @@ const PlanifierTournee: React.FC = () => {
         });
         setClients(list);
 
-        // 5. Charger coordonnées du dépôt (une seule fois !)
-        let depotCoord: { latitude: number; longitude: number } = {
-          latitude: 0,
-          longitude: 0,
-        };
+        // 5. Charger coordonnées du dépôt
+        let depotCoord = { latitude: 0, longitude: 0 };
         const depotRes = await apiFetch(`/api/depots/${depotId}`);
         if (depotRes.ok) {
           const d = await depotRes.json();
           if (
-            d.coordonnees &&
-            typeof d.coordonnees.latitude === "number" &&
-            typeof d.coordonnees.longitude === "number"
+            d.coordonnees?.latitude != null &&
+            d.coordonnees?.longitude != null
           ) {
             depotCoord = d.coordonnees;
           }
         }
         setDepotCoords(depotCoord);
 
-        // 6. CHARGER la flotte de véhicules
+        // 6. Charger la flotte de véhicules
         const vRes = await apiFetch(`/vehicles/by-depot?depot=${depotId}`);
         if (!vRes.ok) {
           setFleet([]);
         } else {
           const vehicles: Vehicle[] = await vRes.json();
           const withStaff = vehicles.filter(
-            (v) => !!v.chauffeur_id && !!v.livreur_id
+            (v) => v.chauffeur_id && v.livreur_id
           );
           setFleet(
             withStaff.map((v) => ({
@@ -228,38 +224,50 @@ const PlanifierTournee: React.FC = () => {
     load();
   }, [depotId]);
 
-  const handleFleetChange = (idx: number, field: string, value: any) => {
-    setFleet((fleet) =>
-      fleet.map((v, i) =>
+  const handleFleetChange = (
+    idx: number,
+    field: "start" | "end",
+    value: string
+  ) => {
+    setFleet((f) =>
+      f.map((v, i) =>
         i === idx ? { ...v, shift: { ...v.shift, [field]: value } } : v
       )
     );
   };
 
-  // 🚨🚨 ADAPTATION DU PAYLOAD POUR L'API 🚨🚨
   const handlePlanifier = () => {
     if (!depotId) return;
     const today = new Date().toISOString().slice(0, 10);
 
     const stops = clients.map((cl, idx) => ({
-      id: cl._id || String(idx + 1), // assure une string
-      name: cl.nom_client || null,
+      id: cl._id,
+      name: cl.nom_client,
       location: { latitude: cl.latitude, longitude: cl.longitude },
       duration: 10,
-      load: cl.totalWeight || 1,
+      load: cl.totalWeight,
       types: null,
       priority: null,
       time_windows: null,
     }));
 
-    const fleetPayload = fleet.map((v, idx) => ({
-      id: v.id || String(idx + 1), // assure une string
-      start_location: v.start_location,
-      end_location: v.end_location,
+    const fleetPayload = fleet.map((v) => ({
+      id: v.id,
+      start_location: {
+        latitude: v.start_location.latitude,
+        longitude: v.start_location.longitude,
+      },
+      end_location: {
+        latitude: v.end_location.latitude,
+        longitude: v.end_location.longitude,
+      },
       shift: v.shift,
       capacity: v.capacity,
-      types: null,         
-      speed_factor: 1.0
+      types: null,
+      min_stops: null,
+      max_stops: null,
+      breaks: null,
+      off_days: null,
     }));
 
     const payload = {
@@ -271,10 +279,21 @@ const PlanifierTournee: React.FC = () => {
       fleet: fleetPayload,
     };
 
-    // Debug du payload pour voir ce qui part à l'API
-    console.log("[DEBUG][Planifier][payload envoyé]:", payload);
+    console.log("[DEBUG] payload envoye", payload);
 
-    // Génération du fichier comme l'API attend
+    // Appel réel à l’API (à décommenter pour prod)
+    /*
+    fetch(`/api/tournees/planifier?depotId=${depotId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then(res => res.json())
+      .then(data => console.log("API réponse:", data))
+      .catch(err => console.error("API erreur:", err));
+    */
+
+    // téléchargement JSON
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: "application/json",
     });
@@ -348,9 +367,7 @@ const PlanifierTournee: React.FC = () => {
                   Aucun véhicule avec chauffeur et livreur trouvé dans ce dépôt.
                 </p>
               ) : (
-                <table
-                  style={{ width: "100%", marginTop: 15, marginBottom: 18 }}
-                >
+                <table style={{ width: "100%", margin: "15px 0 18px" }}>
                   <thead>
                     <tr>
                       <th style={thStyle}>ID Véhicule</th>
@@ -377,12 +394,12 @@ const PlanifierTournee: React.FC = () => {
                         <td style={tdStyle}>{v.chauffeur}</td>
                         <td style={tdStyle}>{v.livreur}</td>
                         <td style={tdStyle}>
-                          {v.start_location.latitude?.toFixed(5)},{" "}
-                          {v.start_location.longitude?.toFixed(5)}
+                          {v.start_location.latitude.toFixed(5)},{" "}
+                          {v.start_location.longitude.toFixed(5)}
                         </td>
                         <td style={tdStyle}>
-                          {v.end_location.latitude?.toFixed(5)},{" "}
-                          {v.end_location.longitude?.toFixed(5)}
+                          {v.end_location.latitude.toFixed(5)},{" "}
+                          {v.end_location.longitude.toFixed(5)}
                         </td>
                         <td style={tdStyle}>
                           <input
@@ -479,7 +496,7 @@ const PlanifierTournee: React.FC = () => {
                   <th style={thStyle}>Adresse</th>
                   <th style={thStyle}>Latitude</th>
                   <th style={thStyle}>Longitude</th>
-                  <th style={thStyle}>Poids&nbsp;(kg)</th>
+                  <th style={thStyle}>Poids (kg)</th>
                 </tr>
               </thead>
               <tbody>
@@ -494,8 +511,8 @@ const PlanifierTournee: React.FC = () => {
                       {cl.localisation.adresse}, {cl.localisation.ville},{" "}
                       {cl.localisation.region}
                     </td>
-                    <td style={tdStyle}>{cl.latitude?.toFixed(6) ?? "–"}</td>
-                    <td style={tdStyle}>{cl.longitude?.toFixed(6) ?? "–"}</td>
+                    <td style={tdStyle}>{cl.latitude.toFixed(6)}</td>
+                    <td style={tdStyle}>{cl.longitude.toFixed(6)}</td>
                     <td
                       style={{
                         ...tdStyle,

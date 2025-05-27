@@ -32,7 +32,11 @@ export class TourneeService {
       throw new NotFoundException("Dépôt introuvable");
     }
     const depotCoords = (depotDoc as any).localisation?.coordonnees;
-    if (!depotCoords) {
+    if (
+      !depotCoords ||
+      typeof depotCoords.latitude !== "number" ||
+      typeof depotCoords.longitude !== "number"
+    ) {
       this.logger.error(`Coordonnées manquantes pour le dépôt ${depotId}`);
       throw new NotFoundException("Coordonnées manquantes pour le dépôt");
     }
@@ -65,7 +69,6 @@ export class TourneeService {
         this.logger.warn(`Client ${o.clientId} introuvable, on l’ignore`);
         continue;
       }
-
       const coord = (cl as any).localisation?.coordonnees;
       if (
         !coord ||
@@ -80,14 +83,12 @@ export class TourneeService {
       this.logger.debug(
         `Coordonnées client ${cl.nom_client} : ${coord.latitude}, ${coord.longitude}`
       );
-
       const poidsCommande = o.items.reduce(
         (acc: number, it: any) =>
           acc + (parseFloat(it.poids ?? "0") || 0) * it.quantity,
         0
       );
       this.logger.debug(`Poids commande ${o._id} : ${poidsCommande}kg`);
-
       if (!clientMap[o.clientId]) {
         clientMap[o.clientId] = {
           name: cl.nom_client,
@@ -100,21 +101,16 @@ export class TourneeService {
     }
 
     // 4) Construction des stops
-    const stops = Object.entries(clientMap).map(([id, c]) => {
-      this.logger.debug(
-        `Stop pour client ${c.name} (${id}) → load=${c.load}, loc=[${c.latitude},${c.longitude}]`
-      );
-      return {
-        id,
-        name: c.name,
-        location: { latitude: c.latitude, longitude: c.longitude },
-        duration: 10,
-        load: c.load || 1,
-        types: null,
-        priority: null,
-        time_windows: null,
-      };
-    });
+    const stops = Object.entries(clientMap).map(([id, c]) => ({
+      id,
+      name: c.name,
+      location: { latitude: c.latitude, longitude: c.longitude },
+      duration: 10,
+      load: c.load || 1,
+      types: null,
+      priority: null,
+      time_windows: null,
+    }));
     this.logger.log(`Total stops valides : ${stops.length}`);
 
     // 5) Parc véhicules
@@ -164,7 +160,7 @@ export class TourneeService {
     );
     this.logger.debug("Réponse API VRP reçue");
 
-    // 8) Sauvegarde
+    // 8) Sauvegarde complète
     await this.tourneeModel.create({
       depot: depotId,
       date: new Date(),
@@ -172,9 +168,12 @@ export class TourneeService {
       vehicles: fleet.map((f) => f.id),
       solution: data.solution,
       unscheduled: data.unscheduled,
+      total_travel_time: data.total_travel_time,
+      total_travel_distance: data.total_travel_distance,
+      raw_response: data,
     });
-    this.logger.log("Tournée enregistrée avec succès");
 
+    this.logger.log("Tournée enregistrée avec succès");
     return { success: true };
   }
 }

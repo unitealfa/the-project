@@ -1,3 +1,4 @@
+// src/tournee/schemas/tournee.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
@@ -26,6 +27,18 @@ export class Tournee extends Document {
   /* Arrêts non planifiés par l’optimiseur */
   @Prop({ type: Array })
   unscheduled!: unknown[];
+
+  /* Temps de trajet total (minutes) */
+  @Prop()
+  total_travel_time?: number;
+
+  /* Distance totale parcourue (km) */
+  @Prop()
+  total_travel_distance?: number;
+
+  /* Réponse brute complète de l’API VRP */
+  @Prop({ type: Object })
+  raw_response?: unknown;
 }
 
 export const TourneeSchema = SchemaFactory.createForClass(Tournee);
