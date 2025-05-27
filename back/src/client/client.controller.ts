@@ -60,7 +60,7 @@ export class ClientController {
   /* ──────────────────────── GET CLIENT PAR ID ──────────────────────── */
 
   @Get(':id')
-  @Roles('Admin', 'responsable depot', 'superviseur des ventes', 'Administrateur des ventes')
+  @Roles('Admin', 'responsable depot', 'superviseur des ventes', 'Administrateur des ventes', 'Pré-vendeur')
   async getClientById(@Param('id') id: string) {
     this.logger.debug(`GET /clients/${id}`);
     const client = await this.clientService.findById(id);

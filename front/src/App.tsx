@@ -52,6 +52,7 @@ import DetailPreventeMember from "./pages/DetailPreventeMember";
 import ProductClient from "./pages/ProductClient";
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
+import ProductList from "./pages/ProductList";
 
 import Commandes from "@/pages/Commandes";
 import HistoriqueOrders from "./pages/HistoriqueOrders";
@@ -404,6 +405,15 @@ export default function App() {
         element={
           <RequireAuth allowedRoles={["client"]}>
             <Wishlist />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/productlist"
+        element={
+          <RequireAuth allowedRoles={["Pré-vendeur"]}>
+            <ProductList />
           </RequireAuth>
         }
       />
