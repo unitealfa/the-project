@@ -32,16 +32,17 @@ export class ClientController {
   /* ───────────────────────── LISTE DES CLIENTS ───────────────────────── */
 
   @Get()
-  @Roles('Admin', 'responsable depot', 'superviseur des ventes', 'Administrateur des ventes')
+  @Roles('Admin', 'responsable depot', 'superviseur des ventes', 'Administrateur des ventes', 'Pré-vendeur')
   async getClients(@Req() req, @Query('depot') depotId?: string) {
     const user = req.user;
     this.logger.debug(`GET /clients – role=${user.role} depotQuery=${depotId ?? '∅'}`);
 
-    // responsables / superviseurs / admin-ventes ⇒ uniquement leur dépôt
+    // responsables / superviseurs / admin-ventes / prévendeurs ⇒ uniquement leur dépôt
     if (
       user.role === 'responsable depot' ||
       user.role === 'superviseur des ventes' ||
-      user.role === 'Administrateur des ventes'
+      user.role === 'Administrateur des ventes' ||
+      user.role === 'Pré-vendeur'
     ) {
       this.logger.debug(` → findByDepot(${user.depot})`);
       return this.clientService.findByDepot(user.depot);
@@ -59,7 +60,7 @@ export class ClientController {
   /* ──────────────────────── GET CLIENT PAR ID ──────────────────────── */
 
   @Get(':id')
-  @Roles('Admin', 'responsable depot', 'superviseur des ventes', 'Administrateur des ventes')
+  @Roles('Admin', 'responsable depot', 'superviseur des ventes', 'Administrateur des ventes', 'Pré-vendeur')
   async getClientById(@Param('id') id: string) {
     this.logger.debug(`GET /clients/${id}`);
     const client = await this.clientService.findById(id);

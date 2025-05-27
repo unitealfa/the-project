@@ -20,12 +20,21 @@ export interface Cart {
   items: CartItem[];
 }
 
+const getUser = () => {
+  const rawUser = localStorage.getItem('user');
+  return rawUser ? JSON.parse(rawUser) : null;
+};
+
 export const cartService = {
-  async addToCart(productId: string, quantity: number): Promise<Cart> {
-    console.log('Ajout au panier:', { productId, quantity });
+  async addToCart(productId: string, quantity: number, clientId?: string): Promise<Cart> {
+    console.log('Ajout au panier:', { productId, quantity, clientId });
+    const user = getUser();
+    const isPrevendeur = user?.role === 'Pré-vendeur';
+    
     const response = await axios.post(`${API_URL}/api/cart`, {
       productId,
       quantity,
+      ...(isPrevendeur && clientId ? { clientId } : {})
     }, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -35,9 +44,13 @@ export const cartService = {
     return response.data;
   },
 
-  async getCart(): Promise<Cart> {
+  async getCart(clientId?: string): Promise<Cart> {
     console.log('Récupération du panier');
+    const user = getUser();
+    const isPrevendeur = user?.role === 'Pré-vendeur';
+    
     const response = await axios.get(`${API_URL}/api/cart`, {
+      params: isPrevendeur && clientId ? { clientId } : {},
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
@@ -46,10 +59,14 @@ export const cartService = {
     return response.data;
   },
 
-  async updateCartItem(productId: string, quantity: number): Promise<Cart> {
-    console.log('Mise à jour du panier:', { productId, quantity });
+  async updateCartItem(productId: string, quantity: number, clientId?: string): Promise<Cart> {
+    console.log('Mise à jour du panier:', { productId, quantity, clientId });
+    const user = getUser();
+    const isPrevendeur = user?.role === 'Pré-vendeur';
+    
     const response = await axios.put(`${API_URL}/api/cart/${productId}`, {
       quantity,
+      ...(isPrevendeur && clientId ? { clientId } : {})
     }, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -59,9 +76,13 @@ export const cartService = {
     return response.data;
   },
 
-  async removeFromCart(productId: string): Promise<Cart> {
-    console.log('Suppression du panier:', { productId });
+  async removeFromCart(productId: string, clientId?: string): Promise<Cart> {
+    console.log('Suppression du panier:', { productId, clientId });
+    const user = getUser();
+    const isPrevendeur = user?.role === 'Pré-vendeur';
+    
     const response = await axios.delete(`${API_URL}/api/cart/${productId}`, {
+      params: isPrevendeur && clientId ? { clientId } : {},
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
@@ -70,9 +91,13 @@ export const cartService = {
     return response.data;
   },
 
-  async clearCart(): Promise<Cart> {
+  async clearCart(clientId?: string): Promise<Cart> {
     console.log('Vidage du panier');
+    const user = getUser();
+    const isPrevendeur = user?.role === 'Pré-vendeur';
+    
     const response = await axios.delete(`${API_URL}/api/cart`, {
+      params: isPrevendeur && clientId ? { clientId } : {},
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }

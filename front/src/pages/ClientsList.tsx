@@ -265,6 +265,17 @@ export default function ClientsList() {
                     <button onClick={() => navigate(`/clients/${client._id}`)} style={actionBtn}>
                       👁️ Voir
                     </button>
+                    {user?.role === 'Pré-vendeur' && (
+                      <button 
+                        onClick={() => navigate(`/productlist?clientId=${client._id}`)} 
+                        style={{
+                          ...actionBtn,
+                          color: '#10b981'
+                        }}
+                      >
+                        🛒 Commande
+                      </button>
+                    )}
                     {user?.role === 'responsable depot' && (
                       <>
                         <button onClick={() => navigate(`/clients/edit/${client._id}`)} style={actionBtn}>
