@@ -17,3 +17,5 @@ node_modules/.vite/
 .vscode/
 .idea/
 front/package.json
+
+back/src/config/secret/vrp.ts

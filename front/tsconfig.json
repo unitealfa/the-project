@@ -28,7 +28,7 @@
     },
 
     /* ─── types Vite (env) ─── */
-    "types": ["vite/client"]
+    "types": ["node", "react", "react-dom", "vite/client"]
   },
 
   "include": [

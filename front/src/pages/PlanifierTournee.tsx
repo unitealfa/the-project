@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
 import { apiFetch } from "../utils/api";
+import { vrpConfig } from "../config/vrp.config";
 
 interface OrderItem {
   productId: string;
@@ -236,11 +237,11 @@ const PlanifierTournee: React.FC = () => {
     );
   };
 
-  const handlePlanifier = () => {
+  const handlePlanifier = async () => {
     if (!depotId) return;
     const today = new Date().toISOString().slice(0, 10);
 
-    const stops = clients.map((cl, idx) => ({
+    const stops = clients.map((cl) => ({
       id: cl._id,
       name: cl.nom_client,
       location: { latitude: cl.latitude, longitude: cl.longitude },
@@ -271,6 +272,7 @@ const PlanifierTournee: React.FC = () => {
     }));
 
     const payload = {
+      depotId,
       date_interval: {
         start: `${today}T08:00:00`,
         end: `${today}T16:00:00`,
@@ -279,32 +281,33 @@ const PlanifierTournee: React.FC = () => {
       fleet: fleetPayload,
     };
 
-    console.log("[DEBUG] payload envoye", payload);
+    console.log("▶️ Envoi payload à notre backend :", payload);
 
-    // Appel réel à l’API (à décommenter pour prod)
-    /*
-    fetch(`/api/tournees/planifier?depotId=${depotId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
-      .then(res => res.json())
-      .then(data => console.log("API réponse:", data))
-      .catch(err => console.error("API erreur:", err));
-    */
+    try {
+      const res = await fetch(`/api/tournees/planifier`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      console.log("✅ Backend VRP a répondu :", data);
 
-    // téléchargement JSON
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "tournee-payload.json";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "tournee-reponse-backend.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("❌ Erreur appel backend VRP :", err);
+      alert("Erreur lors de l’appel au backend VRP : " + err);
+    }
   };
 
   if (loading) return <p>Chargement…</p>;
