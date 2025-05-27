@@ -318,14 +318,7 @@ export default function App() {
       <Route
         path="/clients"
         element={
-          <RequireAuth
-            allowedRoles={[
-              "admin",
-              "responsable depot",
-              "superviseur des ventes",
-              "Administrateur des ventes",
-            ]}
-          >
+          <RequireAuth allowedRoles={["admin", "responsable depot", "Pré-vendeur"]}>
             <ClientsList />
           </RequireAuth>
         }
@@ -333,31 +326,24 @@ export default function App() {
       <Route
         path="/clients/add"
         element={
-          <RequireAuth allowedRoles={["responsable depot"]}>
+          <RequireAuth allowedRoles={["admin", "responsable depot"]}>
             <AddClient />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/clients/edit/:id"
-        element={
-          <RequireAuth allowedRoles={["responsable depot"]}>
-            <EditClient />
           </RequireAuth>
         }
       />
       <Route
         path="/clients/:id"
         element={
-          <RequireAuth
-            allowedRoles={[
-              "admin",
-              "responsable depot",
-              "superviseur des ventes",
-              "Administrateur des ventes",
-            ]}
-          >
+          <RequireAuth allowedRoles={["admin", "responsable depot", "Pré-vendeur"]}>
             <ClientDetail />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/clients/:id/edit"
+        element={
+          <RequireAuth allowedRoles={["admin", "responsable depot"]}>
+            <EditClient />
           </RequireAuth>
         }
       />
