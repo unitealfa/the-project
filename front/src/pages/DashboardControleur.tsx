@@ -1,5 +1,6 @@
 // front/src/pages/DashboardControleur.tsx
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 
 export default function DashboardControleur() {
@@ -16,7 +17,20 @@ export default function DashboardControleur() {
 
         <section style={{marginTop:'2rem'}}>
           <h2>✅  Inventaires &amp; contrôles qualité</h2>
-          <p style={{opacity:.7}}>Module en développement…</p>
+          <Link
+            to="/tournees"
+            style={{
+              display: 'inline-block',
+              marginTop: '0.5rem',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#4f46e5',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '4px'
+            }}
+          >
+            Voir les tournées
+          </Link>
         </section>
       </main>
     </>

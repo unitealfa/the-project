@@ -58,6 +58,8 @@ import Commandes from "@/pages/Commandes";
 import HistoriqueOrders from "./pages/HistoriqueOrders";
 
 import PlanifierTournee from "./pages/PlanifierTournee";
+import TourneesList from "./pages/TourneesList";
+import TourneeDetail from "./pages/TourneeDetail";
 
 export default function App() {
   return (
@@ -483,6 +485,24 @@ export default function App() {
         element={
           <RequireAuth allowedRoles={["Administrateur des ventes"]}>
             <PlanifierTournee />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/tournees"
+        element={
+          <RequireAuth allowedRoles={["manutentionnaire", "contrôleur"]}>
+            <TourneesList />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/tournees/:id"
+        element={
+          <RequireAuth allowedRoles={["manutentionnaire", "contrôleur"]}>
+            <TourneeDetail />
           </RequireAuth>
         }
       />
