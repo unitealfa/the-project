@@ -1,3 +1,5 @@
+// back/src/orders/order.controller.ts
+
 import {
   Controller,
   Get,
@@ -10,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderDto } from './dto/update-order.dto';    // ← nouveau
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { GetUser } from '../auth/decorators';
 
@@ -35,9 +38,13 @@ export class OrderController {
     return this.orderService.findByDepot(depotId);
   }
 
-  // ---- AJOUT POUR CONFIRMATION ----
+  // ← NOUVEL ENDPOINT
   @Patch(':id/confirm')
-  async confirmOrder(@Param('id') orderId: string) {
+  async confirmOrder(
+    @Param('id') orderId: string,
+    @Body() dto: UpdateOrderDto,
+  ) {
+    // vous pouvez ignorer le dto.confirmed et forcer à true
     return this.orderService.confirmOrder(orderId);
   }
 }

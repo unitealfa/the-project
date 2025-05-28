@@ -241,6 +241,7 @@ const PlanifierTournee: React.FC = () => {
     if (!depotId) return;
     const today = new Date().toISOString().slice(0, 10);
 
+    // --- Construction du payload VRP ---
     const stops = clients.map((cl) => ({
       id: cl._id,
       name: cl.nom_client,
@@ -273,10 +274,7 @@ const PlanifierTournee: React.FC = () => {
 
     const payload = {
       depotId,
-      date_interval: {
-        start: `${today}T08:00:00`,
-        end: `${today}T16:00:00`,
-      },
+      date_interval: { start: `${today}T08:00:00`, end: `${today}T16:00:00` },
       stops,
       fleet: fleetPayload,
     };
@@ -284,6 +282,7 @@ const PlanifierTournee: React.FC = () => {
     console.log("▶️ Envoi payload à notre backend :", payload);
 
     try {
+      // 1) Envoi au backend
       const res = await fetch(`/api/tournees/planifier`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -293,6 +292,39 @@ const PlanifierTournee: React.FC = () => {
       const data = await res.json();
       console.log("✅ Backend VRP a répondu :", data);
 
+      // 2) Récupère tous les clientIds planifiés (hors end_…)
+      const plannedClientIds: string[] = Object.values(data.solution.date1)
+        .flatMap((driverOut: any) =>
+          driverOut.ordered_stops.map((s: any) => s.stop_id)
+        )
+        .filter((id: string) => !id.startsWith("end_"));
+
+      // 3) Pour chaque clientId, patch toutes ses commandes pour confirmed = true
+      await Promise.all(
+        plannedClientIds.flatMap((clientId) =>
+          orders
+            .filter((o) => o.clientId === clientId)
+            .map((order) =>
+              apiFetch(`/api/orders/${order._id}/confirm`, {
+                method: "PATCH",
+              })
+            )
+        )
+      );
+
+      // 4) Mets à jour l’UI en retirant les commandes/clients planifiés
+      setOrders((prev) =>
+        prev.filter((o) => !plannedClientIds.includes(o.clientId))
+      );
+      setClients((prev) =>
+        prev.filter((c) => !plannedClientIds.includes(c._id))
+      );
+
+      // 5) Fermeture de la modale et notification
+      setShowFleetModal(false);
+      alert("Tournée planifiée et commandes confirmées !");
+
+      // 6) Téléchargement de la réponse pour debug/test
       const blob = new Blob([JSON.stringify(data, null, 2)], {
         type: "application/json",
       });
