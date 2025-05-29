@@ -61,6 +61,9 @@ import PlanifierTournee from "./pages/PlanifierTournee";
 import TourneesList from "./pages/TourneesList";
 import TourneeDetail from "./pages/TourneeDetail";
 
+import ChauffeurTours from "./pages/ChauffeurTours";
+import LivreurCommandes from "./pages/LivreurCommandes";
+
 export default function App() {
   return (
     <Routes>
@@ -506,6 +509,26 @@ export default function App() {
           </RequireAuth>
         }
       />
+            {/* Tableau de bord chauffeur */}
+      <Route
+        path="/chauffeur/tournees"
+        element={
+          <RequireAuth allowedRoles={["Chauffeur"]}>
+            <ChauffeurTours />
+          </RequireAuth>
+        }
+      />
+
+      {/* Tableau de bord livreur */}
+      <Route
+        path="/livreur/commandes"
+        element={
+          <RequireAuth allowedRoles={["Livreur"]}>
+            <LivreurCommandes />
+          </RequireAuth>
+        }
+      />
+
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
 
