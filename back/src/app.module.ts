@@ -17,6 +17,8 @@ import { WishlistModule } from './wishlist/wishlist.module';
 import { VehicleModule } from './vehicle/vehicle.module'; // Add this line
 import { OrderModule } from './order/order.module';
 import { ImageUploadModule } from './upload/image-upload.module';
+import { ChauffeursController } from './chauffeurs.controller';
+import { LivreursController } from './livreurs.controller';
 
 @Module({
   imports: [
@@ -45,6 +47,10 @@ import { ImageUploadModule } from './upload/image-upload.module';
     OrderModule,// Add this line
     ImageUploadModule,
     TourneeModule,
+  ],
+  controllers: [
+    ChauffeursController,
+    LivreursController,
   ],
 })
 export class AppModule {}

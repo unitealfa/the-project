@@ -1,32 +1,36 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 
+interface Stop {
+  _id: string;
+  clientName: string;
+  latitude: number;
+  longitude: number;
+}
+
 export default function ChauffeurTours() {
-  // ici vous pourrez récupérer via fetch vos tournées assignées au chauffeur
-  const dummyTours = [
-    { id: 't1', name: 'Tournée 1 – 3 arrêts' },
-    { id: 't2', name: 'Tournée 2 – 5 arrêts' },
-  ];
+  const [stops, setStops] = useState<Stop[]>([]);
+  const chauffeurId = JSON.parse(localStorage.getItem('user') || '{}').id;
+  const apiBase = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    fetch(`${apiBase}/chauffeurs/${chauffeurId}/stops`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+      .then(res => res.ok ? res.json() : [])
+      .then(setStops)
+      .catch(console.error);
+  }, [apiBase, chauffeurId]);
 
   return (
     <>
-      <Header/>
+      <Header />
       <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-        <h1>🛣️ Tournées du chauffeur</h1>
-        <ul style={{ marginTop: '1rem', listStyle: 'none', padding: 0 }}>
-          {dummyTours.map(t => (
-            <li key={t.id} style={{ marginBottom: '0.5rem' }}>
-              <Link
-                to={`/chauffeur/tournees/${t.id}`}
-                style={{
-                  textDecoration: 'none',
-                  color: '#4f46e5',
-                  fontWeight: 'bold'
-                }}
-              >
-                {t.name}
-              </Link>
+        <h1>🛣️ Arrêts assignés</h1>
+        <ul>
+          {stops.map(s => (
+            <li key={s._id}>
+              {s.clientName} — ({s.latitude}, {s.longitude})
             </li>
           ))}
         </ul>

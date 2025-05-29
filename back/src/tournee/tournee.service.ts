@@ -280,4 +280,70 @@ export class TourneeService {
 
     return tournee;
   }
+
+  async getStopsForChauffeur(chauffeurId: string): Promise<any[]> {
+    const vehicles = await this.vehicleModel.find({ chauffeur_id: chauffeurId }).lean();
+    const vehicleIds = vehicles.map(v => v._id.toString());
+    if (!vehicleIds.length) return [];
+
+    const tournee = await this.tourneeModel
+      .findOne({ vehicles: { $in: vehicleIds } })
+      .sort({ date: -1 })
+      .lean();
+    if (!tournee?.solution) return [];
+
+    const solution: any = tournee.solution;
+    const clientIds = new Set<string>();
+
+    for (const vid of vehicleIds) {
+      const veh = solution.date1[vid];
+      if (veh) {
+        veh.ordered_stops.forEach((stop: any) => {
+          if (!stop.stop_id.startsWith('end_')) {
+            clientIds.add(stop.stop_id);
+          }
+        });
+      }
+    }
+    if (!clientIds.size) return [];
+
+    const clients = await this.clientModel.find({ _id: { $in: Array.from(clientIds) } }).lean();
+    return clients.map(c => ({
+      _id: c._id.toString(),
+      clientName: c.nom_client,
+      latitude:  c.localisation.coordonnees.latitude,
+      longitude: c.localisation.coordonnees.longitude,
+    }));
+  }
+
+  async getOrdersForLivreur(livreurId: string): Promise<any[]> {
+    this.logger.debug('▶ getOrdersForLivreur demarré pour', livreurId);
+
+    // 1) Récupère les véhicules du livreur
+    const vehicles = await this.vehicleModel.find({ livreur_id: livreurId }).lean();
+    const vehicleIds = vehicles.map(v => v._id.toString());
+    this.logger.debug('  véhicules trouvés:', vehicleIds);
+    if (!vehicleIds.length) return [];
+
+    // 2) Récupère la dernière tournée qui contient ces véhicules
+    const tournee = await this.tourneeModel
+      .findOne({ vehicles: { $in: vehicleIds } })
+      .sort({ date: -1 })
+      .lean();
+    this.logger.debug('  tournée trouvée, orderIds =', tournee?.orderIds);
+    if (!tournee) return [];
+
+    // 3) Va chercher directement les commandes par leurs IDs
+    const orders = await this.orderModel
+      .find({ _id: { $in: tournee.orderIds } })
+      .lean();
+    this.logger.debug('  orders from DB:', orders);
+
+    // 4) Formate la réponse
+    return orders.map(o => ({
+      _id: o._id.toString(),
+      nom_client: o.nom_client, // Updated to use `nom_client`
+      items: o.items
+    }));
+  }
 }
