@@ -19,7 +19,7 @@ export default function DepotsList() {
   const apiBase = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    fetch(`${apiBase}/depots`, {
+    fetch(`${apiBase}/api/depots`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => {
@@ -112,7 +112,7 @@ export default function DepotsList() {
                   <button
                     onClick={async () => {
                       if (!confirm('Supprimer ce dépôt ?')) return;
-                      const res = await fetch(`${apiBase}/depots/${d._id}`, {
+                      const res = await fetch(`${apiBase}/api/depots/${d._id}`, {
                         method: 'DELETE',
                         headers: { Authorization: `Bearer ${token}` },
                       });

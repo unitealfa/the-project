@@ -30,7 +30,7 @@ export default function TeamManage () {
     const load = async () => {
       setLoading(true)
       try {
-        const res = await apiFetch(`/depots/${depotId}`)
+        const res = await apiFetch(`/api/depots/${depotId}`)
         if (cancel) return
         setDepot(await res.json())
       } catch { !cancel && setError('Impossible de charger le dépôt') }
@@ -86,7 +86,7 @@ export default function TeamManage () {
         {/* ───── titre ───── */}
         {error && <p style={{color:'red'}}>{error}</p>}
         <h1 style={{margin:'0 0 1.5rem 0'}}>
-          Gestion de l’équipe
+          Gestion de l'équipe
           {depot && !loading && <> du dépôt « {depot.nom_depot} »</>}
         </h1>
 

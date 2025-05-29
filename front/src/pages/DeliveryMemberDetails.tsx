@@ -14,7 +14,7 @@ export default function MemberDetails() {
     (async () => {
       setLoading(true);
       try {
-        const res = await apiFetch(`/teams/members/${memberId}`);
+        const res = await apiFetch(`/api/teams/members/${memberId}`);
         setMember(await res.json());
       } catch {
         setError('Impossible de charger le membre');

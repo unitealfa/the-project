@@ -25,7 +25,7 @@ export default function DashboardResponsableDepot() {
   useEffect(() => {
     if (!user?.depot) return;
 
-    fetch(`${apiBase}/depots/${user.depot}`, {
+    fetch(`${apiBase}/api/depots/${user.depot}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -71,7 +71,7 @@ export default function DashboardResponsableDepot() {
                 textDecoration: "none",
               }}
             >
-              👥 Gérer l’équipe du dépôt
+              👥 Gérer l'équipe du dépôt
             </Link>
 
             <Link

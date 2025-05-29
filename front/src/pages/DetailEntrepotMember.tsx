@@ -22,7 +22,7 @@ export default function DetailEntrepotMember() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await apiFetch(`/teams/members/${memberId}`);
+        const res = await apiFetch(`/api/teams/members/${memberId}`);
         if (!res.ok) throw new Error('Erreur lors du chargement');
         setMember(await res.json());
       } catch (err: any) {

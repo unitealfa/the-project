@@ -35,7 +35,7 @@ export default function AddMember() {
     e.preventDefault();
     setSaving(true);
     try {
-      await apiFetch(`/teams/${depotId}/members`, {
+      await apiFetch(`/api/teams/${depotId}/members`, {
         method: 'POST',
         body  : JSON.stringify(f),
       });

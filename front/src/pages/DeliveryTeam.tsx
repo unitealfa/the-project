@@ -23,8 +23,8 @@ export default function DeliveryTeam() {
       setLoading(true);
       try {
         const [dRes, tRes] = await Promise.all([
-          apiFetch(`/depots/${depotId}`),
-          apiFetch(`/teams/${depotId}?role=livraison`),
+          apiFetch(`/api/depots/${depotId}`),
+          apiFetch(`/api/teams/${depotId}?role=livraison`),
         ]);
         if (cancel) return;
         setDepot(await dRes.json());
@@ -42,7 +42,7 @@ export default function DeliveryTeam() {
   const handleDelete = async (memberId: string) => {
     if (!window.confirm('Supprimer ce membre ?')) return;
     try {
-      await apiFetch(`/teams/members/${memberId}`, { method: 'DELETE' });
+      await apiFetch(`/api/teams/members/${memberId}`, { method: 'DELETE' });
       setMembers(members => members.filter(m => m._id !== memberId));
     } catch {
       setError('Erreur lors de la suppression');
@@ -95,12 +95,14 @@ export default function DeliveryTeam() {
                     >
                       Éditer
                     </button>
-                    <button
-                      style={{ color:'#fff', background:'#dc2626', border:'none', borderRadius:4, padding:'0.25rem 0.75rem' }}
-                      onClick={() => handleDelete(m._id)}
-                    >
-                      Supprimer
-                    </button>
+                    {(user.role === 'admin' || user.role === 'responsable depot') && (
+                      <button
+                        style={{ color:'#fff', background:'#dc2626', border:'none', borderRadius:4, padding:'0.25rem 0.75rem' }}
+                        onClick={() => handleDelete(m._id)}
+                      >
+                        Supprimer
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

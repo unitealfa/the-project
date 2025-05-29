@@ -49,7 +49,7 @@ export default function CreateDepot() {
     e.preventDefault();
     const token = localStorage.getItem('token') || '';
     try {
-      const res = await fetch(`${apiBase}/depots`, {
+      const res = await fetch(`${apiBase}/api/depots`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
