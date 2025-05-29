@@ -42,9 +42,9 @@ export default function EntrepotTeam() {
       setLoading(true);
       try {
         // Charge le dépôt
-        const dRes = await apiFetch(`/depots/${user.depot}`);
+        const dRes = await apiFetch(`/api/depots/${user.depot}`);
         // Charge TOUTE l'équipe du responsable
-        const tRes = await apiFetch('/teams/mine');
+        const tRes = await apiFetch('/api/teams/mine');
 
         if (cancel) return;
 
@@ -52,7 +52,7 @@ export default function EntrepotTeam() {
         setDepot(dJson);
 
         const tJson = await tRes.json();
-        // On ne garde que la catégorie “entrepot”
+        // On ne garde que la catégorie "entrepot"
         setList(tJson.entrepot ?? []);
       } catch {
         if (!cancel) setError('Impossible de charger');
@@ -66,7 +66,7 @@ export default function EntrepotTeam() {
   const handleDelete = async (memberId: string) => {
     if (!window.confirm('Supprimer ce membre ?')) return;
     try {
-      await apiFetch(`/teams/members/${memberId}`, { method: 'DELETE' });
+      await apiFetch(`/api/teams/members/${memberId}`, { method: 'DELETE' });
       setList(list => list.filter(m => m._id !== memberId));
     } catch {
       setError('Erreur lors de la suppression');

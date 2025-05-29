@@ -30,7 +30,7 @@ export default function EditPreventeMember() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await apiFetch(`/teams/members/${memberId}`);
+        const res = await apiFetch(`/api/teams/members/${memberId}`);
         if (!res.ok) throw new Error('Erreur lors du chargement');
         const data = await res.json();
         setF({
@@ -52,7 +52,7 @@ export default function EditPreventeMember() {
     if (!f) return;
     setSaving(true);
     try {
-      await apiFetch(`/teams/members/${memberId}`, {
+      await apiFetch(`/api/teams/members/${memberId}`, {
         method: 'PUT',
         body: JSON.stringify(f),
       });

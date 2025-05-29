@@ -36,7 +36,7 @@ export default function DepotDetail() {
   const apiBase = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    fetch(`${apiBase}/depots/${id}`, {
+    fetch(`${apiBase}/api/depots/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => {

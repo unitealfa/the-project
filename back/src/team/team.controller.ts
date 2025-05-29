@@ -10,7 +10,7 @@ import { CreateMemberDto, UpdateMemberDto } from './dto/create-member.dto';
 
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('teams')
+@Controller('api/teams')
 export class TeamController {
   private readonly logger = new Logger(TeamController.name);
 
@@ -97,10 +97,10 @@ export class TeamController {
   }
 
   /** Suppression d'un membre */
-  @Roles('Admin')
+  @Roles('Admin', 'responsable depot')
   @Delete('members/:memberId')
   async remove(@Param('memberId') memberId: string, @Req() req: any) {
-    this.logger.log(`Admin ${req.user.id} - delete member ${memberId}`);
+    this.logger.log(`${req.user.role} ${req.user.id} - delete member ${memberId}`);
     await this.svc.removeMember(memberId, req.user.id);
     return { deleted: true };
   }

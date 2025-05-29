@@ -29,7 +29,7 @@ export default function DepotEdit() {
   const apiBase = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    fetch(`${apiBase}/depots/${id}`, {
+    fetch(`${apiBase}/api/depots/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => { if (!res.ok) throw new Error(`Erreur ${res.status}`); return res.json(); })
@@ -83,7 +83,7 @@ export default function DepotEdit() {
         password: data.responsable_id?.password,
       },
     };
-    const res = await fetch(`${apiBase}/depots/${id}`, {
+    const res = await fetch(`${apiBase}/api/depots/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(body),

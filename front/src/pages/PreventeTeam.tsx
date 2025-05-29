@@ -19,7 +19,7 @@ export default function PreventeTeam() {
     (async () => {
       setLoading(true);
       try {
-        const r = await apiFetch(`/teams/${depotId}?role=prevente`);
+        const r = await apiFetch(`/api/teams/${depotId}?role=prevente`);
         const data = await r.json();
         setList(Array.isArray(data.prevente) ? data.prevente : data.prevente ?? []);
       } catch {
@@ -33,7 +33,7 @@ export default function PreventeTeam() {
   const handleDelete = async (memberId: string) => {
     if (!window.confirm('Supprimer ce membre ?')) return;
     try {
-      await apiFetch(`/teams/members/${memberId}`, { method: 'DELETE' });
+      await apiFetch(`/api/teams/members/${memberId}`, { method: 'DELETE' });
       setList(list => list.filter(m => m._id !== memberId));
     } catch {
       setError('Erreur lors de la suppression');
