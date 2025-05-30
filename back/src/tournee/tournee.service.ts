@@ -113,7 +113,12 @@ export class TourneeService {
       if (orders.length > 0) {
         await this.orderModel.updateMany(
           { _id: { $in: orders.map(o => o._id) } },
-          { $set: { confirmed: true } }
+          { 
+            $set: { 
+              confirmed: true,
+              etat_livraison: 'en_cours'
+            } 
+          }
         );
       }
 
@@ -342,8 +347,9 @@ export class TourneeService {
     // 4) Formate la réponse
     return orders.map(o => ({
       _id: o._id.toString(),
-      nom_client: o.nom_client, // Updated to use `nom_client`
-      items: o.items
+      nom_client: o.nom_client,
+      items: o.items,
+      etat_livraison: o.etat_livraison || 'en_attente'
     }));
   }
 }

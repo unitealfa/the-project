@@ -65,6 +65,14 @@ export class OrderService {
     );
   }
 
+  async updateDeliveryStatus(orderId: string, status: 'en_attente' | 'en_cours' | 'livree') {
+    return this.orderModel.findByIdAndUpdate(
+      orderId,
+      { etat_livraison: status },
+      { new: true }
+    );
+  }
+
   // --- MODIFIE ICI POUR JOINDRE LES COORDONNÉES DU CLIENT ---
   async findByDepot(depotId: string) {
     // 1. Récupère les commandes

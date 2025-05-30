@@ -49,6 +49,13 @@ export class Order extends Document {
   }>;
 
   @Prop({ required: true }) total: number;
+
+  @Prop({ 
+    type: String, 
+    enum: ['en_attente', 'en_cours', 'livree'],
+    default: 'en_attente'
+  })
+  etat_livraison: string;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

@@ -26,6 +26,7 @@ interface Order {
   };
   depot_name?: string;
   entreprise?: { nom_company?: string };
+  etat_livraison: 'en_attente' | 'en_cours' | 'livree';
 }
 
 export default function HistoriqueOrders() {
@@ -65,6 +66,24 @@ export default function HistoriqueOrders() {
     pdf.save("bon-de-livraison.pdf");
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'en_attente': return '#f59e0b';
+      case 'en_cours': return '#3b82f6';
+      case 'livree': return '#10b981';
+      default: return '#6b7280';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'en_attente': return 'En attente';
+      case 'en_cours': return 'En cours';
+      case 'livree': return 'Livrée';
+      default: return status;
+    }
+  };
+
   return (
     <>
       <Header />
@@ -84,6 +103,7 @@ export default function HistoriqueOrders() {
                 <th style={{ border: "1px solid #ddd", padding: 8 }}>Date</th>
                 <th style={{ border: "1px solid #ddd", padding: 8 }}>Total</th>
                 <th style={{ border: "1px solid #ddd", padding: 8 }}>Nombre d'articles</th>
+                <th style={{ border: "1px solid #ddd", padding: 8 }}>État de livraison</th>
                 <th style={{ border: "1px solid #ddd", padding: 8 }}>Action</th>
               </tr>
             </thead>
@@ -101,6 +121,17 @@ export default function HistoriqueOrders() {
                   </td>
                   <td style={{ border: "1px solid #ddd", padding: 8 }}>
                     {order.items.length}
+                  </td>
+                  <td style={{ border: "1px solid #ddd", padding: 8 }}>
+                    <span style={{
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '9999px',
+                      backgroundColor: getStatusColor(order.etat_livraison),
+                      color: 'white',
+                      fontSize: '0.875rem'
+                    }}>
+                      {getStatusText(order.etat_livraison)}
+                    </span>
                   </td>
                   <td style={{ border: "1px solid #ddd", padding: 8 }}>
                     <button

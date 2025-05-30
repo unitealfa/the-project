@@ -47,4 +47,12 @@ export class OrderController {
     // vous pouvez ignorer le dto.confirmed et forcer à true
     return this.orderService.confirmOrder(orderId);
   }
+
+  @Patch(':id/delivery-status')
+  async updateDeliveryStatus(
+    @Param('id') id: string,
+    @Body('status') status: 'en_attente' | 'en_cours' | 'livree'
+  ) {
+    return this.orderService.updateDeliveryStatus(id, status);
+  }
 }
