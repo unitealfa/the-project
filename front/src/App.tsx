@@ -69,6 +69,8 @@ import OrderDetails from "@/pages/OrderDetails";
 import ReclamationsList from "./pages/ReclamationsList";
 import ReclamationResponse from "./pages/ReclamationResponse";
 
+import Orders from "./pages/Orders";
+
 export default function App() {
   return (
     <Routes>
@@ -471,7 +473,7 @@ export default function App() {
       <Route
         path="/commandes"
         element={
-          <RequireAuth allowedRoles={["Superviseur des ventes"]}>
+          <RequireAuth allowedRoles={["Administrateur des ventes", "Superviseur des ventes"]}>
             <Commandes />
           </RequireAuth>
         }
@@ -537,6 +539,15 @@ export default function App() {
       <Route path="/orders/:orderId" element={<OrderDetails />} />
       <Route path="/reclamations" element={<ReclamationsList />} />
       <Route path="/reclamations/:id/response" element={<ReclamationResponse />} />
+
+      <Route
+        path="/orders"
+        element={
+          <RequireAuth allowedRoles={["Administrateur des ventes", "Superviseur des ventes"]}>
+            <Orders />
+          </RequireAuth>
+        }
+      />
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
