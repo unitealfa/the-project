@@ -81,4 +81,26 @@ export class ProductController {
   ) {
     return this.productService.updateQuantiteParDepot(productId, depotId, quantite);
   }
+
+  /** Import en masse depuis Excel */
+  @Post('bulk')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin', 'ResponsableDepot', 'Gestionnaire de stock')
+  async bulkCreate(
+    @Body() dtos: CreateProductDto[],
+    @Req() req,
+  ): Promise<{ success: number; errors: { row: number; message: string }[] }> {
+    const companyId = req.user.company;
+    const depotId = req.query.depot as string;
+
+    const enriched = dtos.map(dto => ({
+      ...dto,
+      company_id: companyId,
+      disponibilite: depotId
+        ? [{ depot_id: depotId, quantite: 0 }]
+        : dto.disponibilite || [],
+    }));
+
+    return this.productService.bulkCreate(enriched);
+  }
 }

@@ -81,4 +81,26 @@ export class ProductService {
 
     return product.save();
   }
+
+  /**
+   * Sauvegarde en boucle chaque DTO,
+   * collecte les lignes en erreur pour retourner { success, errors }
+   */
+  async bulkCreate(
+    dtos: CreateProductDto[],
+  ): Promise<{ success: number; errors: { row: number; message: string }[] }> {
+    const errors: { row: number; message: string }[] = [];
+    let success = 0;
+
+    for (let i = 0; i < dtos.length; i++) {
+      try {
+        await new this.productModel(dtos[i]).save();
+        success++;
+      } catch (err: any) {
+        errors.push({ row: i + 1, message: err.message });
+      }
+    }
+
+    return { success, errors };
+  }
 }

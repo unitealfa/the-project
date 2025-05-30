@@ -1,6 +1,6 @@
 // FRONTEND - ProductEdit.tsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axios from '../utils/axios';
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 
 export default function ProductEdit() {
@@ -25,7 +25,7 @@ export default function ProductEdit() {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    axios.get(`/api/products/${id}`).then((res) => {
+    axios.get(`/products/${id}`).then((res) => {
       const prod = res.data;
       setFormData({
         nom_product: prod.nom_product,
@@ -62,10 +62,10 @@ export default function ProductEdit() {
       formData.append('file', files[0]);
 
       const token = localStorage.getItem('token');
-      const response = await axios.post('/api/upload/image', formData, {
+      const response = await axios.post('/upload/image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -84,7 +84,7 @@ export default function ProductEdit() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    await axios.put(`/api/products/${id}`, {
+    await axios.put(`/products/${id}`, {
       nom_product: formData.nom_product,
       prix_gros: parseFloat(formData.prix_gros),
       prix_detail: parseFloat(formData.prix_detail),
