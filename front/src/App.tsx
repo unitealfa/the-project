@@ -64,6 +64,11 @@ import TourneeDetail from "./pages/TourneeDetail";
 import ChauffeurTours from "./pages/ChauffeurTours";
 import LivreurCommandes from "./pages/LivreurCommandes";
 
+import OrderDetails from "@/pages/OrderDetails";
+
+import ReclamationsList from "./pages/ReclamationsList";
+import ReclamationResponse from "./pages/ReclamationResponse";
+
 export default function App() {
   return (
     <Routes>
@@ -324,7 +329,7 @@ export default function App() {
       <Route
         path="/clients"
         element={
-          <RequireAuth allowedRoles={["admin", "responsable depot", "Pré-vendeur"]}>
+          <RequireAuth allowedRoles={["admin", "responsable depot", "Pré-vendeur", "Administrateur des ventes", "superviseur des ventes"]}>
             <ClientsList />
           </RequireAuth>
         }
@@ -340,7 +345,7 @@ export default function App() {
       <Route
         path="/clients/:id"
         element={
-          <RequireAuth allowedRoles={["admin", "responsable depot", "Pré-vendeur"]}>
+          <RequireAuth allowedRoles={["admin", "responsable depot", "Pré-vendeur", "Administrateur des ventes", "superviseur des ventes"]}>
             <ClientDetail />
           </RequireAuth>
         }
@@ -529,8 +534,9 @@ export default function App() {
         }
       />
 
-
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/orders/:orderId" element={<OrderDetails />} />
+      <Route path="/reclamations" element={<ReclamationsList />} />
+      <Route path="/reclamations/:id/response" element={<ReclamationResponse />} />
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

@@ -9,6 +9,7 @@ import {
   Body,
   UseGuards,
   UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -36,6 +37,15 @@ export class OrderController {
       throw new UnauthorizedException("Aucun dépôt associé à cet utilisateur");
     }
     return this.orderService.findByDepot(depotId);
+  }
+
+  @Get(':id')
+  async getOrderById(@Param('id') id: string) {
+    const order = await this.orderService.findById(id);
+    if (!order) {
+      throw new NotFoundException(`Commande avec l'ID ${id} non trouvée`);
+    }
+    return order;
   }
 
   // ← NOUVEL ENDPOINT

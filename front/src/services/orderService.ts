@@ -1,4 +1,12 @@
-import { apiFetch } from '../utils/api';
+const apiBase = 'http://localhost:5000';
+
+const getHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+};
 
 export interface OrderItem {
   productId: string;
@@ -7,27 +15,47 @@ export interface OrderItem {
   quantity: number;
 }
 
-export interface CreateOrderPayload {
+export interface Order {
+  _id: string;
+  clientId: string;
   items: OrderItem[];
   total: number;
+  status: string;
+  depot: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export const orderService = {
-  createOrder: async (payload: CreateOrderPayload) => {
-    const res = await apiFetch('/api/orders', {
-      method: 'POST',
-      body: JSON.stringify(payload)
+  createOrder: async (orderData: { items: OrderItem[]; depot: string }) => {
+    const response = await fetch(`${apiBase}/api/orders`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(orderData),
     });
-    return res.json();
+    return response.json();
   },
+
   getOrders: async () => {
-    const res = await apiFetch('/api/orders');
-    return res.json();
-  },
-  confirmOrder: async (orderId: string) => {
-    const res = await apiFetch(`/api/orders/${orderId}/confirm`, {
-      method: "PATCH",
+    const response = await fetch(`${apiBase}/api/orders`, {
+      headers: getHeaders()
     });
-    return res.json();
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  },
+
+  getOrderById: async (id: string) => {
+    const response = await fetch(`${apiBase}/api/orders/${id}`, {
+      headers: getHeaders()
+    });
+    return response.json();
+  },
+
+  confirmOrder: async (id: string) => {
+    const response = await fetch(`${apiBase}/api/orders/${id}/confirm`, {
+      method: "PATCH",
+      headers: getHeaders()
+    });
+    return response.json();
   }
 };

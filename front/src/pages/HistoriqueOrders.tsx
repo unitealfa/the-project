@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
-import Header from "@/components/Header";
-import { orderService } from "@/services/orderService";
+import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
+import { orderService } from "../services/orderService";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -30,6 +31,7 @@ interface Order {
 }
 
 export default function HistoriqueOrders() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,10 +42,19 @@ export default function HistoriqueOrders() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const data = await orderService.getOrders();
-        setOrders(data || []);
+        if (Array.isArray(data)) {
+          setOrders(data);
+        } else {
+          setError("Format de données invalide");
+          setOrders([]);
+        }
       } catch (err) {
+        console.error("Erreur lors du chargement des commandes:", err);
         setError("Erreur lors du chargement des commandes");
+        setOrders([]);
       } finally {
         setLoading(false);
       }
@@ -84,6 +95,10 @@ export default function HistoriqueOrders() {
     }
   };
 
+  const handleOrderClick = (orderId: string) => {
+    navigate(`/orders/${orderId}`);
+  };
+
   return (
     <>
       <Header />
@@ -111,7 +126,20 @@ export default function HistoriqueOrders() {
               {orders.map((order) => (
                 <tr key={order._id}>
                   <td style={{ border: "1px solid #ddd", padding: 8 }}>
-                    {order.numero || order._id}
+                    <button
+                      onClick={() => handleOrderClick(order._id)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#4f46e5",
+                        cursor: "pointer",
+                        textDecoration: "underline",
+                        padding: 0,
+                        fontSize: "inherit"
+                      }}
+                    >
+                      {order.numero || order._id}
+                    </button>
                   </td>
                   <td style={{ border: "1px solid #ddd", padding: 8 }}>
                     {new Date(order.createdAt).toLocaleString()}

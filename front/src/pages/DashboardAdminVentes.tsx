@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { apiFetch } from "../utils/api";
 
@@ -35,6 +35,8 @@ const DashboardAdminVentes: React.FC = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const navigate = useNavigate();
 
   const loadVehicles = async () => {
     if (!user?.depot) {
@@ -189,6 +191,38 @@ const DashboardAdminVentes: React.FC = () => {
               Planifier une tournée
             </button>
           </Link>
+        </div>
+
+        <div style={{ marginBottom: "2rem" }}>
+          <h1 style={{ marginBottom: "1rem" }}>Tableau de bord</h1>
+          <div style={{ display: "flex", gap: "1rem" }}>
+            <button
+              onClick={() => navigate("/orders")}
+              style={{
+                background: "#4f46e5",
+                color: "white",
+                border: "none",
+                borderRadius: "0.375rem",
+                padding: "0.5rem 1rem",
+                cursor: "pointer"
+              }}
+            >
+              Voir les commandes
+            </button>
+            <button
+              onClick={() => navigate("/reclamations")}
+              style={{
+                background: "#4f46e5",
+                color: "white",
+                border: "none",
+                borderRadius: "0.375rem",
+                padding: "0.5rem 1rem",
+                cursor: "pointer"
+              }}
+            >
+              Voir les réclamations
+            </button>
+          </div>
         </div>
 
         <section style={{ marginTop: "2rem" }}>
