@@ -99,4 +99,17 @@ export class OrderService {
       { new: true }
     );
   }
+
+  async addDeliveryPhotos(
+    orderId: string,
+    photos: Array<{ url: string; takenAt: Date }>
+  ) {
+    const order = await this.orderModel.findById(orderId);
+    if (!order) throw new NotFoundException(`Commande ${orderId} introuvable`);
+    order.photosLivraison.push(...photos);
+    if (order.photosLivraison.length > 4) {
+      order.photosLivraison = order.photosLivraison.slice(-4);
+    }
+    return order.save();
+  }
 }

@@ -10,12 +10,24 @@ import {
   UseGuards,
   UnauthorizedException,
   NotFoundException,
+  UploadedFiles,
+  UseInterceptors,
+  BadRequestException
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';    // ← nouveau
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { GetUser } from '../auth/decorators';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import * as fs from 'fs';
+import { Request } from 'express';
+
+interface RequestWithUser extends Request {
+  user: { id: string };
+}
 
 @Controller('api/orders')
 @UseGuards(JwtAuthGuard)
@@ -64,5 +76,42 @@ export class OrderController {
     @Body('status') status: 'en_attente' | 'en_cours' | 'livree'
   ) {
     return this.orderService.updateDeliveryStatus(id, status);
+  }
+
+  @Post(':id/photos')
+  @UseInterceptors(
+    FilesInterceptor('photos', 4, {
+      storage: diskStorage({
+        destination: (req: RequestWithUser, file, cb) => {
+          const orderId = req.params.id;
+          const livreurId = req.user.id;
+          const date = new Date().toISOString().slice(0, 10);
+          const uploadPath = `uploads/delivery/${orderId}/${livreurId}/${date}`;
+          fs.mkdirSync(uploadPath, { recursive: true });
+          cb(null, uploadPath);
+        },
+        filename: (req, file, cb) => {
+          const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, `${unique}${extname(file.originalname)}`);
+        }
+      }),
+      fileFilter: (req, file, cb) => cb(null, true),
+    })
+  )
+  async uploadOrderPhotos(
+    @Param('id') orderId: string,
+    @UploadedFiles() files: Express.Multer.File[],
+    @GetUser('id') livreurId: string,
+  ) {
+    if (!files || files.length === 0) {
+      throw new BadRequestException('Aucune photo reçue');
+    }
+    const date = new Date().toISOString().slice(0, 10);
+    const urlBase = `/uploads/delivery/${orderId}/${livreurId}/${date}`;
+    const photos = files.map(f => ({
+      url: `${urlBase}/${f.filename}`,
+      takenAt: new Date(),
+    }));
+    return this.orderService.addDeliveryPhotos(orderId, photos);
   }
 }

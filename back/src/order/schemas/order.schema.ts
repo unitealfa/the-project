@@ -56,6 +56,17 @@ export class Order extends Document {
     default: 'en_attente'
   })
   etat_livraison: string;
+
+  @Prop({
+    type: [
+      {
+        url: { type: String, required: true },
+        takenAt: { type: Date, required: true }
+      }
+    ],
+    default: []
+  })
+  photosLivraison: Array<{ url: string; takenAt: Date }>;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

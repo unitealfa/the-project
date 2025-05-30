@@ -26,12 +26,17 @@ interface Order {
   total: number;
   etat_livraison: 'en_attente' | 'en_cours' | 'livree';
   createdAt: string;
+  photosLivraison?: Array<{ url: string; takenAt: string }>;
+
 }
 
 const Orders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [modalPhotos, setModalPhotos] = useState<string[]>([]);
+  const [showModal, setShowModal] = useState(false);
 
   const rawUser = localStorage.getItem("user");
   const user: {
@@ -74,6 +79,28 @@ const Orders: React.FC = () => {
     });
   };
 
+  const thStyle: React.CSSProperties = { padding: '12px', textAlign: 'left', borderBottom: '2px solid #e5e7eb' };
+  const tdStyle: React.CSSProperties = { padding: '12px', verticalAlign: 'middle' };
+  const seeButtonStyle: React.CSSProperties = {
+    padding: '4px 8px', backgroundColor: '#3b82f6', color: 'white',
+    border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem'
+  };
+  const modalOverlayStyle: React.CSSProperties = {
+    position: 'fixed', top: '0', left: '0', right: '0', bottom: '0',
+    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
+    alignItems: 'center', justifyContent: 'center', zIndex: 1000
+  };
+  const modalContentStyle: React.CSSProperties = {
+    backgroundColor: 'white', padding: '16px', borderRadius: '8px',
+    maxWidth: '90%', maxHeight: '90%', overflowY: 'auto', position: 'relative'
+  };
+  const closeBtnStyle: React.CSSProperties = {
+    position: 'absolute', top: '8px', right: '8px',
+    background: 'transparent', border: 'none', fontSize: '24px', cursor: 'pointer'
+  };
+
+  const apiBase = import.meta.env.VITE_API_URL; // ex: "http://localhost:3000"
+
   return (
     <>
       <Header />
@@ -91,10 +118,11 @@ const Orders: React.FC = () => {
             <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "1rem" }}>
               <thead>
                 <tr style={{ backgroundColor: "#f3f4f6" }}>
-                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e5e7eb" }}>Client</th>
-                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e5e7eb" }}>Date</th>
-                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e5e7eb" }}>Montant total</th>
-                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #e5e7eb" }}>Statut</th>
+                  <th style={thStyle}>Client</th>
+                  <th style={thStyle}>Date</th>
+                  <th style={thStyle}>Montant total</th>
+                  <th style={thStyle}>Statut</th>
+                  <th style={thStyle}>Preuves</th>
                 </tr>
               </thead>
               <tbody>
@@ -120,6 +148,20 @@ const Orders: React.FC = () => {
                          order.etat_livraison === "en_cours" ? "En cours" : "En attente"}
                       </span>
                     </td>
+                    <td style={tdStyle}>
+                      {order.etat_livraison === 'livree' && order.photosLivraison?.length
+                        ? <button
+                            style={seeButtonStyle}
+                            onClick={() => {
+                              setModalPhotos(order.photosLivraison!.map(p => p.url));
+                              setShowModal(true);
+                            }}
+                          >
+                            Voir preuves ({order.photosLivraison.length})
+                          </button>
+                        : '-'
+                      }
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -127,8 +169,30 @@ const Orders: React.FC = () => {
           </div>
         )}
       </main>
+      {showModal && (
+        <div style={modalOverlayStyle} onClick={() => setShowModal(false)}>
+          <div style={modalContentStyle} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowModal(false)} style={closeBtnStyle}>×</button>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {modalPhotos.map((relUrl, i) => (
+                <img
+                  key={i}
+                  src={`${apiBase}${relUrl}`}
+                  alt={`Preuve ${i+1}`}
+                  style={{
+                    maxWidth: 200,
+                    maxHeight: 200,
+                    objectFit: 'cover',
+                    borderRadius: 4
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
 
-export default Orders; 
+export default Orders;
