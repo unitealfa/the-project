@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+// front/src/pages/GestionDepot.tsx
+import React, { useEffect, useState, ChangeEvent } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -21,6 +22,10 @@ export default function GestionDepot() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // États pour la recherche et le filtre
+  const [searchName, setSearchName] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
 
   useEffect(() => {
     if (!depotId) return;
@@ -62,6 +67,34 @@ export default function GestionDepot() {
     }
   };
 
+  // Extraire la liste des catégories uniques
+  const categories = Array.from(
+    new Set(products.map((p) => p.categorie))
+  ).sort();
+
+  // Appliquer le filtrage par nom et catégorie
+  const filteredProducts = products.filter((product) => {
+    const matchesName = product.nom_product
+      .toLowerCase()
+      .includes(searchName.toLowerCase().trim());
+    const matchesCategory =
+      selectedCategory === "" || product.categorie === selectedCategory;
+    return matchesName && matchesCategory;
+  });
+
+  const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchName(e.target.value);
+  };
+
+  const handleCategoryChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCategory(e.target.value);
+  };
+
+  const resetFilters = () => {
+    setSearchName("");
+    setSelectedCategory("");
+  };
+
   if (loading) return <p>Chargement…</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
 
@@ -87,7 +120,61 @@ export default function GestionDepot() {
         ➕ Ajouter un nouveau produit
       </button>
 
-      {products.length === 0 ? (
+      {/* Barre de recherche par nom et filtre par catégorie */}
+      <div
+        style={{
+          display: "flex",
+          gap: "0.5rem",
+          marginBottom: "1rem",
+          alignItems: "center",
+        }}
+      >
+        <input
+          type="text"
+          placeholder="Rechercher par nom..."
+          value={searchName}
+          onChange={handleNameChange}
+          style={{
+            flex: 1,
+            padding: "0.5rem",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+          }}
+        />
+        <select
+          value={selectedCategory}
+          onChange={handleCategoryChange}
+          style={{
+            padding: "0.5rem",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            background: "#fff",
+          }}
+        >
+          <option value="">Toutes catégories</option>
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={resetFilters}
+          style={{
+            padding: "0.5rem 1rem",
+            backgroundColor: "#f3f4f6",
+            color: "#333",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+          disabled={!searchName && !selectedCategory}
+        >
+          Réinitialiser
+        </button>
+      </div>
+
+      {filteredProducts.length === 0 ? (
         <p>Aucun produit trouvé dans ce dépôt.</p>
       ) : (
         <table
@@ -105,7 +192,7 @@ export default function GestionDepot() {
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => {
+            {filteredProducts.map((product) => {
               const dispo = product.disponibilite.find(
                 (d) => d.depot_id === depotId
               );
@@ -148,7 +235,6 @@ export default function GestionDepot() {
                       <button type="submit">💾</button>
                     </form>
                   </td>
-
                   <td>
                     <button
                       onClick={() => navigate(`/product-detail/${product._id}`)}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { orderService } from "../services/orderService";
@@ -36,6 +36,10 @@ export default function HistoriqueOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = 15;
 
   const blRef = useRef<HTMLDivElement>(null);
 
@@ -99,17 +103,87 @@ export default function HistoriqueOrders() {
     navigate(`/orders/${orderId}`);
   };
 
+  const filteredOrders = orders.filter(order => {
+    const term = searchTerm.toLowerCase().trim();
+    const numeroStr = (order.numero || order._id).toLowerCase();
+    const matchesNumber = numeroStr.includes(term) || order._id.toLowerCase().includes(term);
+    const dateStr = order.createdAt ? new Date(order.createdAt).toLocaleString().toLowerCase() : "";
+    const matchesDate = dateStr.includes(term);
+    const matchesTerm = term === "" || matchesNumber || matchesDate;
+
+    const matchesStatus = selectedStatus === "" || order.etat_livraison === selectedStatus;
+
+    return matchesTerm && matchesStatus;
+  });
+
+  const indexOfLastOrder = currentPage * ordersPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
+  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    setSelectedStatus(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setSelectedStatus("");
+    setCurrentPage(1);
+  };
+
+  const goToNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  const goToPrevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
+
   return (
     <>
       <Header />
       <main style={{ padding: "2rem" }}>
         <h2>Historique de mes commandes</h2>
+        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", alignItems: "center" }}>
+          <input
+            type="text"
+            placeholder="Recherche par numéro ou date..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            style={{ flex: 1, padding: "0.5rem", border: "1px solid #ccc", borderRadius: "4px" }}
+          />
+          <select
+            value={selectedStatus}
+            onChange={handleStatusChange}
+            style={{ padding: "0.5rem", border: "1px solid #ccc", borderRadius: "4px", background: "#fff" }}
+          >
+            <option value="">Tous états</option>
+            <option value="en_attente">En attente</option>
+            <option value="en_cours">En cours</option>
+            <option value="livree">Livrée</option>
+          </select>
+          <button
+            onClick={resetFilters}
+            disabled={!searchTerm && !selectedStatus}
+            style={{
+              padding: "0.5rem 1rem",
+              backgroundColor: "#f3f4f6",
+              color: "#333",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              cursor: !searchTerm && !selectedStatus ? "not-allowed" : "pointer",
+            }}
+          >
+            Réinitialiser
+          </button>
+        </div>
         {loading ? (
           <p>Chargement...</p>
         ) : error ? (
           <p style={{ color: "red" }}>{error}</p>
-        ) : orders.length === 0 ? (
-          <p>Vous n'avez pas encore passé de commande.</p>
+        ) : filteredOrders.length === 0 ? (
+          <p>Aucun résultat trouvé.</p>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
@@ -123,7 +197,7 @@ export default function HistoriqueOrders() {
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => (
+              {currentOrders.map((order) => (
                 <tr key={order._id}>
                   <td style={{ border: "1px solid #ddd", padding: 8 }}>
                     <button
@@ -180,6 +254,39 @@ export default function HistoriqueOrders() {
               ))}
             </tbody>
           </table>
+        )}
+        {filteredOrders.length > ordersPerPage && (
+          <div style={{ marginTop: "1rem", display: "flex", justifyContent: "center", gap: "0.5rem" }}>
+            <button
+              onClick={goToPrevPage}
+              disabled={currentPage === 1}
+              style={{
+                padding: "0.5rem 1rem",
+                backgroundColor: "#f3f4f6",
+                color: "#333",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                cursor: currentPage === 1 ? "not-allowed" : "pointer",
+              }}
+            >
+              ← Précédent
+            </button>
+            <span>Page {currentPage} / {totalPages}</span>
+            <button
+              onClick={goToNextPage}
+              disabled={currentPage === totalPages}
+              style={{
+                padding: "0.5rem 1rem",
+                backgroundColor: "#f3f4f6",
+                color: "#333",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+              }}
+            >
+              Suivant →
+            </button>
+          </div>
         )}
 
         {/* ----------- Modal BL ------------- */}

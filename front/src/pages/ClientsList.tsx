@@ -43,6 +43,7 @@ export default function ClientsList() {
   const [vehicules, setVehicules] = useState<Vehicle[]>([]);
   const [loadingVehicules, setLoadingVehicules] = useState(false);
   const [vehiculesError, setVehiculesError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const query    = useQuery();
 
@@ -181,6 +182,36 @@ export default function ClientsList() {
     loadPrevendeurs();
   };
 
+  // --- NOUVEAU : état pour la pagination ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const clientsPerPage = 15; // on fixe à 2 clients par page
+
+  // --- NOUVEAU : on calcule la liste paginée ---
+  const indexOfLastClient = currentPage * clientsPerPage;
+  const indexOfFirstClient = indexOfLastClient - clientsPerPage;
+
+  // Filtrage des clients
+  const filteredClients = clients.filter((client) => {
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return true;
+    const nom = client.nom_client.toLowerCase();
+    const email = client.email.toLowerCase();
+    const telephone = client.contact.telephone.toLowerCase();
+    return nom.includes(term) || email.includes(term) || telephone.includes(term);
+  });
+
+  // Pagination sur filteredClients
+  const currentClients = filteredClients.slice(indexOfFirstClient, indexOfLastClient);
+  const totalPages = Math.ceil(filteredClients.length / clientsPerPage);
+
+  // Fonctions pour changer de page
+  const goToNextPage = () => {
+    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  };
+  const goToPrevPage = () => {
+    setCurrentPage(prev => Math.max(prev - 1, 1));
+  };
+
   return (
     <>
       <Header />
@@ -239,6 +270,42 @@ export default function ClientsList() {
           </button>
         )}
 
+        {/* Barre de recherche + bouton “Réinitialiser” */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Recherche par nom, email ou téléphone..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1); // Revenir à la première page
+            }}
+            style={{
+              flex: 1,
+              padding: '0.5rem',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+            }}
+          />
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setCurrentPage(1);
+            }}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#f3f4f6',
+              color: '#333',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+            disabled={!searchTerm}
+          >
+            Réinitialiser
+          </button>
+        </div>
+
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ backgroundColor: '#f3f4f6' }}>
@@ -252,7 +319,7 @@ export default function ClientsList() {
               </tr>
             </thead>
             <tbody>
-              {clients.map(client => (
+              {currentClients.map(client => (
                 <tr key={client._id} style={{ borderBottom: '1px solid #ccc' }}>
                   <td style={td}>{client.nom_client}</td>
                   <td style={td}>{client.email}</td>
@@ -289,7 +356,7 @@ export default function ClientsList() {
                   </td>
                 </tr>
               ))}
-              {clients.length === 0 && (
+              {filteredClients.length === 0 && (
                 <tr>
                   <td colSpan={6} style={{ padding: '1rem', textAlign: 'center', color: '#999' }}>
                     Aucun client trouvé.
@@ -299,6 +366,41 @@ export default function ClientsList() {
             </tbody>
           </table>
         </div>
+
+        {/* Contrôles de pagination */}
+        {clients.length > clientsPerPage && (
+          <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
+            <button
+              onClick={goToPrevPage}
+              disabled={currentPage === 1}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: currentPage === 1 ? '#ddd' : '#4f46e5',
+                color: currentPage === 1 ? '#666' : '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+              }}
+            >
+              ← Précédent
+            </button>
+            <span style={{ alignSelf: 'center' }}>Page {currentPage} / {totalPages}</span>
+            <button
+              onClick={goToNextPage}
+              disabled={currentPage === totalPages}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: currentPage === totalPages ? '#ddd' : '#4f46e5',
+                color: currentPage === totalPages ? '#666' : '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+              }}
+            >
+              Suivant →
+            </button>
+          </div>
+        )}
 
         {/* Modal pour la liste des prévendeurs */}
         {isModalOpen && (
