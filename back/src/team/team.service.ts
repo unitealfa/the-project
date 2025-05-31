@@ -17,10 +17,10 @@ export class TeamService {
   async listPrevendeursForSuperviseur(depotId: string) {
     const oid = new Types.ObjectId(depotId);
     
-    // Récupérer uniquement les prévendeurs du dépôt
+    // Récupérer les prévendeurs et superviseurs des ventes du dépôt
     const prevendeurs = await this.userModel.find({
       depot: oid,
-      role: 'Pré-vendeur',
+      role: { $in: ['Pré-vendeur', 'Superviseur des ventes'] },
       poste: 'Prévente'
     }).select('-password').lean();
     

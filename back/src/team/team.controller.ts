@@ -43,14 +43,26 @@ export class TeamController {
   }
 
   /** Liste par dépôt, filtre sur `poste` (catégorie) */
-  @Roles('Admin', 'responsable depot')
+  @Roles('Admin', 'responsable depot', 'Superviseur des ventes')
   @Get(':depotId')
   async list(
     @Param('depotId') depotId: string,
     @Req() req: any,
+    @Query('role') role?: string,
     @Query('poste') poste?: 'Livraison' | 'Prévente' | 'Entrepôt',
   ) {
+    // Si c'est un superviseur des ventes, vérifier qu'il appartient au dépôt
+    if (req.user.role === 'Superviseur des ventes' && req.user.depot !== depotId) {
+      throw new ForbiddenException('Vous n\'avez pas accès à ce dépôt');
+    }
+
     this.logger.log(`${req.user.role} ${req.user.id} liste ${poste ?? 'ALL'} pour dépôt ${depotId}`);
+    
+    // Si role=prevente est spécifié, retourner uniquement les prévendeurs
+    if (role === 'prevente') {
+      return this.svc.listPrevendeursForSuperviseur(depotId);
+    }
+    
     return this.svc.listByDepot(depotId, req.user.id, poste);
   }
 

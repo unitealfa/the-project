@@ -100,7 +100,7 @@ export default function ClientsList() {
     }
     setLoadingPrevendeurs(true);
     try {
-      const response = await apiFetch(`/teams/prevente/${depot}`);
+      const response = await apiFetch(`/api/teams/${depot}?role=prevente`);
       const data = await response.json();
       
       if (!data || !data.prevente) {
