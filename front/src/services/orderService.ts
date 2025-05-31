@@ -18,12 +18,23 @@ export interface OrderItem {
 export interface Order {
   _id: string;
   clientId: string;
+  nom_client: string;
+  telephone: string;
+  depot: string;
+  depot_name?: string;
+  numero?: string;
+  confirmed: boolean;
+  adresse_client?: {
+    adresse?: string;
+    ville?: string;
+    code_postal?: string;
+    region?: string;
+  };
   items: OrderItem[];
   total: number;
-  status: string;
-  depot: string;
+  etat_livraison: 'en_attente' | 'en_cours' | 'livree';
   createdAt: string;
-  updatedAt: string;
+  photosLivraison?: Array<{ url: string; takenAt: string }>;
 }
 
 export const orderService = {
@@ -44,6 +55,9 @@ export const orderService = {
     const response = await fetch(`${apiBase}/api/orders`, {
       headers: getHeaders()
     });
+    if (!response.ok) {
+      throw new Error('Erreur lors de la récupération des commandes');
+    }
     const data = await response.json();
     return Array.isArray(data) ? data : [];
   },
@@ -52,6 +66,9 @@ export const orderService = {
     const response = await fetch(`${apiBase}/api/orders/${id}`, {
       headers: getHeaders()
     });
+    if (!response.ok) {
+      throw new Error('Erreur lors de la récupération de la commande');
+    }
     return response.json();
   },
 
@@ -60,6 +77,9 @@ export const orderService = {
       method: "PATCH",
       headers: getHeaders()
     });
+    if (!response.ok) {
+      throw new Error('Erreur lors de la confirmation de la commande');
+    }
     return response.json();
   }
 };

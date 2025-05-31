@@ -79,7 +79,7 @@ export class OrderService {
       },
       items: dto.items,
       total: dto.total,
-      confirmed: true,
+      confirmed: false,
       numero
     });
 
@@ -92,7 +92,10 @@ export class OrderService {
 
   async findByDepot(depotId: string) {
     // 1. Récupère les commandes
-    const orders = await this.orderModel.find({ depot: depotId }).lean();
+    const orders = await this.orderModel
+      .find({ depot: depotId })
+      .sort({ createdAt: -1 }) // Tri par date décroissante
+      .lean();
 
     // 2. Récupère tous les clients nécessaires en une seule fois
     const clientIds = [...new Set(orders.map(o => o.clientId))];
