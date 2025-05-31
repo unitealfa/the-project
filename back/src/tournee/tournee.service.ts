@@ -392,6 +392,7 @@ export class TourneeService {
     return orders.map(o => ({
       _id: o._id.toString(),
       nom_client: o.nom_client,
+      numero: o.numero,
       items: o.items,
       etat_livraison: o.etat_livraison || 'en_attente'
     }));
