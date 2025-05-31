@@ -7,6 +7,7 @@ import { OrderController } from './order.controller';
 import { ReclamationController } from './reclamation.controller';
 import { OrderService } from './order.service';
 import { ReclamationService } from './reclamation.service';
+import { ProductModule } from '../product/product.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ReclamationService } from './reclamation.service';
       { name: Client.name, schema: ClientSchema },
       { name: Reclamation.name, schema: ReclamationSchema }
     ]),
+    ProductModule,
   ],
   controllers: [OrderController, ReclamationController],
   providers: [OrderService, ReclamationService],

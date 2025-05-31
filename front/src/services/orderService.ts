@@ -27,12 +27,16 @@ export interface Order {
 }
 
 export const orderService = {
-  createOrder: async (orderData: { items: OrderItem[]; depot: string }) => {
+  createOrder: async (orderData: { items: OrderItem[]; total: number }) => {
     const response = await fetch(`${apiBase}/api/orders`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify(orderData),
     });
+    if (!response.ok) {
+      const error = await response.json();
+      throw error;
+    }
     return response.json();
   },
 

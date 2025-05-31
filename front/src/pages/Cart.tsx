@@ -12,6 +12,10 @@ interface Product {
   nom_product: string;
   prix_detail: number;
   images: string[];
+  disponibilite: Array<{
+    depot_id: string;
+    quantite: number;
+  }>;
 }
 
 interface CartItem {
@@ -21,6 +25,11 @@ interface CartItem {
   product: Product | null;
 }
 
+interface DepotStock {
+  depot_id: string;
+  quantite: number;
+}
+
 export default function Cart() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +37,7 @@ export default function Cart() {
   const [sending, setSending] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
+  const [stockInfo, setStockInfo] = useState<Record<string, number>>({});
 
   // ---- État pour édition quantité
   const [editItemId, setEditItemId] = useState<string | null>(null);
@@ -56,6 +66,19 @@ export default function Cart() {
       const data = await cartService.getCart();
       console.log('Données du panier:', data);
       setCart(data?.items ?? []);
+      
+      // Récupérer les informations de stock pour chaque produit
+      const stockData: Record<string, number> = {};
+      for (const item of data?.items ?? []) {
+        if (item.product?.disponibilite) {
+          const depotId = user?.affectations?.[0]?.depot;
+          const depotStock = item.product.disponibilite.find((d: DepotStock) => d.depot_id === depotId);
+          if (depotStock) {
+            stockData[item.productId] = depotStock.quantite;
+          }
+        }
+      }
+      setStockInfo(stockData);
     } catch {
       setCart([]);
     } finally {
@@ -131,8 +154,13 @@ export default function Cart() {
       setConfirmedOrder(res); // <= stocke la commande complète
       setOrderSuccess("Commande envoyée avec succès !");
       // NE PAS fermer la modale ici, attends l'action du client
-    } catch {
-      setOrderError("Erreur lors de la validation");
+    } catch (error: any) {
+      console.error("Erreur lors de la validation:", error);
+      if (error.response?.data?.message) {
+        setOrderError(error.response.data.message);
+      } else {
+        setOrderError("Erreur lors de la validation de la commande");
+      }
     } finally {
       setSending(false);
       setTimeout(() => setOrderSuccess(null), 3000);
@@ -256,6 +284,15 @@ export default function Cart() {
                           <p style={{ margin: "0.5rem 0" }}>
                             Prix unitaire : {item.product.prix_detail} €
                           </p>
+                          {stockInfo[item.productId] !== undefined && stockInfo[item.productId] < 50 && (
+                            <p style={{ 
+                              margin: "0.5rem 0", 
+                              color: stockInfo[item.productId] < 10 ? "#ef4444" : "#f59e0b",
+                              fontWeight: "bold"
+                            }}>
+                              ⚠️ Il ne reste que {stockInfo[item.productId]} unités en stock
+                            </p>
+                          )}
                         </div>
                       </div>
                       {/* Quantité + actions */}

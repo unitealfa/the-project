@@ -1,15 +1,17 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Order } from "./schemas/order.schema";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { Client } from "../client/schemas/client.schema";
+import { ProductService } from "../product/product.service";
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectModel(Order.name) private orderModel: Model<Order>,
-    @InjectModel(Client.name) private clientModel: Model<Client>
+    @InjectModel(Client.name) private clientModel: Model<Client>,
+    private productService: ProductService
   ) {}
 
   async createOrder(userId: string, dto: CreateOrderDto) {
@@ -34,7 +36,35 @@ export class OrderService {
       }
     }
 
-    // Ici, pas de numéro de commande généré tout de suite, il sera ajouté à la confirmation
+    // Vérifier la disponibilité du stock pour chaque produit
+    for (const item of dto.items) {
+      const product = await this.productService.findOne(item.productId);
+      if (!product) {
+        throw new NotFoundException(`Produit ${item.productName} non trouvé`);
+      }
+
+      const depotDispo = product.disponibilite.find(d => d.depot_id.toString() === depotId);
+      if (!depotDispo) {
+        throw new BadRequestException(`Le produit ${item.productName} n'est pas disponible dans ce dépôt`);
+      }
+
+      if (depotDispo.quantite < item.quantity) {
+        throw new BadRequestException(
+          `Stock insuffisant pour ${item.productName}. Quantité disponible: ${depotDispo.quantite}, Quantité demandée: ${item.quantity}`
+        );
+      }
+    }
+
+    // Mettre à jour les quantités de stock pour chaque produit
+    for (const item of dto.items) {
+      const product = await this.productService.findOne(item.productId);
+      const depotDispo = product.disponibilite.find(d => d.depot_id.toString() === depotId);
+      const newQuantite = depotDispo.quantite - item.quantity;
+      await this.productService.updateQuantiteParDepot(item.productId, depotId, newQuantite);
+    }
+
+    // Créer la commande avec le numéro directement
+    const numero = "CMD-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
     const order = new this.orderModel({
       clientId: client._id,
       nom_client: client.nom_client,
@@ -49,8 +79,8 @@ export class OrderService {
       },
       items: dto.items,
       total: dto.total,
-      confirmed: false,
-      numero: null
+      confirmed: true,
+      numero
     });
 
     return order.save();

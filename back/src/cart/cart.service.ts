@@ -92,6 +92,7 @@ export class CartService {
             nom_product: product.nom_product,
             prix_detail: product.prix_detail,
             images: product.images,
+            disponibilite: product.disponibilite,
           } : null,
         };
         if (!product) {

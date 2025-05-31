@@ -6,6 +6,10 @@ export interface Product {
   nom_product: string;
   prix_detail: number;
   images: string[];
+  disponibilite: Array<{
+    depot_id: string;
+    quantite: number;
+  }>;
 }
 
 export interface CartItem {
