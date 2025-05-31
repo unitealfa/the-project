@@ -24,6 +24,7 @@ export default function ProductList() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const navigate = useNavigate();
   const location = useLocation();
   const query = new URLSearchParams(location.search);
@@ -52,6 +53,13 @@ export default function ProductList() {
         if (!productsRes.ok) throw new Error('Erreur lors de la récupération des produits');
         const productsData = await productsRes.json();
         setProducts(productsData);
+        
+        // Initialiser les quantités à 1 pour chaque produit
+        const initialQuantities = productsData.reduce((acc: { [key: string]: number }, product: Product) => {
+          acc[product._id] = 1;
+          return acc;
+        }, {});
+        setQuantities(initialQuantities);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -62,14 +70,23 @@ export default function ProductList() {
     fetchData();
   }, [clientId, user?.depot]);
 
+  const handleQuantityChange = (productId: string, newQuantity: number) => {
+    setQuantities(prev => ({
+      ...prev,
+      [productId]: Math.max(1, Math.min(newQuantity, 100)) // Limite entre 1 et 100
+    }));
+  };
+
   const handleAddToCart = async (productId: string) => {
     if (!clientId) {
       setError('Aucun client sélectionné');
       return;
     }
 
+    const quantity = quantities[productId] || 1;
+
     try {
-      const res = await cartService.addToCart(productId, 1, clientId);
+      const res = await cartService.addToCart(productId, quantity, clientId);
       if (!res) throw new Error('Erreur lors de l\'ajout au panier');
       setSuccessMessage('Produit ajouté au panier avec succès');
       // Effacer le message après 3 secondes
@@ -136,6 +153,7 @@ export default function ProductList() {
           {products.map(product => {
             const depotStock = product.disponibilite.find(d => d.depot_id === user?.depot);
             const stock = depotStock?.quantite ?? 0;
+            const quantity = quantities[product._id] || 1;
 
             return (
               <div key={product._id} style={{
@@ -166,22 +184,67 @@ export default function ProductList() {
                 <p style={{ margin: 0, color: stock > 0 ? '#10b981' : '#ef4444' }}>
                   Stock : {stock}
                 </p>
-                <button
-                  onClick={() => handleAddToCart(product._id)}
-                  disabled={stock === 0}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: stock > 0 ? '#10b981' : '#9ca3af',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: stock > 0 ? 'pointer' : 'not-allowed',
-                    fontSize: '1rem',
-                    transition: 'background-color 0.2s'
-                  }}
-                >
-                  {stock > 0 ? 'Ajouter au panier' : 'Rupture de stock'}
-                </button>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button
+                      onClick={() => handleQuantityChange(product._id, quantity - 1)}
+                      disabled={quantity <= 1}
+                      style={{
+                        padding: '0.25rem 0.5rem',
+                        backgroundColor: '#f3f4f6',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '4px',
+                        cursor: quantity <= 1 ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      max={stock}
+                      value={quantity}
+                      onChange={(e) => handleQuantityChange(product._id, parseInt(e.target.value) || 1)}
+                      style={{
+                        width: '60px',
+                        padding: '0.25rem',
+                        textAlign: 'center',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '4px'
+                      }}
+                    />
+                    <button
+                      onClick={() => handleQuantityChange(product._id, quantity + 1)}
+                      disabled={quantity >= stock}
+                      style={{
+                        padding: '0.25rem 0.5rem',
+                        backgroundColor: '#f3f4f6',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '4px',
+                        cursor: quantity >= stock ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => handleAddToCart(product._id)}
+                    disabled={stock === 0}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      backgroundColor: stock > 0 ? '#10b981' : '#9ca3af',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: stock > 0 ? 'pointer' : 'not-allowed',
+                      fontSize: '1rem',
+                      transition: 'background-color 0.2s'
+                    }}
+                  >
+                    {stock > 0 ? 'Ajouter au panier' : 'Rupture de stock'}
+                  </button>
+                </div>
               </div>
             );
           })}

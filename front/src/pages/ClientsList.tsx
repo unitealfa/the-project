@@ -278,7 +278,7 @@ export default function ClientsList() {
                     )}
                     {user?.role === 'responsable depot' && (
                       <>
-                        <button onClick={() => navigate(`/clients/edit/${client._id}`)} style={actionBtn}>
+                        <button onClick={() => navigate(`/clients/${client._id}/edit`)} style={actionBtn}>
                           ✏️ Modifier
                         </button>
                         <button onClick={() => handleDelete(client._id)} style={{ ...actionBtn, color: 'red' }}>
