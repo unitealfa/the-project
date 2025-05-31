@@ -2,94 +2,295 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/Header';
 
+interface FormData {
+  nom_client: string;
+  email: string;
+  password: string;
+  contact: {
+    nom_gerant: string;
+    telephone: string;
+  };
+  affectations: Array<{
+    entreprise: string;
+    depot: string;
+  }>;
+  localisation: {
+    adresse: string;
+    ville: string;
+    code_postal: string;
+    region: string;
+    coordonnees: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+}
+
 export default function EditClient() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const token = localStorage.getItem('token') || '';
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [formData, setFormData] = useState<FormData>({
+    nom_client: '',
+    email: '',
+    password: '',
+    contact: {
+      nom_gerant: '',
+      telephone: '',
+    },
+    affectations: [{
+      entreprise: '',
+      depot: '',
+    }],
+    localisation: {
+      adresse: '',
+      ville: '',
+      code_postal: '',
+      region: '',
+      coordonnees: {
+        latitude: 0,
+        longitude: 0,
+      },
+    },
+  });
+
   const apiBase = import.meta.env.VITE_API_URL;
+  const token = localStorage.getItem('token') || '';
   const userRaw = localStorage.getItem('user');
   const user = userRaw ? JSON.parse(userRaw) : null;
 
-  const [form, setForm] = useState<any>(null);
-
   useEffect(() => {
     fetch(`${apiBase}/clients`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     })
       .then(res => res.json())
       .then(data => {
         const client = data.find((c: any) => c._id === id);
         if (!client) throw new Error('Client introuvable');
-        setForm(client);
+        setFormData(client);
       })
-      .catch(err => alert(err.message));
-  }, [id, apiBase, token]);
+      .catch(err => setError(err.message));
+  }, [id, token]);
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
     if (name.startsWith('contact.')) {
       const key = name.split('.')[1];
-      setForm({ ...form, contact: { ...form.contact, [key]: value } });
+      setFormData(prev => ({
+        ...prev,
+        contact: { ...prev.contact, [key]: value }
+      }));
     } else if (name.startsWith('localisation.')) {
       const key = name.split('.')[1];
-      setForm({ ...form, localisation: { ...form.localisation, [key]: value } });
+      setFormData(prev => ({
+        ...prev,
+        localisation: { 
+          ...prev.localisation,
+          [key]: value 
+        }
+      }));
     } else if (name.startsWith('coordonnees.')) {
       const key = name.split('.')[1];
-      setForm({
-        ...form,
+      setFormData(prev => ({
+        ...prev,
         localisation: {
-          ...form.localisation,
-          coordonnees: { ...form.localisation.coordonnees, [key]: parseFloat(value) },
-        },
-      });
+          ...prev.localisation,
+          coordonnees: {
+            ...prev.localisation.coordonnees,
+            [key]: parseFloat(value)
+          }
+        }
+      }));
     } else {
-      setForm({ ...form, [name]: value });
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      // 🔥 Forcer la préservation du champ `depot`
-      const body = {
-        ...form,
-        depot: form.depot || user?.depot, // fallback si inexistant
-      };
+    setError('');
+    setSuccess('');
 
+    const dataToSend = {
+      ...formData,
+      ...(formData.password ? {} : { password: undefined }),
+    };
+
+    try {
       const res = await fetch(`${apiBase}/clients/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(dataToSend),
       });
-      if (!res.ok) throw new Error('Erreur lors de la modification');
-      navigate('/clients');
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Erreur lors de la modification');
+      }
+
+      setSuccess('Client modifié avec succès');
+      setTimeout(() => navigate('/clients'), 2000);
     } catch (err: any) {
-      alert(err.message);
+      setError(err.message);
     }
   };
 
-  if (!form) return <p style={{ padding: '2rem' }}>Chargement…</p>;
+  if (!formData) return <p style={{ padding: '2rem' }}>Chargement…</p>;
 
   return (
     <>
       <Header />
       <main style={{ padding: '2rem' }}>
         <h1>✏️ Modifier le client</h1>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {success && <p style={{ color: 'green' }}>{success}</p>}
         <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem', maxWidth: 500 }}>
-          <input name="nom_client" value={form.nom_client} onChange={handleChange} required />
-          <input name="email" value={form.email} onChange={handleChange} required />
-          <input name="contact.nom_gerant" value={form.contact.nom_gerant} onChange={handleChange} required />
-          <input name="contact.telephone" value={form.contact.telephone} onChange={handleChange} required />
-          <input name="localisation.adresse" value={form.localisation?.adresse || ''} onChange={handleChange} required />
-          <input name="localisation.ville" value={form.localisation?.ville || ''} onChange={handleChange} required />
-          <input name="localisation.code_postal" value={form.localisation?.code_postal || ''} onChange={handleChange} required />
-          <input name="localisation.region" value={form.localisation?.region || ''} onChange={handleChange} required />
-          <input name="coordonnees.latitude" type="number" step="any" value={form.localisation?.coordonnees?.latitude || 0} onChange={handleChange} required />
-          <input name="coordonnees.longitude" type="number" step="any" value={form.localisation?.coordonnees?.longitude || 0} onChange={handleChange} required />
-          <button type="submit" style={{ padding: '0.5rem', backgroundColor: '#3b82f6', color: 'white', border: 'none' }}>
+          <div style={formGroup}>
+            <label htmlFor="nom_client" style={labelStyle}>Nom du client:</label>
+            <input
+              id="nom_client"
+              name="nom_client"
+              value={formData.nom_client}
+              onChange={handleChange}
+              style={inputStyle}
+              required
+            />
+          </div>
+
+          <div style={formGroup}>
+            <label htmlFor="email" style={labelStyle}>Email:</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              style={inputStyle}
+              required
+            />
+          </div>
+
+          <div style={formGroup}>
+            <label htmlFor="password" style={labelStyle}>Nouveau mot de passe (optionnel):</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              style={inputStyle}
+              placeholder="Laissez vide pour ne pas modifier"
+            />
+          </div>
+
+          <div style={formGroup}>
+            <label htmlFor="nom_gerant" style={labelStyle}>Nom du gérant:</label>
+            <input
+              id="nom_gerant"
+              name="contact.nom_gerant"
+              value={formData.contact.nom_gerant}
+              onChange={handleChange}
+              style={inputStyle}
+              required
+            />
+          </div>
+
+          <div style={formGroup}>
+            <label htmlFor="telephone" style={labelStyle}>Téléphone:</label>
+            <input
+              id="telephone"
+              name="contact.telephone"
+              value={formData.contact.telephone}
+              onChange={handleChange}
+              style={inputStyle}
+              required
+            />
+          </div>
+
+          <div style={formGroup}>
+            <label htmlFor="adresse" style={labelStyle}>Adresse:</label>
+            <input
+              id="adresse"
+              name="localisation.adresse"
+              value={formData.localisation?.adresse || ''}
+              onChange={handleChange}
+              style={inputStyle}
+              required
+            />
+          </div>
+
+          <div style={formGroup}>
+            <label htmlFor="ville" style={labelStyle}>Ville:</label>
+            <input
+              id="ville"
+              name="localisation.ville"
+              value={formData.localisation?.ville || ''}
+              onChange={handleChange}
+              style={inputStyle}
+              required
+            />
+          </div>
+
+          <div style={formGroup}>
+            <label htmlFor="code_postal" style={labelStyle}>Code postal:</label>
+            <input
+              id="code_postal"
+              name="localisation.code_postal"
+              value={formData.localisation?.code_postal || ''}
+              onChange={handleChange}
+              style={inputStyle}
+              required
+            />
+          </div>
+
+          <div style={formGroup}>
+            <label htmlFor="region" style={labelStyle}>Région:</label>
+            <input
+              id="region"
+              name="localisation.region"
+              value={formData.localisation?.region || ''}
+              onChange={handleChange}
+              style={inputStyle}
+              required
+            />
+          </div>
+
+          <div style={formGroup}>
+            <label htmlFor="latitude" style={labelStyle}>Latitude:</label>
+            <input
+              type="number"
+              step="any"
+              id="latitude"
+              name="coordonnees.latitude"
+              value={formData.localisation?.coordonnees?.latitude || 0}
+              onChange={handleChange}
+              style={inputStyle}
+              required
+            />
+          </div>
+
+          <div style={formGroup}>
+            <label htmlFor="longitude" style={labelStyle}>Longitude:</label>
+            <input
+              type="number"
+              step="any"
+              id="longitude"
+              name="coordonnees.longitude"
+              value={formData.localisation?.coordonnees?.longitude || 0}
+              onChange={handleChange}
+              style={inputStyle}
+              required
+            />
+          </div>
+
+          <button type="submit" style={submitButton}>
             Enregistrer les modifications
           </button>
         </form>
@@ -97,3 +298,35 @@ export default function EditClient() {
     </>
   );
 }
+
+const formGroup = {
+  display: 'flex',
+  flexDirection: 'column' as const,
+  gap: '0.5rem',
+};
+
+const labelStyle = {
+  fontWeight: 'bold',
+  color: '#374151',
+};
+
+const inputStyle = {
+  padding: '0.5rem',
+  border: '1px solid #d1d5db',
+  borderRadius: '0.375rem',
+  fontSize: '1rem',
+};
+
+const submitButton = {
+  padding: '0.75rem 1rem',
+  backgroundColor: '#3b82f6',
+  color: 'white',
+  border: 'none',
+  borderRadius: '0.375rem',
+  cursor: 'pointer',
+  fontSize: '1rem',
+  fontWeight: 'bold',
+  ':hover': {
+    backgroundColor: '#2563eb',
+  },
+};
