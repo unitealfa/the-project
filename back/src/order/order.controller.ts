@@ -12,7 +12,8 @@ import {
   NotFoundException,
   UploadedFiles,
   UseInterceptors,
-  BadRequestException
+  BadRequestException,
+  Delete
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -113,5 +114,13 @@ export class OrderController {
       takenAt: new Date(),
     }));
     return this.orderService.addDeliveryPhotos(orderId, photos);
+  }
+
+  @Delete(':id/photos/:photoIdx')
+  async deleteOrderPhoto(
+    @Param('id') orderId: string,
+    @Param('photoIdx') photoIdx: string
+  ) {
+    return this.orderService.deleteDeliveryPhoto(orderId, parseInt(photoIdx, 10));
   }
 }

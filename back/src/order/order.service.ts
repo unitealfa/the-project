@@ -112,4 +112,16 @@ export class OrderService {
     }
     return order.save();
   }
+
+  async deleteDeliveryPhoto(orderId: string, photoIdx: number) {
+    const order = await this.orderModel.findById(orderId);
+    if (!order) throw new NotFoundException('Commande non trouvée');
+    if (!order.photosLivraison || order.photosLivraison.length <= photoIdx) {
+      throw new NotFoundException('Photo non trouvée');
+    }
+    // Optionnel : supprimer le fichier physique ici
+    order.photosLivraison.splice(photoIdx, 1);
+    await order.save();
+    return order;
+  }
 }

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Header from '../components/Header';
+import { useNavigate } from 'react-router-dom';
 
 interface OrderItem {
   productName: string;
@@ -9,10 +10,10 @@ interface OrderItem {
 interface Order {
   _id: string;
   nom_client: string;
+  numero?: string;
   items: OrderItem[];
   etat_livraison: 'en_attente' | 'en_cours' | 'livree';
   photosLivraison?: Array<{ url: string; takenAt: string }>;
-
 }
 
 export default function LivreurCommandes() {
@@ -23,6 +24,7 @@ export default function LivreurCommandes() {
   const livreurId = JSON.parse(localStorage.getItem('user') || '{}').id;
   const apiBase = import.meta.env.VITE_API_URL;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchOrders();
@@ -152,18 +154,25 @@ export default function LivreurCommandes() {
           {orders.map(o => (
             <div key={o._id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem', backgroundColor: 'white' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h3 style={{ margin: 0 }}>{o.nom_client}</h3>
+                <button
+                  onClick={() => navigate(`/livreur/commandes/${o._id}`)}
+                  style={{
+                    background: 'none', border: 'none', color: '#2563eb', fontWeight: 'bold', fontSize: '1.1rem', cursor: 'pointer', padding: 0, margin: 0
+                  }}
+                >
+                  {o.nom_client}
+                </button>
+                {o.numero && (
+                  <div style={{ color: '#6b7280', fontWeight: 500, marginTop: 2 }}>
+                    N° commande : {o.numero}
+                  </div>
+                )}
                 <span style={{ padding: '0.25rem 0.75rem', borderRadius: '9999px', backgroundColor: getStatusColor(o.etat_livraison), color: 'white', fontSize: '0.875rem' }}>
                   {getStatusText(o.etat_livraison)}
                 </span>
               </div>
-              <ul style={{ margin: '0 0 1rem 0', padding: '0 0 0 1.5rem' }}>
-                {o.items.map((it, i) => (
-                  <li key={i}>{it.productName} × {it.quantity}</li>
-                ))}
-              </ul>
 
-              {o.etat_livraison === 'en_cours' && (
+              {o.etat_livraison === 'en_cours' && false && (
                 <>
                   <button
                     onClick={() => fileInputRefs.current[o._id]?.click()}
@@ -226,6 +235,23 @@ export default function LivreurCommandes() {
               {o.etat_livraison === 'livree' && (
                 <button onClick={() => updateDeliveryStatus(o._id, 'en_cours')} style={{ padding: '0.5rem 1rem', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
                   Annuler la validation
+                </button>
+              )}
+
+              {o.etat_livraison === 'en_cours' && (
+                <button
+                  onClick={() => updateDeliveryStatus(o._id, 'livree')}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    backgroundColor: '#10b981',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    marginTop: '0.5rem'
+                  }}
+                >
+                  Valider la livraison
                 </button>
               )}
             </div>

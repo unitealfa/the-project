@@ -70,6 +70,7 @@ import ReclamationsList from "./pages/ReclamationsList";
 import ReclamationResponse from "./pages/ReclamationResponse";
 
 import Orders from "./pages/Orders";
+import LivreurCommandeDetail from "./pages/LivreurCommandeDetail";
 
 export default function App() {
   return (
@@ -548,6 +549,8 @@ export default function App() {
           </RequireAuth>
         }
       />
+
+      <Route path="/livreur/commandes/:orderId" element={<LivreurCommandeDetail />} />
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
