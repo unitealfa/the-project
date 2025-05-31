@@ -44,6 +44,13 @@ interface TourneeSolution {
   date1: Record<string, VehicleSolution>;
 }
 
+interface StopClient {
+  _id: string;
+  clientName: string;
+  latitude: number;
+  longitude: number;
+}
+
 @Injectable()
 export class TourneeService {
   private readonly logger = new Logger(TourneeService.name);
@@ -286,39 +293,76 @@ export class TourneeService {
     return tournee;
   }
 
-  async getStopsForChauffeur(chauffeurId: string): Promise<any[]> {
+  async getStopsForChauffeur(chauffeurId: string): Promise<{
+    depot: { latitude: number; longitude: number; nom_depot: string };
+    stops: StopClient[];
+  }> {
+    // 1) Récupérer les véhicules rattachés à ce chauffeur
     const vehicles = await this.vehicleModel.find({ chauffeur_id: chauffeurId }).lean();
     const vehicleIds = vehicles.map(v => v._id.toString());
-    if (!vehicleIds.length) return [];
+    if (!vehicleIds.length) {
+      throw new NotFoundException(`Aucun véhicule trouvé pour le chauffeur ${chauffeurId}`);
+    }
 
+    // 2) Récupérer la dernière tournée affectant l’un de ces véhicules
     const tournee = await this.tourneeModel
       .findOne({ vehicles: { $in: vehicleIds } })
       .sort({ date: -1 })
       .lean();
-    if (!tournee?.solution) return [];
+    if (!tournee) {
+      throw new NotFoundException(`Aucune tournée trouvée pour le chauffeur ${chauffeurId}`);
+    }
 
-    const solution: any = tournee.solution;
+    // 3) Charger les coordonnées du dépôt pour départ et retour
+    const depotDoc = await this.depotModel.findById(tournee.depot).lean();
+    if (!depotDoc || !depotDoc.coordonnees) {
+      throw new NotFoundException(`Dépôt ${tournee.depot} introuvable ou sans coordonnées`);
+    }
+    const depotCoordinates = {
+      latitude: depotDoc.coordonnees.latitude,
+      longitude: depotDoc.coordonnees.longitude,
+      nom_depot: depotDoc.nom_depot,
+    };
+
+    // 4) Extraire tous les clientIds (stop_id) de la solution VRP
+    const solution: any = tournee.solution; // votre structure VRP
     const clientIds = new Set<string>();
-
     for (const vid of vehicleIds) {
-      const veh = solution.date1[vid];
-      if (veh) {
+      const veh = solution.date1?.[vid];
+      if (veh?.ordered_stops) {
         veh.ordered_stops.forEach((stop: any) => {
-          if (!stop.stop_id.startsWith('end_')) {
+          if (!stop.stop_id.startsWith("end_")) {
             clientIds.add(stop.stop_id);
           }
         });
       }
     }
-    if (!clientIds.size) return [];
+    // Si aucun client à livrer, retourner juste le dépôt
+    if (!clientIds.size) {
+      return { depot: depotCoordinates, stops: [] };
+    }
 
-    const clients = await this.clientModel.find({ _id: { $in: Array.from(clientIds) } }).lean();
-    return clients.map(c => ({
-      _id: c._id.toString(),
-      clientName: c.nom_client,
-      latitude:  c.localisation.coordonnees.latitude,
-      longitude: c.localisation.coordonnees.longitude,
-    }));
+    // 5) Charger les documents Client pour récupérer nom + coordonnées
+    const clients = await this.clientModel
+      .find({ _id: { $in: Array.from(clientIds) } })
+      .lean();
+
+    // 6) Construire l’array stops au format attendu (StopClient[])
+    const stops: StopClient[] = clients.map(c => {
+      // Si c.localisation.coordonnees est manquant, on met (0,0) par défaut
+      const coord = c.localisation?.coordonnees || { latitude: 0, longitude: 0 };
+      return {
+        _id: c._id.toString(),
+        clientName: c.nom_client,
+        latitude: coord.latitude,
+        longitude: coord.longitude,
+      };
+    });
+
+    return {
+      depot: depotCoordinates,
+      stops,
+    };
   }
 
   async getOrdersForLivreur(livreurId: string): Promise<any[]> {
