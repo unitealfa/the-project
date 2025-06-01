@@ -28,6 +28,7 @@ interface Order {
   depot_name?: string;
   entreprise?: { nom_company?: string };
   etat_livraison: 'en_attente' | 'en_cours' | 'livree';
+  statut_chargement: 'en_attente' | 'en_cours' | 'charge';
 }
 
 export default function HistoriqueOrders() {
@@ -90,11 +91,29 @@ export default function HistoriqueOrders() {
     }
   };
 
+  const getLoadingStatusColor = (status: string) => {
+    switch (status) {
+      case 'en_attente': return '#f59e0b';
+      case 'en_cours': return '#3b82f6';
+      case 'charge': return '#10b981';
+      default: return '#6b7280';
+    }
+  };
+
   const getStatusText = (status: string) => {
     switch (status) {
       case 'en_attente': return 'En attente';
       case 'en_cours': return 'En cours';
       case 'livree': return 'Livrée';
+      default: return status;
+    }
+  };
+
+  const getLoadingStatusText = (status: string) => {
+    switch (status) {
+      case 'en_attente': return 'En attente';
+      case 'en_cours': return 'En cours';
+      case 'charge': return 'Chargé';
       default: return status;
     }
   };
@@ -193,6 +212,7 @@ export default function HistoriqueOrders() {
                 <th style={{ border: "1px solid #ddd", padding: 8 }}>Total</th>
                 <th style={{ border: "1px solid #ddd", padding: 8 }}>Nombre d'articles</th>
                 <th style={{ border: "1px solid #ddd", padding: 8 }}>État de livraison</th>
+                <th style={{ border: "1px solid #ddd", padding: 8 }}>État de chargement</th>
                 <th style={{ border: "1px solid #ddd", padding: 8 }}>Action</th>
               </tr>
             </thead>
@@ -233,6 +253,17 @@ export default function HistoriqueOrders() {
                       fontSize: '0.875rem'
                     }}>
                       {getStatusText(order.etat_livraison)}
+                    </span>
+                  </td>
+                  <td style={{ border: "1px solid #ddd", padding: 8 }}>
+                    <span style={{
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '9999px',
+                      backgroundColor: getLoadingStatusColor(order.statut_chargement),
+                      color: 'white',
+                      fontSize: '0.875rem'
+                    }}>
+                      {getLoadingStatusText(order.statut_chargement)}
                     </span>
                   </td>
                   <td style={{ border: "1px solid #ddd", padding: 8 }}>

@@ -32,6 +32,7 @@ interface Tournee {
   vehicles: string[];
   total_travel_time?: number;
   total_travel_distance?: number;
+  statut_chargement: 'en_cours' | 'charge';
   solution?: {
     date1: Record<string, Vehicle>;
   };
@@ -43,9 +44,17 @@ export default function TourneeDetail() {
   const navigate = useNavigate();
   const [tournee, setTournee] = useState<Tournee | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const apiBase = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isControleur = user.role === 'Contrôleur';
+  
+  useEffect(() => {
+    console.log('User:', user);
+    console.log('Is Controleur:', isControleur);
+    console.log('User Role:', user.role);
+  }, [user, isControleur]);
 
   useEffect(() => {
     if (!id) {
@@ -86,6 +95,41 @@ export default function TourneeDetail() {
       });
   }, [apiBase, token, id]);
 
+  const updateLoadingStatus = async (status: 'en_cours' | 'charge') => {
+    try {
+      const res = await fetch(`${apiBase}/tournees/${id}/loading-status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status })
+      });
+      if (res.ok) {
+        const updatedTournee = await res.json();
+        setTournee(updatedTournee);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut de chargement:', error);
+    }
+  };
+
+  const getLoadingStatusColor = (status: string) => {
+    switch (status) {
+      case 'en_cours': return '#3b82f6';
+      case 'charge': return '#10b981';
+      default: return '#6b7280';
+    }
+  };
+
+  const getLoadingStatusText = (status: string) => {
+    switch (status) {
+      case 'en_cours': return 'Chargement en cours';
+      case 'charge': return 'Chargé';
+      default: return status;
+    }
+  };
+
   if (loading) return <div>Chargement...</div>;
   if (error) return <div style={{ color: 'red' }}>{error}</div>;
   if (!tournee) return <div>Aucune tournée trouvée</div>;
@@ -117,6 +161,52 @@ export default function TourneeDetail() {
             <p>Date : {new Date(tournee.date).toLocaleDateString()}</p>
             <p>Nombre d'arrêts : {tournee.stops.length}</p>
             <p>Nombre de véhicules : {tournee.vehicles.length}</p>
+            <p>Statut de chargement : 
+              <span style={{ 
+                padding: '0.25rem 0.75rem', 
+                borderRadius: '9999px', 
+                backgroundColor: getLoadingStatusColor(tournee.statut_chargement), 
+                color: 'white', 
+                fontSize: '0.875rem',
+                marginLeft: '0.5rem'
+              }}>
+                {getLoadingStatusText(tournee.statut_chargement)}
+              </span>
+            </p>
+            {isControleur && (
+              <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+                {tournee.statut_chargement === 'en_cours' && (
+                  <button
+                    onClick={() => updateLoadingStatus('charge')}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Valider le chargement
+                  </button>
+                )}
+                {tournee.statut_chargement === 'charge' && (
+                  <button
+                    onClick={() => updateLoadingStatus('en_cours')}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#ef4444',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Annuler la validation
+                  </button>
+                )}
+              </div>
+            )}
             {tournee.total_travel_time && (
               <p>Temps de trajet total : {tournee.total_travel_time} minutes</p>
             )}

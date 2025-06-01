@@ -293,6 +293,31 @@ export class TourneeService {
     return tournee;
   }
 
+  /**
+   * Met à jour le statut de chargement d'une tournée
+   */
+  async updateLoadingStatus(id: string, status: 'en_cours' | 'charge') {
+    this.logger.debug(`Mise à jour du statut de chargement de la tournée ${id} à ${status}`);
+    const tournee = await this.tourneeModel.findByIdAndUpdate(
+      id,
+      { $set: { statut_chargement: status } },
+      { new: true }
+    ).lean();
+
+    if (tournee) {
+      // Mettre à jour le statut de chargement des commandes associées
+      await this.orderModel.updateMany(
+        { _id: { $in: tournee.orderIds } },
+        { $set: { statut_chargement: status } }
+      );
+
+      // Récupérer la tournée complète avec tous ses détails
+      return this.findById(id);
+    }
+
+    return tournee;
+  }
+
   async getStopsForChauffeur(chauffeurId: string): Promise<{
     depot: { latitude: number; longitude: number; nom_depot: string };
     stops: StopClient[];
@@ -304,7 +329,7 @@ export class TourneeService {
       throw new NotFoundException(`Aucun véhicule trouvé pour le chauffeur ${chauffeurId}`);
     }
 
-    // 2) Récupérer la dernière tournée affectant l’un de ces véhicules
+    // 2) Récupérer la dernière tournée affectant l'un de ces véhicules
     const tournee = await this.tourneeModel
       .findOne({ vehicles: { $in: vehicleIds } })
       .sort({ date: -1 })
@@ -347,7 +372,7 @@ export class TourneeService {
       .find({ _id: { $in: Array.from(clientIds) } })
       .lean();
 
-    // 6) Construire l’array stops au format attendu (StopClient[])
+    // 6) Construire l'array stops au format attendu (StopClient[])
     const stops: StopClient[] = clients.map(c => {
       // Si c.localisation.coordonnees est manquant, on met (0,0) par défaut
       const coord = c.localisation?.coordonnees || { latitude: 0, longitude: 0 };

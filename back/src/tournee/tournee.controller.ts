@@ -1,5 +1,8 @@
-import { Controller, Post, Body, BadRequestException, Get, Param, NotFoundException } from "@nestjs/common";
+import { Controller, Post, Body, BadRequestException, Get, Param, NotFoundException, Patch, UseGuards } from "@nestjs/common";
 import { TourneeService } from "./tournee.service";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { RolesGuard } from "../auth/roles.guard";
+import { Roles } from "../auth/roles.decorator";
 
 @Controller("tournees")
 export class TourneeController {
@@ -42,6 +45,27 @@ export class TourneeController {
       throw new BadRequestException("L'ID de la tournée est requis");
     }
     const tournee = await this.tourneeService.findById(id);
+    if (!tournee) {
+      throw new NotFoundException("Tournée non trouvée");
+    }
+    return tournee;
+  }
+
+  /**
+   * PATCH /api/tournees/:id/loading-status
+   * Met à jour le statut de chargement d'une tournée
+   */
+  @Patch(":id/loading-status")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Contrôleur')
+  async updateLoadingStatus(
+    @Param("id") id: string,
+    @Body() body: { status: 'en_cours' | 'charge' }
+  ) {
+    if (!id) {
+      throw new BadRequestException("L'ID de la tournée est requis");
+    }
+    const tournee = await this.tourneeService.updateLoadingStatus(id, body.status);
     if (!tournee) {
       throw new NotFoundException("Tournée non trouvée");
     }

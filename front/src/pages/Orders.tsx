@@ -25,9 +25,9 @@ interface Order {
   }>;
   total: number;
   etat_livraison: 'en_attente' | 'en_cours' | 'livree';
+  statut_chargement: 'en_attente' | 'en_cours' | 'charge';
   createdAt: string;
   photosLivraison?: Array<{ url: string; takenAt: string }>;
-
 }
 
 const Orders: React.FC = () => {
@@ -41,6 +41,7 @@ const Orders: React.FC = () => {
   const [searchName, setSearchName] = useState("");
   const [searchDate, setSearchDate] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedLoadingStatus, setSelectedLoadingStatus] = useState("");
   const [selectedProofFilter, setSelectedProofFilter] = useState<"toutes" | "avec" | "sans">("toutes");
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 15;
@@ -123,6 +124,11 @@ const Orders: React.FC = () => {
     setCurrentPage(1);
   };
 
+  const handleLoadingStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedLoadingStatus(e.target.value);
+    setCurrentPage(1);
+  };
+
   const handleProofFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedProofFilter(e.target.value as any);
     setCurrentPage(1);
@@ -134,8 +140,45 @@ const Orders: React.FC = () => {
     setSearchName("");
     setSearchDate("");
     setSelectedStatus("");
+    setSelectedLoadingStatus("");
     setSelectedProofFilter("toutes");
     setCurrentPage(1);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'en_attente': return '#f59e0b';
+      case 'en_cours': return '#3b82f6';
+      case 'livree': return '#10b981';
+      default: return '#6b7280';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'en_attente': return 'En attente';
+      case 'en_cours': return 'En cours';
+      case 'livree': return 'Livrée';
+      default: return status;
+    }
+  };
+
+  const getLoadingStatusColor = (status: string) => {
+    switch (status) {
+      case 'en_attente': return '#f59e0b';
+      case 'en_cours': return '#3b82f6';
+      case 'charge': return '#10b981';
+      default: return '#6b7280';
+    }
+  };
+
+  const getLoadingStatusText = (status: string) => {
+    switch (status) {
+      case 'en_attente': return 'En attente';
+      case 'en_cours': return 'En cours';
+      case 'charge': return 'Chargé';
+      default: return status;
+    }
   };
 
   const filteredOrders = orders.filter(order => {
@@ -158,6 +201,7 @@ const Orders: React.FC = () => {
     const matchesDate = termDate === "" || dateStr.includes(termDate);
 
     const matchesStatus = selectedStatus === "" || order.etat_livraison === selectedStatus;
+    const matchesLoadingStatus = selectedLoadingStatus === "" || order.statut_chargement === selectedLoadingStatus;
 
     let matchesProof = true;
     if (selectedProofFilter === "avec") {
@@ -166,7 +210,7 @@ const Orders: React.FC = () => {
       matchesProof = !order.photosLivraison || order.photosLivraison.length === 0;
     }
 
-    return matchesClient && matchesDate && matchesStatus && matchesProof;
+    return matchesClient && matchesDate && matchesStatus && matchesLoadingStatus && matchesProof;
   });
 
   const indexOfLastOrder = currentPage * ordersPerPage;
@@ -223,6 +267,22 @@ const Orders: React.FC = () => {
           </select>
 
           <select
+            value={selectedLoadingStatus}
+            onChange={e => { setSelectedLoadingStatus(e.target.value); setCurrentPage(1); }}
+            style={{
+              padding: "0.5rem",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              background: "#fff",
+            }}
+          >
+            <option value="">Tous statuts de chargement</option>
+            <option value="en_attente">En attente</option>
+            <option value="en_cours">En cours</option>
+            <option value="charge">Chargé</option>
+          </select>
+
+          <select
             value={selectedProofFilter}
             onChange={e => { setSelectedProofFilter(e.target.value as any); setCurrentPage(1); }}
             style={{
@@ -242,10 +302,11 @@ const Orders: React.FC = () => {
               setSearchName("");
               setSearchDate("");
               setSelectedStatus("");
+              setSelectedLoadingStatus("");
               setSelectedProofFilter("toutes");
               setCurrentPage(1);
             }}
-            disabled={!searchName && !searchDate && !selectedStatus && selectedProofFilter === "toutes"}
+            disabled={!searchName && !searchDate && !selectedStatus && !selectedLoadingStatus && selectedProofFilter === "toutes"}
             style={{
               padding: "0.5rem 1rem",
               backgroundColor: "#f3f4f6",
@@ -253,7 +314,7 @@ const Orders: React.FC = () => {
               border: "1px solid #ccc",
               borderRadius: "4px",
               cursor:
-                !searchName && !searchDate && !selectedStatus && selectedProofFilter === "toutes"
+                !searchName && !searchDate && !selectedStatus && !selectedLoadingStatus && selectedProofFilter === "toutes"
                   ? "not-allowed"
                   : "pointer",
             }}
@@ -271,50 +332,53 @@ const Orders: React.FC = () => {
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "1rem" }}>
               <thead>
-                <tr style={{ backgroundColor: "#f3f4f6" }}>
+                <tr>
                   <th style={thStyle}>Client</th>
                   <th style={thStyle}>Date</th>
-                  <th style={thStyle}>Montant total</th>
-                  <th style={thStyle}>Statut</th>
-                  <th style={thStyle}>Preuves</th>
+                  <th style={thStyle}>Total</th>
+                  <th style={thStyle}>Statut Livraison</th>
+                  <th style={thStyle}>Statut Chargement</th>
+                  <th style={thStyle}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {currentOrders.map((order) => (
-                  <tr key={order._id} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                    <td style={{ padding: "12px" }}>
-                      {order.nom_client}
-                      <br />
-                      <small style={{ color: "#6b7280" }}>{order.telephone}</small>
+                  <tr key={order._id}>
+                    <td style={tdStyle}>
+                      <div>{order.nom_client}</div>
+                      <div style={{ fontSize: "0.875rem", color: "#666" }}>{order.telephone}</div>
                     </td>
-                    <td style={{ padding: "12px" }}>{formatDate(order.createdAt)}</td>
-                    <td style={{ padding: "12px" }}>{order.total.toFixed(2)} €</td>
-                    <td style={{ padding: "12px" }}>
+                    <td style={tdStyle}>{formatDate(order.createdAt)}</td>
+                    <td style={tdStyle}>{order.total.toFixed(2)} €</td>
+                    <td style={tdStyle}>
                       <span style={{
-                        padding: "4px 8px",
-                        borderRadius: "4px",
-                        backgroundColor: order.etat_livraison === "livree" ? "#10b981" : 
-                                       order.etat_livraison === "en_cours" ? "#f59e0b" : "#ef4444",
-                        color: "white",
-                        fontSize: "0.875rem"
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '9999px',
+                        backgroundColor: getStatusColor(order.etat_livraison),
+                        color: 'white',
+                        fontSize: '0.875rem'
                       }}>
-                        {order.etat_livraison === "livree" ? "Livrée" :
-                         order.etat_livraison === "en_cours" ? "En cours" : "En attente"}
+                        {getStatusText(order.etat_livraison)}
                       </span>
                     </td>
                     <td style={tdStyle}>
-                      {order.etat_livraison === 'livree' && order.photosLivraison?.length
-                        ? <button
-                            style={seeButtonStyle}
-                            onClick={() => {
-                              setModalPhotos(order.photosLivraison!.map(p => p.url));
-                              setShowModal(true);
-                            }}
-                          >
-                            Voir preuves ({order.photosLivraison.length})
-                          </button>
-                        : '-'
-                      }
+                      <span style={{
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '9999px',
+                        backgroundColor: getLoadingStatusColor(order.statut_chargement),
+                        color: 'white',
+                        fontSize: '0.875rem'
+                      }}>
+                        {getLoadingStatusText(order.statut_chargement)}
+                      </span>
+                    </td>
+                    <td style={tdStyle}>
+                      <button
+                        onClick={() => window.location.href = `/orders/${order._id}`}
+                        style={seeButtonStyle}
+                      >
+                        Voir détails
+                      </button>
                     </td>
                   </tr>
                 ))}
