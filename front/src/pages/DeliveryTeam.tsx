@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import Header    from '../components/Header';
+import Header from '../components/Header';
+import { PaginationSearch } from '../components/PaginationSearch';
 import { apiFetch } from '../utils/api';
 
 interface Member { _id: string; nom: string; prenom: string; role: string }
@@ -11,9 +12,13 @@ export default function DeliveryTeam() {
   const nav = useNavigate();
   const loc = useLocation();
   const [members, setMembers] = useState<Member[]>([]);
+  const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
   const [depot, setDepot] = useState<Depot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const user = JSON.parse(localStorage.getItem('user') || '{}') as { role: string };
 
@@ -29,7 +34,9 @@ export default function DeliveryTeam() {
         if (cancel) return;
         setDepot(await dRes.json());
         const payload = await tRes.json();
-        setMembers(Array.isArray(payload) ? payload : payload.livraison ?? []);
+        const membersData = Array.isArray(payload) ? payload : payload.livraison ?? [];
+        setMembers(membersData);
+        setFilteredMembers(membersData);
       } catch {
         if (!cancel) setError('Impossible de charger');
       } finally {
@@ -38,6 +45,22 @@ export default function DeliveryTeam() {
     })();
     return () => { cancel = true; };
   }, [depotId, loc.key]);
+
+  useEffect(() => {
+    // Filtrer les membres en fonction du terme de recherche
+    const filtered = members.filter(member => 
+      member.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.role.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredMembers(filtered);
+    setCurrentPage(1); // Réinitialiser la page courante lors d'une nouvelle recherche
+  }, [searchTerm, members]);
+
+  // Calculer les membres à afficher pour la page courante
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredMembers.slice(indexOfFirstItem, indexOfLastItem);
 
   const handleDelete = async (memberId: string) => {
     if (!window.confirm('Supprimer ce membre ?')) return;
@@ -68,49 +91,60 @@ export default function DeliveryTeam() {
         {loading ? (
           <p>Chargement…</p>
         ) : (
-          <table style={{ width:'100%', borderCollapse:'collapse', marginTop:'1rem' }}>
-            <thead>
-              <tr>
-                {['Nom','Prénom','Rôle','Actions'].map(h => (
-                  <th key={h} style={{ padding:'.5rem', borderBottom:'1px solid #ccc', textAlign:'left' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {members.map(m => (
-                <tr key={m._id}>
-                  <td style={{ padding:'.5rem 0' }}>{m.nom}</td>
-                  <td style={{ padding:'.5rem 0' }}>{m.prenom}</td>
-                  <td style={{ padding:'.5rem 0' }}>{m.role}</td>
-                  <td>
-                    <button
-                      style={{ marginRight:8 }}
-                      onClick={() => nav(`/teams/members/${m._id}/detail-delivery`)}
-                    >
-                      Détails
-                    </button>
-                    <button
-                      style={{ marginRight:8 }}
-                      onClick={() => nav(`/teams/members/${m._id}/edit-delivery`)}
-                    >
-                      Éditer
-                    </button>
-                    {(user.role === 'admin' || user.role === 'responsable depot') && (
-                      <button
-                        style={{ color:'#fff', background:'#dc2626', border:'none', borderRadius:4, padding:'0.25rem 0.75rem' }}
-                        onClick={() => handleDelete(m._id)}
-                      >
-                        Supprimer
-                      </button>
-                    )}
-                  </td>
+          <>
+            <PaginationSearch
+              totalItems={filteredMembers.length}
+              itemsPerPage={itemsPerPage}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              placeholder="Rechercher un membre..."
+            />
+            <table style={{ width:'100%', borderCollapse:'collapse', marginTop:'1rem' }}>
+              <thead>
+                <tr>
+                  {['Nom','Prénom','Rôle','Actions'].map(h => (
+                    <th key={h} style={{ padding:'.5rem', borderBottom:'1px solid #ccc', textAlign:'left' }}>{h}</th>
+                  ))}
                 </tr>
-              ))}
-              {members.length === 0 && (
-                <tr><td colSpan={4} style={{ padding:'.75rem', fontStyle:'italic' }}>Aucun membre</td></tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {currentItems.map(m => (
+                  <tr key={m._id}>
+                    <td style={{ padding:'.5rem 0' }}>{m.nom}</td>
+                    <td style={{ padding:'.5rem 0' }}>{m.prenom}</td>
+                    <td style={{ padding:'.5rem 0' }}>{m.role}</td>
+                    <td>
+                      <button
+                        style={{ marginRight:8 }}
+                        onClick={() => nav(`/teams/members/${m._id}/detail-delivery`)}
+                      >
+                        Détails
+                      </button>
+                      <button
+                        style={{ marginRight:8 }}
+                        onClick={() => nav(`/teams/members/${m._id}/edit-delivery`)}
+                      >
+                        Éditer
+                      </button>
+                      {(user.role === 'admin' || user.role === 'responsable depot') && (
+                        <button
+                          style={{ color:'#fff', background:'#dc2626', border:'none', borderRadius:4, padding:'0.25rem 0.75rem' }}
+                          onClick={() => handleDelete(m._id)}
+                        >
+                          Supprimer
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {currentItems.length === 0 && (
+                  <tr><td colSpan={4} style={{ padding:'.75rem', fontStyle:'italic' }}>Aucun membre trouvé</td></tr>
+                )}
+              </tbody>
+            </table>
+          </>
         )}
       </div>
     </>

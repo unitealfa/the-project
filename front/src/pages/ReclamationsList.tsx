@@ -2,13 +2,19 @@ import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import { reclamationService, Reclamation } from "../services/reclamationService";
 import { useNavigate } from "react-router-dom";
+import { PaginationSearch } from "@/components/PaginationSearch";
 
 export default function ReclamationsList() {
   const navigate = useNavigate();
   const [reclamations, setReclamations] = useState<Reclamation[]>([]);
+  const [filteredReclamations, setFilteredReclamations] = useState<Reclamation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchReclamations = async () => {
@@ -30,6 +36,7 @@ export default function ReclamationsList() {
         }
         
         setReclamations(data);
+        setFilteredReclamations(data);
       } catch (err) {
         console.error("Erreur lors du chargement des réclamations:", err);
         setError("Erreur lors du chargement des réclamations");
@@ -39,6 +46,28 @@ export default function ReclamationsList() {
     };
     fetchReclamations();
   }, []);
+
+  useEffect(() => {
+    // Filtrer les réclamations en fonction du terme de recherche et du statut
+    const filtered = reclamations.filter(reclamation => {
+      const matchesSearch = 
+        reclamation.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        reclamation.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        reclamation.orderId.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = selectedStatus === '' || reclamation.status === selectedStatus;
+      
+      return matchesSearch && matchesStatus;
+    });
+    
+    setFilteredReclamations(filtered);
+    setCurrentPage(1); // Réinitialiser la page courante lors d'un nouveau filtre
+  }, [searchTerm, selectedStatus, reclamations]);
+
+  // Calculer les réclamations à afficher pour la page courante
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredReclamations.slice(indexOfFirstItem, indexOfLastItem);
 
   const handleReject = async (reclamationId: string) => {
     if (!window.confirm("Êtes-vous sûr de vouloir rejeter cette réclamation ?")) {
@@ -136,12 +165,43 @@ export default function ReclamationsList() {
           <h1 style={{ marginBottom: "1rem" }}>Réclamations des clients</h1>
         </div>
 
-        {reclamations.length > 0 ? (
+        <div style={{ marginBottom: "2rem" }}>
+          <PaginationSearch
+            totalItems={filteredReclamations.length}
+            itemsPerPage={itemsPerPage}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            placeholder="Rechercher par titre, message ou numéro de commande..."
+          />
+          
+          <div style={{ marginTop: "1rem", display: "flex", gap: "1rem", alignItems: "center" }}>
+            <label style={{ fontWeight: "bold" }}>Filtrer par statut :</label>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              style={{
+                padding: "0.5rem",
+                borderRadius: "0.375rem",
+                border: "1px solid #d1d5db",
+                backgroundColor: "white"
+              }}
+            >
+              <option value="">Tous les statuts</option>
+              <option value="en_attente">En attente</option>
+              <option value="resolue">Résolue</option>
+              <option value="rejeter">Rejetée</option>
+            </select>
+          </div>
+        </div>
+
+        {currentItems.length > 0 ? (
           <div style={{ 
             display: "grid", 
             gap: "1rem"
           }}>
-            {reclamations.map((reclamation) => (
+            {currentItems.map((reclamation) => (
               <div
                 key={reclamation._id}
                 style={{
@@ -251,11 +311,6 @@ export default function ReclamationsList() {
                   }}>
                     <strong>Réponse :</strong>
                     <p style={{ marginTop: "0.25rem" }}>{reclamation.reponse}</p>
-                    {reclamation.reponseDate && (
-                      <small style={{ color: "#6b7280" }}>
-                        Répondu le {new Date(reclamation.reponseDate).toLocaleString()}
-                      </small>
-                    )}
                   </div>
                 )}
               </div>
@@ -263,13 +318,13 @@ export default function ReclamationsList() {
           </div>
         ) : (
           <div style={{ 
-            background: "white", 
-            padding: "2rem", 
+            textAlign: "center", 
+            padding: "2rem",
+            background: "white",
             borderRadius: "0.5rem",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-            textAlign: "center"
+            boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
           }}>
-            <p>Aucune réclamation trouvée.</p>
+            <p>Aucune réclamation trouvée</p>
           </div>
         )}
       </main>

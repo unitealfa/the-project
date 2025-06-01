@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { apiFetch } from '../utils/api';
 import { cartService } from '../services/cartService';
+import { PaginationSearch } from '../components/PaginationSearch';
 
 interface Product {
   _id: string;
@@ -20,11 +21,15 @@ interface Client {
 
 export default function ProductList() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [client, setClient] = useState<Client | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
   const navigate = useNavigate();
   const location = useLocation();
   const query = new URLSearchParams(location.search);
@@ -69,6 +74,21 @@ export default function ProductList() {
 
     fetchData();
   }, [clientId, user?.depot]);
+
+  useEffect(() => {
+    // Filtrer les produits en fonction du terme de recherche
+    const filtered = products.filter(product => 
+      product.nom_product.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredProducts(filtered);
+    setCurrentPage(1); // Réinitialiser la page courante lors d'une nouvelle recherche
+  }, [searchTerm, products]);
+
+  // Calculer les produits à afficher pour la page courante
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
 
   const handleQuantityChange = (productId: string, newQuantity: number) => {
     setQuantities(prev => ({
@@ -145,12 +165,22 @@ export default function ProductList() {
           </div>
         )}
 
+        <PaginationSearch
+          totalItems={filteredProducts.length}
+          itemsPerPage={itemsPerPage}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          placeholder="Rechercher un produit..."
+        />
+
         <div style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
           gap: '2rem' 
         }}>
-          {products.map(product => {
+          {currentItems.map(product => {
             const depotStock = product.disponibilite.find(d => d.depot_id === user?.depot);
             const stock = depotStock?.quantite ?? 0;
             const quantity = quantities[product._id] || 1;

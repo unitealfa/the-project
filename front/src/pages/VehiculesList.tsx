@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Header from '../components/Header';
+import { PaginationSearch } from '../components/PaginationSearch';
 import axios from 'axios';
 import { API_URL } from '../constants';
 
@@ -50,12 +51,16 @@ const VehiculesList: React.FC = () => {
   const locationState = location.state as LocationState;
   
   const [vehicules, setVehicules] = useState<Vehicule[]>([]);
+  const [filteredVehicules, setFilteredVehicules] = useState<Vehicule[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(locationState?.message || null);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const [deletingVehicle, setDeletingVehicle] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Fonction pour afficher les informations de débogage
   const showDebugInfo = async () => {
@@ -223,6 +228,22 @@ const VehiculesList: React.FC = () => {
     fetchVehicules();
   }, [navigate]);
 
+  useEffect(() => {
+    // Filtrer les véhicules en fonction du terme de recherche
+    const filtered = vehicules.filter(vehicule => 
+      vehicule.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicule.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicule.license_plate.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredVehicules(filtered);
+    setCurrentPage(1); // Réinitialiser la page courante lors d'une nouvelle recherche
+  }, [searchTerm, vehicules]);
+
+  // Calculer les véhicules à afficher pour la page courante
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredVehicules.slice(indexOfFirstItem, indexOfLastItem);
+
   if (loading) {
     return (
       <>
@@ -326,6 +347,16 @@ const VehiculesList: React.FC = () => {
           </div>
         )}
 
+        <PaginationSearch
+          totalItems={filteredVehicules.length}
+          itemsPerPage={itemsPerPage}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          placeholder="Rechercher un véhicule..."
+        />
+
         {!error && vehicules.length === 0 ? (
           <p>Aucun véhicule trouvé dans ce dépôt.</p>
         ) : (
@@ -343,7 +374,7 @@ const VehiculesList: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {vehicules.map((vehicule) => (
+                {currentItems.map((vehicule) => (
                   <tr key={vehicule._id} style={{ borderBottom: '1px solid #ddd' }}>
                     <td style={{ padding: '12px 15px' }}>{vehicule.make}</td>
                     <td style={{ padding: '12px 15px' }}>{vehicule.model}</td>

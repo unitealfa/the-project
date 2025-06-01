@@ -187,7 +187,11 @@ export default function ReclamationResponse() {
                 </div>
                 <div style={{ marginBottom: "1rem" }}>
                   <strong>Statut :</strong>
-                  <p style={{ marginTop: "0.25rem" }}>{order.status}</p>
+                  <p style={{ marginTop: "0.25rem" }}>
+                    {order.etat_livraison === 'en_attente' ? 'En attente' :
+                     order.etat_livraison === 'en_cours' ? 'En cours de livraison' :
+                     order.etat_livraison === 'livree' ? 'Livrée' : order.etat_livraison}
+                  </p>
                 </div>
                 <div>
                   <strong>Articles :</strong>

@@ -68,85 +68,120 @@ export default function ProductClient() {
           }}
         >
           <h2>Produits disponibles</h2>
-          <div
-            style={{
-              display: "flex",
-              gap: "0.5rem",
-              marginBottom: "1.5rem",
-              alignItems: "center",
-            }}
-          >
-            <input
-              type="text"
-              placeholder="Rechercher par nom…"
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
-              style={{
-                flex: 1,
-                padding: "0.5rem",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-              }}
-            />
-
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              style={{
-                padding: "0.5rem",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                background: "#fff",
-              }}
-            >
-              <option value="">Tous types</option>
-              {availableTypes.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedCompany}
-              onChange={(e) => setSelectedCompany(e.target.value)}
-              style={{
-                padding: "0.5rem",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                background: "#fff",
-              }}
-            >
-              <option value="">Toutes entreprises</option>
-              {availableCompanies.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-
+          <div style={{ display: "flex", gap: "1rem" }}>
             <button
-              onClick={() => {
-                setSearchName("");
-                setSelectedType("");
-                setSelectedCompany("");
-              }}
-              disabled={!searchName && !selectedType && !selectedCompany}
+              onClick={() => navigate("/cart")}
               style={{
-                padding: "0.5rem 1rem",
-                backgroundColor: "#f3f4f6",
-                color: "#333",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                cursor:
-                  !searchName && !selectedType && !selectedCompany
-                    ? "not-allowed"
-                    : "pointer",
+                padding: "0.75rem 1.5rem",
+                backgroundColor: "#4f46e5",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
               }}
             >
-              Réinitialiser
+              🛒 Voir mon panier
+            </button>
+            <button
+              onClick={() => navigate("/wishlist")}
+              style={{
+                padding: "0.75rem 1.5rem",
+                backgroundColor: "#10b981",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}
+            >
+              ❤️ Ma liste de souhaits
             </button>
           </div>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            gap: "0.5rem",
+            marginBottom: "1.5rem",
+            alignItems: "center",
+          }}
+        >
+          <input
+            type="text"
+            placeholder="Rechercher par nom…"
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+            style={{
+              flex: 1,
+              padding: "0.5rem",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+          />
+
+          <select
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
+            style={{
+              padding: "0.5rem",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              background: "#fff",
+            }}
+          >
+            <option value="">Tous types</option>
+            {availableTypes.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={selectedCompany}
+            onChange={(e) => setSelectedCompany(e.target.value)}
+            style={{
+              padding: "0.5rem",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              background: "#fff",
+            }}
+          >
+            <option value="">Toutes entreprises</option>
+            {availableCompanies.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+
+          <button
+            onClick={() => {
+              setSearchName("");
+              setSelectedType("");
+              setSelectedCompany("");
+            }}
+            disabled={!searchName && !selectedType && !selectedCompany}
+            style={{
+              padding: "0.5rem 1rem",
+              backgroundColor: "#f3f4f6",
+              color: "#333",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              cursor:
+                !searchName && !selectedType && !selectedCompany
+                  ? "not-allowed"
+                  : "pointer",
+            }}
+          >
+            Réinitialiser
+          </button>
         </div>
 
         <div
