@@ -71,13 +71,25 @@ export default function ClientsList() {
   }, [depot, user?.company]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Confirmer la suppression de ce client ?')) return;
+    if (!confirm('Confirmer la suppression de ce client de ce dépôt ?')) return;
+
     try {
       const res = await apiFetch(`/clients/${id}`, {
         method: 'DELETE',
       });
-      if (!res.ok) throw new Error('Erreur lors de la suppression');
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Erreur inconnue lors de la suppression');
+      }
+
+      const result = await res.json();
+
+      // Retirer le client de la liste locale
       setClients(prev => prev.filter(c => c._id !== id));
+
+      // Optionnel : afficher le message de l'API
+      // alert(result.message);
     } catch (err: any) {
       alert(err.message);
     }

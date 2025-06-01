@@ -40,9 +40,11 @@ export default function AddClient() {
     );
   };
 
+  // Ajout d'une pop-up native pour récapituler les informations du client existant et proposer l'affectation
   const checkExistingClient = async () => {
     setVerifDone(true);
-    setSuggestedClient(null);
+    setShowFullForm(false);
+
     try {
       const res = await fetch(
         `${apiBase}/clients/check?email=${encodeURIComponent(form.email)}`,
@@ -52,9 +54,22 @@ export default function AddClient() {
         setShowFullForm(true);
         return;
       }
+
       const data = await res.json();
       if (data?.nom_client === form.nom_client) {
-        setSuggestedClient(data);
+        const info =
+          `Client trouvé:\n` +
+          `Nom: ${data.nom_client}\n` +
+          `Email: ${data.email}\n` +
+          `Nom gérant: ${data.contact.nom_gerant}\n` +
+          `Téléphone: ${data.contact.telephone}\n` +
+          `Adresse: ${data.localisation.adresse}, ${data.localisation.region}\n`;
+        const confirmAdd = window.confirm(
+          info + '\nVoulez-vous l\'affecter à votre dépôt ?'
+        );
+        if (confirmAdd) {
+          handleAffecterClient(data);
+        }
       } else {
         setShowFullForm(true);
       }
@@ -115,30 +130,34 @@ export default function AddClient() {
     }
   };
 
-  const handleAffecterClient = async () => {
-    if (clientDejaAffecte(suggestedClient)) {
+  const handleAffecterClient = async (client: any) => {
+    if (clientDejaAffecte(client)) {
       alert('⚠️ Ce client est déjà affecté à votre dépôt.');
       return;
     }
-    const res = await fetch(
-      `${apiBase}/clients/${suggestedClient._id}/affectation`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          entreprise: user.company,
-          depot: user.depot,
-        }),
+    try {
+      const res = await fetch(
+        `${apiBase}/clients/${client._id}/affectation`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            entreprise: user.entreprise,
+            depot: user.depot,
+          }),
+        }
+      );
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.message || "Erreur lors de l'affectation.");
+        return;
       }
-    );
-    if (res.ok) {
       navigate('/clients');
-    } else {
-      const err = await res.json();
-      alert(err.message || "Erreur lors de l'affectation.");
+    } catch (err: any) {
+      alert(err.message);
     }
   };
 
@@ -166,6 +185,7 @@ export default function AddClient() {
             onChange={handleChange}
             value={form.email}
           />
+
           {!showFullForm && (
             <button
               type="button"
@@ -181,48 +201,8 @@ export default function AddClient() {
               🔍 Vérifier
             </button>
           )}
-          {verifDone && suggestedClient && (
-            <div
-              style={{
-                border: '1px solid gray',
-                padding: '1rem',
-                background: '#f9fafb',
-              }}
-            >
-              <h3>Client déjà existant</h3>
-              <p><b>Nom:</b> {suggestedClient.nom_client}</p>
-              <p><b>Email:</b> {suggestedClient.email}</p>
-              <p><b>Nom gérant:</b> {suggestedClient.contact.nom_gerant}</p>
-              <p><b>Téléphone:</b> {suggestedClient.contact.telephone}</p>
-              <p><b>Adresse:</b> {suggestedClient.localisation.adresse}</p>
-              <p><b>Région:</b> {suggestedClient.localisation.region}</p>
-              <p>
-                <b>Coordonnées:</b>{' '}
-                {suggestedClient.localisation.coordonnees.latitude},{' '}
-                {suggestedClient.localisation.coordonnees.longitude}
-              </p>
-              {clientDejaAffecte(suggestedClient) ? (
-                <p style={{ color: 'red', marginTop: '1rem' }}>
-                  ⚠️ Client déjà affecté à votre dépôt.
-                </p>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleAffecterClient}
-                  style={{
-                    marginTop: '1rem',
-                    backgroundColor: '#10b981',
-                    color: 'white',
-                    padding: '0.5rem',
-                    border: 'none',
-                  }}
-                >
-                  ➕ Affecter à mon dépôt
-                </button>
-              )}
-            </div>
-          )}
-          {verifDone && !suggestedClient && showFullForm && (
+
+          {verifDone && showFullForm && (
             <>
               <input
                 name="password"

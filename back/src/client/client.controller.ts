@@ -29,6 +29,14 @@ export class ClientController {
     private readonly depotHelper: DepotHelperService,
   ) {}
 
+  /* ───────────────────────── CHECK EMAIL ───────────────────────── */
+  @Get('check')
+  @Roles('Admin', 'responsable depot')
+  async checkClient(@Query('email') email: string) {
+    this.logger.debug(`GET /clients/check?email=${email}`);
+    return this.clientService.findByEmail(email);
+  }
+
   /* ───────────────────────── LISTE DES CLIENTS ───────────────────────── */
 
   @Get()
@@ -69,15 +77,6 @@ export class ClientController {
       throw new NotFoundException(`Client ${id} introuvable`);
     }
     return client;
-  }
-
-  /* ───────────────────────── CHECK EMAIL ───────────────────────── */
-
-  @Get('check')
-  @Roles('Admin', 'responsable depot')
-  async checkClient(@Query('email') email: string) {
-    this.logger.debug(`GET /clients/check?email=${email}`);
-    return this.clientService.findByEmail(email);
   }
 
   /* ───────────────────────── AFFECTATION ───────────────────────── */
@@ -122,8 +121,9 @@ export class ClientController {
 
   @Delete(':id')
   @Roles('responsable depot')
-  async deleteClient(@Param('id') id: string) {
-    this.logger.debug(`DELETE /clients/${id}`);
-    return this.clientService.delete(id);
+  async deleteClient(@Param('id') id: string, @Req() req) {
+    const user = req.user; // JwtAuthGuard met user.depot
+    this.logger.debug(`DELETE /clients/${id} (soft delete from depot=${user.depot})`);
+    return this.clientService.removeAffectation(id, user.depot);
   }
 }

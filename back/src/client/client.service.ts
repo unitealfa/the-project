@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Client } from './schemas/client.schema';
 import { Model, Types } from 'mongoose';
@@ -90,6 +90,44 @@ export class ClientService {
     });
 
     return client.save();
+  }
+
+  async removeAffectation(clientId: string, depotId: string) {
+    // 1. Récupérer le client tel quel (en mode « plain object » suffit pour lire les affectations)
+    const client = await this.clientModel.findById(clientId).lean().exec();
+    if (!client) {
+      throw new NotFoundException(`Client ${clientId} introuvable`);
+    }
+
+    // 2. Filtrer le tableau d'affectations : on enlève uniquement l'entrée correspondant à depotId
+    const nouvellesAffectations = (client.affectations ?? []).filter(
+      (aff) => aff.depot.toString() !== depotId.toString(),
+    );
+
+    // 3. Si on n'a filtré aucune entrée, l'utilisateur n'était pas affecté à ce dépôt
+    if (nouvellesAffectations.length === (client.affectations?.length ?? 0)) {
+      return { message: 'Aucune affectation trouvée pour ce dépôt.' };
+    }
+
+    // 4. Si, après filtrage, il n’a plus d’affectations → suppression définitive
+    if (nouvellesAffectations.length === 0) {
+      await this.clientModel.findByIdAndDelete(clientId).exec();
+      return {
+        message: 'Client supprimé définitivement car plus d\'affectations.',
+      };
+    }
+
+    // 5. Sinon, mettre à jour uniquement le champ affectations
+    await this.clientModel
+      .findByIdAndUpdate(clientId, { affectations: nouvellesAffectations })
+      .exec();
+
+    // Pour renvoyer éventuellement le client mis à jour, on peut le refetcher :
+    const clientMisAJour = await this.clientModel.findById(clientId).lean().exec();
+    return {
+      message: 'Affectation retirée. Le client reste actif (autres dépôts).',
+      client: clientMisAJour,
+    };
   }
 
   /* ───────────── MISE À JOUR ───────────── */
