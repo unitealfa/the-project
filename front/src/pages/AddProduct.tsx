@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "../utils/axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import { read, utils } from "xlsx";
+import JSZip from "jszip";
 
 // Type des données Excel
 type ExcelRow = Record<string, any>;
@@ -118,33 +119,75 @@ export default function AddProduct() {
   });
   const [bulkErrors, setBulkErrors] = useState<string[]>([]);
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [extractedImages, setExtractedImages] = useState<string[]>([]);
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const wb = read(evt.target?.result as ArrayBuffer);
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const data = utils.sheet_to_json(ws, { header: 1 }) as any[][];
-      const [hdr, ...body] = data;
-      setExcelHeaders(hdr as string[]);
-      const rows = body.map((r) =>
-        Object.fromEntries(hdr.map((h, i) => [h, r[i] ?? ""]))
+
+    const arrayBuffer = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(arrayBuffer);
+
+    // Extract Excel data
+    const wb = read(arrayBuffer);
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const data = utils.sheet_to_json(ws, { header: 1 }) as any[][];
+    const [hdr, ...body] = data;
+    setExcelHeaders(hdr as string[]);
+    const rows = body.map((r) =>
+      Object.fromEntries(hdr.map((h, i) => [h, r[i] ?? ""]))
+    );
+    setExcelRows(rows);
+
+    // Extract embedded images
+    const imagesFolder = zip.folder("xl/media");
+    if (imagesFolder) {
+      const imageFiles = imagesFolder.filter((relativePath) => /\.(png|jpg|jpeg)$/i.test(relativePath));
+      const imageUrls = await Promise.all(
+        imageFiles.map(async (imageFile) => {
+          const blob = await imageFile.async("blob");
+          return URL.createObjectURL(blob);
+        })
       );
-      setExcelRows(rows);
-    };
-    reader.readAsArrayBuffer(file);
+
+      setExtractedImages(imageUrls);
+    }
   };
 
   const handleMapChange = (field: FieldKey) => (e: React.ChangeEvent<HTMLSelectElement>) => {
       setMapping((prev) => ({ ...prev, [field]: e.target.value }));
     };
 
+  const uploadExtractedImages = async () => {
+    const token = localStorage.getItem("token");
+    const uploadedImageUrls: string[] = [];
+
+    for (const imageUrl of extractedImages) {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const formData = new FormData();
+      formData.append("file", blob, "image.png");
+
+      const uploadRes = await axios.post("/upload/image", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      uploadedImageUrls.push(`http://localhost:5000${uploadRes.data.path}`);
+    }
+
+    return uploadedImageUrls;
+  };
+
   const handleBulkImport = async () => {
     setBulkLoading(true);
     setBulkErrors([]);
-    const payload = excelRows.map((row) => {
+
+    const uploadedImages = await uploadExtractedImages();
+
+    const payload = excelRows.map((row, index) => {
       const get = (f: FieldKey) => row[mapping[f]] || "";
       return {
         nom_product: get("nom_product"),
@@ -157,10 +200,7 @@ export default function AddProduct() {
           volume: get("volume"),
         },
         type: [get("type")],
-        images: get("images")
-          .split(",")
-          .map((s: string) => s.trim())
-          .filter(Boolean),
+        images: uploadedImages[index] ? [uploadedImages[index]] : [],
       };
     });
     try {
@@ -391,11 +431,21 @@ export default function AddProduct() {
           <h4>2. Aperçu (5 premières lignes)</h4>
           <table border={1} cellPadding={4} style={{ marginBottom: 16 }}>
             <thead>
-              <tr>{excelHeaders.map((h) => <th key={h}>{h}</th>)}</tr>
+              <tr>
+                {excelHeaders.map((h) => <th key={h}>{h}</th>)}
+                <th>Images extraites</th>
+              </tr>
             </thead>
             <tbody>
               {excelRows.slice(0, 5).map((row, i) => (
-                <tr key={i}>{excelHeaders.map((h) => <td key={h}>{row[h]}</td>)}</tr>
+                <tr key={i}>
+                  {excelHeaders.map((h) => <td key={h}>{row[h]}</td>)}
+                  <td>
+                    {extractedImages[i] && (
+                      <img src={extractedImages[i]} alt={`Produit ${i + 1}`} style={{ width: 50, height: 50 }} />
+                    )}
+                  </td>
+                </tr>
               ))}
             </tbody>
           </table>
