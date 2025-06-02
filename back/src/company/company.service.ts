@@ -24,7 +24,11 @@ export class CompanyService {
     @InjectModel(Client.name) private clientModel: Model<Client>,
   ) {}
 
-  async createWithAdmin(companyData: CreateCompanyDto, adminData: CreateAdminDto) {
+  async createWithAdmin(
+    companyData: CreateCompanyDto,
+    adminData: CreateAdminDto,
+    pfpPath?: string,
+  ) {
     const exists = await this.companyModel.findOne({ nom_company: companyData.nom_company });
     if (exists) {
       throw new ConflictException(`L’entreprise '${companyData.nom_company}' existe déjà.`);
@@ -35,7 +39,11 @@ export class CompanyService {
       throw new ConflictException(`L’email '${adminData.email}' est déjà utilisé.`);
     }
 
-    const company = new this.companyModel(companyData);
+    const companyObj: Partial<Company> = { ...companyData };
+    if (pfpPath) {
+      companyObj.pfp = pfpPath;
+    }
+    const company = new this.companyModel(companyObj);
     await company.save();
 
     const hashed = await bcrypt.hash(adminData.password, 10);
@@ -76,11 +84,22 @@ export class CompanyService {
     );
   }
 
-  async update(id: string, dto: Partial<CreateCompanyDto>): Promise<Company> {
+  async update(
+    id: string,
+    dto: Partial<CreateCompanyDto>,
+    pfpPath?: string,
+  ): Promise<Company> {
+    const updateObj: Partial<Company> = { ...dto };
+    if (pfpPath) {
+      updateObj.pfp = pfpPath;
+    }
+
     const updated = await this.companyModel
-      .findByIdAndUpdate(id, dto, { new: true, runValidators: true })
+      .findByIdAndUpdate(id, updateObj, { new: true, runValidators: true })
       .lean();
-    if (!updated) throw new NotFoundException(`Société ${id} introuvable pour mise à jour.`);
+    if (!updated) {
+      throw new NotFoundException(`Société ${id} introuvable pour mise à jour.`);
+    }
     return updated;
   }
 

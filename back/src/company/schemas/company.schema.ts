@@ -32,6 +32,12 @@ export class Company {
       pays: string;
     };
   };
+
+  @Prop({
+    type: String,
+    default: 'images/default-company.jfif',
+  })
+  pfp: string;
 }
 
 export type CompanyDocument = Company & Document;

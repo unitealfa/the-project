@@ -18,6 +18,7 @@ interface Company {
     };
   };
   createdAt?: string;
+  pfp: string; // ← added property
 }
 
 export default function CompanyDetail() {
@@ -63,6 +64,19 @@ export default function CompanyDetail() {
         <h1>Détails de l’entreprise</h1>
         <p><strong>Nom :</strong> {company.nom_company}</p>
         <p><strong>Gérant :</strong> {company.gerant_company}</p>
+        <div style={{ marginBottom: 16 }}>
+          <img
+            src={`${apiBase}/${company.pfp}`}
+            alt="Photo de profil de l’entreprise"
+            style={{
+              width: 120,
+              height: 120,
+              objectFit: 'cover',
+              borderRadius: '50%',
+              border: '2px solid #ccc',
+            }}
+          />
+        </div>
         <fieldset style={{ marginTop:16 }}>
           <legend>Contact</legend>
           <p><strong>Téléphone :</strong> {company.contact.telephone}</p>

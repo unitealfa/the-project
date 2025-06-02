@@ -29,8 +29,8 @@ import { LivreursController } from './livreurs.controller';
     MongooseModule.forRoot(process.env.MONGO_URI),
 
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'),
-      serveRoot: '/uploads',
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/',
     }),
 
     /* modules fonctionnels */

@@ -6,6 +6,7 @@ import Header from '../components/Header';
 interface Company {
   _id: string;
   nom_company: string;
+  pfp: string; // ← on ajoute ce champ
   admin: { nom: string; prenom: string; email: string } | null;
 }
 
@@ -40,6 +41,7 @@ export default function CompaniesList() {
       const err = await res.json();
       alert(err.message || `Erreur ${res.status}`);
     } else {
+      // Supprime de l’état local
       setList(l => l.filter(c => c._id !== id));
       // Ajuster la pagination si on supprime sur la dernière page
       const filteredAfterDelete = filteredList.filter(c => c._id !== id);
@@ -48,17 +50,6 @@ export default function CompaniesList() {
         setCurrentPage(Math.max(lastPageAfterDelete, 1));
       }
     }
-  };
-
-  // Gestion de la recherche
-  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const resetFilter = () => {
-    setSearchTerm('');
-    setCurrentPage(1);
   };
 
   // Filtrer par nom_company, admin.nom+prenom ou admin.email
@@ -90,6 +81,16 @@ export default function CompaniesList() {
   };
   const goToPrevPage = () => {
     setCurrentPage(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const resetFilter = () => {
+    setSearchTerm('');
+    setCurrentPage(1);
   };
 
   if (error) {
@@ -167,6 +168,9 @@ export default function CompaniesList() {
               <thead>
                 <tr style={{ backgroundColor: '#f3f4f6' }}>
                   <th style={{ padding: '.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>
+                    Logo
+                  </th>
+                  <th style={{ padding: '.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>
                     Société
                   </th>
                   <th style={{ padding: '.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>
@@ -183,11 +187,33 @@ export default function CompaniesList() {
               <tbody>
                 {currentCompanies.map(c => (
                   <tr key={c._id} style={{ borderBottom: '1px solid #ddd' }}>
+                    {/* Colonne Logo */}
+                    <td style={{ padding: '.75rem' }}>
+                      <img
+                        src={`${apiBase}/${c.pfp}`}
+                        alt={`Logo ${c.nom_company}`}
+                        style={{
+                          width: 40,
+                          height: 40,
+                          objectFit: 'cover',
+                          borderRadius: '4px',
+                          border: '1px solid #ccc',
+                        }}
+                      />
+                    </td>
+
+                    {/* Colonne Société */}
                     <td style={{ padding: '.75rem' }}>{c.nom_company}</td>
+
+                    {/* Colonne Admin */}
                     <td style={{ padding: '.75rem' }}>
                       {c.admin ? `${c.admin.nom} ${c.admin.prenom}` : '—'}
                     </td>
+
+                    {/* Colonne Email Admin */}
                     <td style={{ padding: '.75rem' }}>{c.admin?.email ?? '—'}</td>
+
+                    {/* Colonne Actions */}
                     <td style={{ padding: '.75rem', display: 'flex', gap: 8 }}>
                       <Link to={`/companies/${c._id}`} style={{ color: '#4f46e5' }}>
                         Voir

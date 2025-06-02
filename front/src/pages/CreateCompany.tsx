@@ -35,6 +35,7 @@ export default function CreateCompany() {
   const navigate = useNavigate();
   const apiBase = import.meta.env.VITE_API_URL;
 
+  // ─── États existants ──────────────────────────────────────────────────────────
   const [companyData, setCompanyData] = useState<CompanyData>({
     nom_company: '',
     gerant_company: '',
@@ -53,17 +54,31 @@ export default function CreateCompany() {
   });
   const [error, setError] = useState<string>('');
 
+  // ─── NOUVEL ÉTAT POUR LA PFP ──────────────────────────────────────────────────
+  const [pfpFile, setPfpFile] = useState<File | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token') || '';
+
+      // ─── ON CRÉE UN FORMDATA AU LIEU D’UN JSON SIMPLE ─────────────────────────
+      const formData = new FormData();
+      formData.append('companyData', JSON.stringify(companyData));
+      formData.append('adminData', JSON.stringify(adminData));
+
+      // Si une PFP a été sélectionnée, on l’ajoute au formData
+      if (pfpFile) {
+        formData.append('pfp', pfpFile);
+      }
+
       const res = await fetch(`${apiBase}/companies`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
+          // Ne PAS mettre 'Content-Type' ici, fetch détermine le multipart/form-data
         },
-        body: JSON.stringify({ companyData, adminData }),
+        body: formData,
       });
 
       if (res.status === 401) {
@@ -227,6 +242,25 @@ export default function CreateCompany() {
             </div>
           </fieldset>
         </fieldset>
+
+        {/* ─── NOUVEAU CHAMP POUR UPLOADER LA PFP ──────────────────────────────────── */}
+        <div style={{ marginTop: '1rem' }}>
+          <label>Logo / Photo de profil :</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={e => {
+              if (e.target.files && e.target.files[0]) {
+                setPfpFile(e.target.files[0]);
+              } else {
+                setPfpFile(null);
+              }
+            }}
+          />
+          <p style={{ fontSize: '0.9rem', color: '#555' }}>
+            (facultatif – si vous ne mettez pas d’image, le logo par défaut sera utilisé)
+          </p>
+        </div>
 
         <fieldset style={{ marginTop: '2rem' }}>
           <legend>Compte Admin</legend>

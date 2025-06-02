@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+// front/src/pages/CreateDepot.tsx
+
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 
-/* ————————————————
-   Types / state
-   ———————————————— */
 interface CreateDepotDto {
   nom_depot: string;
   type_depot: string;
@@ -40,22 +39,57 @@ export default function CreateDepot() {
     coordonnees: { latitude: 0, longitude: 0 },
     responsable: { nom: '', prenom: '', email: '', password: '', num: '' },
   });
+  const [pfpFile, setPfpFile] = useState<File | null>(null);
+  const [pfpPreview, setPfpPreview] = useState<string>('');
+  const objectUrlRef = useRef<string | null>(null);
   const [error, setError] = useState('');
 
-  /* ————————————————
-     Soumission
-     ———————————————— */
+  // Mettre à jour le preview à chaque fois que pfpFile change
+  useEffect(() => {
+    if (pfpFile) {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+      }
+      const newUrl = URL.createObjectURL(pfpFile);
+      objectUrlRef.current = newUrl;
+      setPfpPreview(newUrl);
+    } else {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
+      setPfpPreview(''); 
+    }
+    return () => {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+      }
+    };
+  }, [pfpFile]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = localStorage.getItem('token') || '';
     try {
+      const formData = new FormData();
+      formData.append('nom_depot', dto.nom_depot);
+      formData.append('type_depot', dto.type_depot);
+      formData.append('capacite', dto.capacite.toString());
+      formData.append('adresse', JSON.stringify(dto.adresse));
+      if (dto.coordonnees) {
+        formData.append('coordonnees', JSON.stringify(dto.coordonnees));
+      }
+      formData.append('responsable', JSON.stringify(dto.responsable));
+      if (pfpFile) {
+        formData.append('pfp', pfpFile);
+      }
+
       const res = await fetch(`${apiBase}/api/depots`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(dto),
+        body: formData,
       });
       if (!res.ok) throw new Error(`Erreur ${res.status}`);
       navigate('/depots');
@@ -64,9 +98,6 @@ export default function CreateDepot() {
     }
   };
 
-  /* ————————————————
-     UI
-     ———————————————— */
   return (
     <>
       <Header />
@@ -206,6 +237,42 @@ export default function CreateDepot() {
               required
             />
           </div>
+
+          {/* Champ pour uploader la PFP du responsable */}
+          <div style={{ marginTop: '1rem' }}>
+            <label>Photo de profil du responsable :</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => {
+                if (e.target.files && e.target.files[0]) {
+                  setPfpFile(e.target.files[0]);
+                } else {
+                  setPfpFile(null);
+                }
+              }}
+            />
+            <p style={{ fontSize: '0.9rem', color: '#555' }}>
+              (facultatif – sinon image par défaut)
+            </p>
+          </div>
+
+          {/* Aperçu de l'image sélectionnée */}
+          {pfpPreview && (
+            <div style={{ marginTop: 16 }}>
+              <img
+                src={pfpPreview}
+                alt="Aperçu photo du responsable"
+                style={{
+                  width: 80,
+                  height: 80,
+                  objectFit: 'cover',
+                  borderRadius: '50%',
+                  border: '1px solid #ccc',
+                }}
+              />
+            </div>
+          )}
         </fieldset>
 
         {error && <p style={{ color: 'red' }}>{error}</p>}
