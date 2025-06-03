@@ -1,16 +1,19 @@
+// back/src/client/client.controller.ts
+
 import {
   Controller,
   Post,
   Get,
-  Body,
   Query,
   Param,
   UseGuards,
   Req,
+  UseInterceptors,
+  UploadedFile,
   Put,
   Delete,
   NotFoundException,
-  Logger,            // ← logger
+  Logger,
 } from '@nestjs/common';
 import { ClientService } from './client.service';
 import { CreateClientDto } from './dto/create-client.dto';
@@ -18,6 +21,11 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { DepotHelperService } from '../common/helpers/depot-helper.service';
+
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { existsSync, mkdirSync } from 'fs';
+import { extname } from 'path';
 
 @Controller('clients')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -38,14 +46,19 @@ export class ClientController {
   }
 
   /* ───────────────────────── LISTE DES CLIENTS ───────────────────────── */
-
   @Get()
-  @Roles('Admin', 'responsable depot', 'superviseur des ventes', 'Administrateur des ventes', 'Pré-vendeur')
+  @Roles(
+    'Admin',
+    'responsable depot',
+    'superviseur des ventes',
+    'Administrateur des ventes',
+    'Pré-vendeur',
+  )
   async getClients(@Req() req, @Query('depot') depotId?: string) {
     const user = req.user;
     this.logger.debug(`GET /clients – role=${user.role} depotQuery=${depotId ?? '∅'}`);
 
-    // responsables / superviseurs / admin-ventes / prévendeurs ⇒ uniquement leur dépôt
+    // Responsables / superviseurs / admin-ventes / prévendeurs ⇒ uniquement leur dépôt
     if (
       user.role === 'responsable depot' ||
       user.role === 'superviseur des ventes' ||
@@ -66,9 +79,14 @@ export class ClientController {
   }
 
   /* ──────────────────────── GET CLIENT PAR ID ──────────────────────── */
-
   @Get(':id')
-  @Roles('Admin', 'responsable depot', 'superviseur des ventes', 'Administrateur des ventes', 'Pré-vendeur')
+  @Roles(
+    'Admin',
+    'responsable depot',
+    'superviseur des ventes',
+    'Administrateur des ventes',
+    'Pré-vendeur',
+  )
   async getClientById(@Param('id') id: string) {
     this.logger.debug(`GET /clients/${id}`);
     const client = await this.clientService.findById(id);
@@ -80,41 +98,175 @@ export class ClientController {
   }
 
   /* ───────────────────────── AFFECTATION ───────────────────────── */
-
   @Post(':id/affectation')
   @Roles('responsable depot')
   async addAffectation(
     @Param('id') id: string,
-    @Body() body: { entreprise: string; depot: string },
+    @Req() req,
   ) {
-    this.logger.debug(`POST /clients/${id}/affectation – body=${JSON.stringify(body)}`);
+    const body: { entreprise: string; depot: string } = req.body;
+    this.logger.debug(
+      `POST /clients/${id}/affectation – body=${JSON.stringify(body)}`,
+    );
     return this.clientService.addAffectation(id, body.entreprise, body.depot);
   }
 
-  /* ───────────────────────── CRÉATION ───────────────────────── */
-
+  /* ───────────────────────── CRÉATION (avec upload pfp) ───────────────────────── */
   @Post()
+  @UseInterceptors(
+    FileInterceptor('pfp', {
+      storage: diskStorage({
+        // → Dossier de destination EXACT : “back/public/client-pfps”
+        destination: (req, file, cb) => {
+          const uploadPath = 'public/client-pfps';
+          // Créer le dossier s’il n’existe pas
+          if (!existsSync(uploadPath)) {
+            mkdirSync(uploadPath, { recursive: true });
+          }
+          cb(null, uploadPath);
+        },
+        filename: (req, file, cb) => {
+          // Générer un nom unique : timestamp + extension d’origine
+          const uniqueSuffix = Date.now().toString();
+          const fileExt = extname(file.originalname);
+          cb(null, `${uniqueSuffix}${fileExt}`);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        // Accepter uniquement les images JPG / JPEG / PNG
+        if (file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+          cb(null, true);
+        } else {
+          cb(new Error('Seules les images JPG/PNG sont autorisées.'), false);
+        }
+      },
+      limits: { fileSize: 2 * 1024 * 1024 }, // 2 Mo max
+    }),
+  )
   @Roles('responsable depot')
-  async createClient(@Body() dto: CreateClientDto, @Req() req) {
+  async createClient(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req,
+  ) {
     const user = req.user;
     this.logger.debug(`POST /clients – user=${user.role}`);
 
+    /**
+     * 1) On récupère tout ce qui vient dans req.body (FormData),
+     *    puis on reconstruit manuellement un CreateClientDto valide.
+     */
+    const body = req.body as Record<string, any>;
+
+    // Construire l’objet CreateClientDto
+    const dto: CreateClientDto = {
+      nom_client: body.nom_client,
+      email: body.email,
+      password: body.password,
+      contact: {
+        nom_gerant: body['contact.nom_gerant'],
+        telephone: body['contact.telephone'],
+      },
+      localisation: {
+        adresse: body['localisation.adresse'],
+        ville: body['localisation.ville'],
+        code_postal: body['localisation.code_postal'],
+        region: body['localisation.region'],
+        coordonnees: {
+          latitude: parseFloat(body['coordonnees.latitude']),
+          longitude: parseFloat(body['coordonnees.longitude']),
+        },
+      },
+      // On ajoutera les affectations juste après
+      affectations: [],
+      // pfp sera mis à jour en fonction de "file" ou laissé par défaut
+    };
+
+    // 2) Si un fichier image a été uploadé, on force dto.pfp = "client-pfps/<filename>"
+    if (file) {
+      dto.pfp = `client-pfps/${file.filename}`;
+    } else {
+      dto.pfp = 'images/default-pfp-client.jpg';
+    }
+
+    // 3) Si le rôle est "responsable depot", on fixe automatiquement l'affectation
     if (user.role === 'responsable depot') {
       const entrepriseId = await this.depotHelper.getEntrepriseFromDepot(user.depot);
-      if (!entrepriseId) throw new Error('Entreprise introuvable pour ce dépôt.');
-
+      if (!entrepriseId) {
+        throw new Error('Entreprise introuvable pour ce dépôt.');
+      }
       dto.affectations = [
         { entreprise: entrepriseId.toString(), depot: user.depot.toString() },
       ];
     }
+
+    // 4) On appelle ensuite le service pour créer le client
     return this.clientService.create(dto);
   }
 
   /* ───────────────────────── UPDATE / DELETE ───────────────────────── */
-
   @Put(':id')
   @Roles('responsable depot')
-  async updateClient(@Param('id') id: string, @Body() dto: Partial<CreateClientDto>) {
+  @UseInterceptors(
+    FileInterceptor('pfp', {
+      storage: diskStorage({
+        destination: (req, file, cb) => {
+          const uploadPath = 'public/client-pfps';
+          if (!existsSync(uploadPath)) {
+            mkdirSync(uploadPath, { recursive: true });
+          }
+          cb(null, uploadPath);
+        },
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now().toString();
+          const fileExt = extname(file.originalname);
+          cb(null, `${uniqueSuffix}${fileExt}`);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+          cb(null, true);
+        } else {
+          cb(new Error('Seules les images JPG/PNG sont autorisées.'), false);
+        }
+      },
+      limits: { fileSize: 2 * 1024 * 1024 },
+    }),
+  )
+  async updateClient(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req,
+  ) {
+    // Pour FormData
+    let dto: any;
+    if (req.is('multipart/form-data')) {
+      const body = req.body as Record<string, any>;
+      dto = {
+        nom_client: body.nom_client,
+        email: body.email,
+        password: body.password,
+        contact: {
+          nom_gerant: body['contact.nom_gerant'],
+          telephone: body['contact.telephone'],
+        },
+        localisation: {
+          adresse: body['localisation.adresse'],
+          ville: body['localisation.ville'],
+          code_postal: body['localisation.code_postal'],
+          region: body['localisation.region'],
+          coordonnees: {
+            latitude: parseFloat(body['coordonnees.latitude']),
+            longitude: parseFloat(body['coordonnees.longitude']),
+          },
+        },
+      };
+      if (file) {
+        dto.pfp = `client-pfps/${file.filename}`;
+      }
+    } else {
+      // Pour JSON classique
+      dto = req.body as Partial<CreateClientDto>;
+    }
     this.logger.debug(`PUT /clients/${id} – body=${JSON.stringify(dto)}`);
     return this.clientService.update(id, dto);
   }
@@ -122,8 +274,10 @@ export class ClientController {
   @Delete(':id')
   @Roles('responsable depot')
   async deleteClient(@Param('id') id: string, @Req() req) {
-    const user = req.user; // JwtAuthGuard met user.depot
-    this.logger.debug(`DELETE /clients/${id} (soft delete from depot=${user.depot})`);
+    const user = req.user; // JwtAuthGuard ajoute user.depot
+    this.logger.debug(
+      `DELETE /clients/${id} (soft delete from depot=${user.depot})`,
+    );
     return this.clientService.removeAffectation(id, user.depot);
   }
 }

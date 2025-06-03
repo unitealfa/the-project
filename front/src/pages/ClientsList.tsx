@@ -10,6 +10,7 @@ interface Client {
   email:       string;
   contact:     { nom_gerant: string; telephone: string };
   affectations:{ entreprise: string; depot: string }[];
+  pfp?:        string; // +++
 }
 
 interface Prevendeur {
@@ -322,6 +323,7 @@ export default function ClientsList() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ backgroundColor: '#f3f4f6' }}>
               <tr>
+                <th style={th}>Photo</th> {/* +++ */}
                 <th style={th}>Nom client</th>
                 <th style={th}>Email</th>
                 <th style={th}>Gérant</th>
@@ -333,6 +335,20 @@ export default function ClientsList() {
             <tbody>
               {currentClients.map(client => (
                 <tr key={client._id} style={{ borderBottom: '1px solid #ccc' }}>
+                  <td style={td}>
+                    <img
+                      src={`${apiBase}/public/${client.pfp || 'images/default-pfp-client.jpg'}`}
+                      alt="pfp"
+                      style={{
+                        width: 42,
+                        height: 42,
+                        objectFit: 'cover',
+                        borderRadius: '50%',
+                        border: '1px solid #ccc'
+                      }}
+                      onError={e => (e.currentTarget.src = `${apiBase}/public/images/default-pfp-client.jpg`)}
+                    />
+                  </td>
                   <td style={td}>{client.nom_client}</td>
                   <td style={td}>{client.email}</td>
                   <td style={td}>{client.contact.nom_gerant}</td>

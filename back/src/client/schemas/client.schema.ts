@@ -48,6 +48,8 @@ export class Client extends Document {
 
   @Prop({ default: 0 }) fidelite_points: number;
   @Prop({ type: Statistiques, default: () => ({}) }) statistiques: Statistiques;
+  @Prop()
+  pfp: string;
 }
 
 export const ClientSchema = SchemaFactory.createForClass(Client);

@@ -24,6 +24,7 @@ interface FormData {
       longitude: number;
     };
   };
+  pfp?: string; // +++
 }
 
 export default function EditClient() {
@@ -54,6 +55,7 @@ export default function EditClient() {
       },
     },
   });
+  const [pfpFile, setPfpFile] = useState<File | null>(null); // +++
 
   const apiBase = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem('token') || '';
@@ -115,19 +117,40 @@ export default function EditClient() {
     setError('');
     setSuccess('');
 
-    const dataToSend = {
-      ...formData,
-      ...(formData.password ? {} : { password: undefined }),
-    };
-
     try {
-      const res = await fetch(`${apiBase}/clients/${id}`, {
-        method: 'PUT',
-        headers: {
+      let body;
+      let headers;
+
+      if (pfpFile) {
+        // Si nouvelle image → multipart/form-data
+        body = new FormData();
+        body.append('nom_client', formData.nom_client);
+        body.append('email', formData.email);
+        if (formData.password) body.append('password', formData.password);
+        body.append('contact.nom_gerant', formData.contact.nom_gerant);
+        body.append('contact.telephone', formData.contact.telephone);
+        body.append('localisation.adresse', formData.localisation.adresse);
+        body.append('localisation.ville', formData.localisation.ville);
+        body.append('localisation.code_postal', formData.localisation.code_postal);
+        body.append('localisation.region', formData.localisation.region);
+        body.append('coordonnees.latitude', formData.localisation.coordonnees.latitude.toString());
+        body.append('coordonnees.longitude', formData.localisation.coordonnees.longitude.toString());
+        body.append('pfp', pfpFile); // +++
+        headers = { Authorization: `Bearer ${token}` };
+      } else {
+        // Sinon → JSON normal
+        const dataToSend = { ...formData, ...(formData.password ? {} : { password: undefined }) };
+        body = JSON.stringify(dataToSend);
+        headers = {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(dataToSend),
+        };
+      }
+
+      const res = await fetch(`${apiBase}/clients/${id}`, {
+        method: 'PUT',
+        headers,
+        body,
       });
 
       if (!res.ok) {
@@ -289,6 +312,36 @@ export default function EditClient() {
               required
             />
           </div>
+
+          {formData.pfp && (
+            <div style={{ marginBottom: '1rem' }}>
+              <img
+                src={`${apiBase}/public/${formData.pfp}`}
+                alt="Photo de profil"
+                style={{
+                  width: 100,
+                  height: 100,
+                  objectFit: 'cover',
+                  borderRadius: '50%',
+                  border: '2px solid #ccc',
+                }}
+                onError={e => (e.currentTarget.src = `${apiBase}/public/images/default-pfp-client.jpg`)}
+              />
+            </div>
+          )}
+          <label style={{ fontSize: '0.9rem' }}>
+            Modifier la photo de profil :
+          </label>
+          <input
+            name="pfp"
+            type="file"
+            accept="image/*"
+            onChange={e => {
+              if (e.target.files && e.target.files[0]) {
+                setPfpFile(e.target.files[0]);
+              }
+            }}
+          />
 
           <button type="submit" style={submitButton}>
             Enregistrer les modifications

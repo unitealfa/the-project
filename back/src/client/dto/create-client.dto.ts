@@ -35,4 +35,7 @@ export class CreateClientDto {
 
   @IsOptional()
   affectations?: AffectationDto[];
+
+  @IsOptional()
+  pfp?: string;
 }

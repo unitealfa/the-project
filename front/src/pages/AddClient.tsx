@@ -30,6 +30,7 @@ export default function AddClient() {
     },
   });
 
+  const [pfpFile, setPfpFile] = useState<File | null>(null);
   const [suggestedClient, setSuggestedClient] = useState<any>(null);
   const [showFullForm, setShowFullForm] = useState(false);
   const [verifDone, setVerifDone] = useState(false);
@@ -79,7 +80,13 @@ export default function AddClient() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const { name, value, files } = e.target;
+
+    if (name === 'pfp' && files) {
+      setPfpFile(files[0]);
+      return;
+    }
+
     if (name.startsWith('contact.')) {
       const key = name.split('.')[1];
       setForm(f => ({ ...f, contact: { ...f.contact, [key]: value } }));
@@ -106,19 +113,39 @@ export default function AddClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload = {
-        ...form,
-        affectations: [
-          { entreprise: user.entreprise, depot: user.depot }
-        ],
-      };
+      const data = new FormData();
+      data.append('nom_client', form.nom_client);
+      data.append('email', form.email);
+      data.append('password', form.password);
+      data.append('contact.nom_gerant', form.contact.nom_gerant);
+      data.append('contact.telephone', form.contact.telephone);
+      data.append('localisation.adresse', form.localisation.adresse);
+      data.append('localisation.ville', form.localisation.ville);
+      data.append('localisation.code_postal', form.localisation.code_postal);
+      data.append('localisation.region', form.localisation.region);
+      data.append(
+        'coordonnees.latitude',
+        form.localisation.coordonnees.latitude.toString()
+      );
+      data.append(
+        'coordonnees.longitude',
+        form.localisation.coordonnees.longitude.toString()
+      );
+      if (pfpFile) {
+        data.append('pfp', pfpFile);
+      }
+
+      // Debug: Afficher le contenu de FormData
+      for (let pair of data.entries()) {
+        console.log(pair[0] + ', ' + pair[1]);
+      }
+
       const res = await fetch(`${apiBase}/clients`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload),
+        body: data,
       });
       if (!res.ok) {
         const err = await res.json();
@@ -263,6 +290,16 @@ export default function AddClient() {
                 required
                 onChange={handleChange}
               />
+              {/* Champ ajouté pour choisir l’image de profil */}
+              <label style={{ fontSize: '0.9rem' }}>
+                Photo de profil (optionnel) :
+              </label>
+              <input
+                name="pfp"
+                type="file"
+                accept="image/*"
+                onChange={handleChange}
+              />
               <button
                 type="submit"
                 style={{
@@ -278,6 +315,23 @@ export default function AddClient() {
             </>
           )}
         </form>
+
+        {/* Exemple d'affichage de l'image de profil du client, si disponible */}
+        {suggestedClient && suggestedClient.pfp && (
+          <div style={{ marginTop: '2rem' }}>
+            <h2>📸 Photo de profil du client :</h2>
+            <img
+              src={`${apiBase}/public/${suggestedClient.pfp}`}
+              alt="pdp client"
+              style={{
+                maxWidth: '100%',
+                height: 'auto',
+                borderRadius: '0.5rem',
+                border: '1px solid #ddd',
+              }}
+            />
+          </div>
+        )}
       </main>
     </>
   );

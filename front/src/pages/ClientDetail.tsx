@@ -40,6 +40,25 @@ export default function ClientDetail() {
           ← Retour à la liste
         </button>
         <h1>👤 Détail du client</h1>
+
+        {/* Affichage de la photo de profil si elle existe */}
+        {client.pfp && (
+          <div style={{ marginBottom: '2rem' }}>
+            <img
+              src={`${apiBase}/public/${client.pfp}`}
+              alt="Photo de profil du client"
+              style={{
+                width: 120,
+                height: 120,
+                objectFit: 'cover',
+                borderRadius: '50%',
+                border: '2px solid #eee',
+                background: '#fff'
+              }}
+            />
+          </div>
+        )}
+
         <ul style={{ lineHeight: 1.8 }}>
           <li><strong>Nom client :</strong> {client.nom_client}</li>
           <li><strong>Email :</strong> {client.email}</li>
