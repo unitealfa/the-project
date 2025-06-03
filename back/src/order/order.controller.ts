@@ -26,6 +26,8 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import * as fs from 'fs';
 import { Request } from 'express';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 
 interface RequestWithUser extends Request {
   user: { id: string };
@@ -61,12 +63,21 @@ export class OrderController {
   @Get('stats')
   async getOrderStats(
     @GetUser() user: any,
-    @Query('period') period: 'day' | 'week' | 'month' | 'all' = 'day'
+    @Query('period') period: 'day' | 'week' | 'month' | 'all' = 'day',
+    @Query('depot') depotId?: string
   ) {
-    if (!user.depot) {
-      throw new UnauthorizedException("Aucun dépôt associé à cet utilisateur");
+    const finalDepotId = depotId || user.depot;
+    if (!finalDepotId) {
+      throw new UnauthorizedException("Aucun dépôt spécifié");
     }
-    return this.orderService.getOrderStats(user.depot, period);
+    return this.orderService.getOrderStats(finalDepotId, period);
+  }
+
+  @Get('stats/global')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async getGlobalStats(@Query('period') period: 'day' | 'week' | 'month' | 'all' = 'day') {
+    return this.orderService.getGlobalStats(period);
   }
 
   @Get(':id')

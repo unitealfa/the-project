@@ -8,13 +8,15 @@ import { ReclamationController } from './reclamation.controller';
 import { OrderService } from './order.service';
 import { ReclamationService } from './reclamation.service';
 import { ProductModule } from '../product/product.module';
+import { Depot, DepotSchema } from '../depot/schemas/depot.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Order.name, schema: OrderSchema },
       { name: Client.name, schema: ClientSchema },
-      { name: Reclamation.name, schema: ReclamationSchema }
+      { name: Reclamation.name, schema: ReclamationSchema },
+      { name: Depot.name, schema: DepotSchema },
     ]),
     ProductModule,
   ],

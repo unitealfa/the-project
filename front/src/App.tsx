@@ -73,6 +73,7 @@ import Orders from "./pages/Orders";
 import LivreurCommandeDetail from "./pages/LivreurCommandeDetail";
 
 import StatsVentes from "./pages/StatsVentes";
+import AdminStats from "./pages/AdminStats";
 
 export default function App() {
   return (
@@ -558,6 +559,24 @@ export default function App() {
         path="/stats-ventes"
         element={
           <RequireAuth allowedRoles={["Administrateur des ventes"]}>
+            <StatsVentes />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/admin/stats"
+        element={
+          <RequireAuth allowedRoles={["admin"]}>
+            <AdminStats />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/admin/stats-ventes"
+        element={
+          <RequireAuth allowedRoles={["admin"]}>
             <StatsVentes />
           </RequireAuth>
         }

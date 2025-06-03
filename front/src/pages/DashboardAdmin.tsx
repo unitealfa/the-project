@@ -64,31 +64,60 @@ export default function DashboardAdmin() {
   return (
     <>
       <Header />
-      <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-        <h1>Tableau de bord – Admin de {company.nom_company}</h1>
-        <p>
-          Bienvenue <strong>{user.nom} {user.prenom}</strong>
-        </p>
-        <p>
-          Votre rôle est : <strong>{user.role}</strong>
-        </p>
+      <main style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
+        <div style={{ marginBottom: "2rem" }}>
+          <h1 style={{ marginBottom: "1rem" }}>Tableau de bord administrateur</h1>
+          
+          <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
+            <button
+              onClick={() => navigate("/admin/stats")}
+              style={{
+                background: "#4f46e5",
+                color: "white",
+                border: "none",
+                borderRadius: "0.375rem",
+                padding: "0.75rem 1.5rem",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem"
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 3v18h18"/>
+                <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+              </svg>
+              Statistiques globales
+            </button>
+          </div>
 
-        <section
-          style={{
-            marginTop: '2rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.75rem',
-          }}
-        >
-          <Link to="/depots" style={linkStyle}>
-            • Voir mes dépôts
-          </Link>
-          <Link to="/clients" style={linkStyle}>
-            • Consulter tous les clients
-          </Link>
-        </section>
-      </div>
+          <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
+            <h1>Tableau de bord – Admin de {company.nom_company}</h1>
+            <p>
+              Bienvenue <strong>{user.nom} {user.prenom}</strong>
+            </p>
+            <p>
+              Votre rôle est : <strong>{user.role}</strong>
+            </p>
+
+            <section
+              style={{
+                marginTop: '2rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem',
+              }}
+            >
+              <Link to="/depots" style={linkStyle}>
+                • Voir mes dépôts
+              </Link>
+              <Link to="/clients" style={linkStyle}>
+                • Consulter tous les clients
+              </Link>
+            </section>
+          </div>
+        </div>
+      </main>
     </>
   );
 }

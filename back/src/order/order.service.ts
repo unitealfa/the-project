@@ -6,6 +6,7 @@ import { CreateOrderDto } from "./dto/create-order.dto";
 import { Client } from "../client/schemas/client.schema";
 import { ProductService } from "../product/product.service";
 import { Reclamation } from "./schemas/reclamation.schema";
+import { Depot } from "../depot/schemas/depot.schema";
 
 @Injectable()
 export class OrderService {
@@ -13,6 +14,7 @@ export class OrderService {
     @InjectModel(Order.name) private orderModel: Model<Order>,
     @InjectModel(Client.name) private clientModel: Model<Client>,
     @InjectModel(Reclamation.name) private reclamationModel: Model<Reclamation>,
+    @InjectModel(Depot.name) private depotModel: Model<Depot>,
     private productService: ProductService
   ) {}
 
@@ -225,12 +227,23 @@ export class OrderService {
     const topClients = await Promise.all(
       clientOrders.map(async (client) => {
         const clientInfo = await this.clientModel.findById(client._id);
+        const depotId = clientInfo?.affectations?.[0]?.depot;
+        let depotName = "Non assigné";
+        
+        if (depotId) {
+          const depotDoc = await this.depotModel.findById(depotId).lean();
+          if (depotDoc && typeof depotDoc.nom_depot === "string") {
+            depotName = depotDoc.nom_depot;
+          }
+        }
+
         return {
           clientId: client._id,
           nom: clientInfo?.nom_client || 'Client inconnu',
           prenom: '',
           nombreCommandes: client.count,
-          montantTotal: client.total
+          montantTotal: client.total,
+          depotName
         };
       })
     );
@@ -263,6 +276,128 @@ export class OrderService {
       reclamationsRejetees,
       reclamationsResolues,
       topClients,
+      topProducts: productStats
+    };
+  }
+
+  async getGlobalStats(period: 'day' | 'week' | 'month' | 'all') {
+    const now = new Date();
+    let startDate: Date;
+
+    switch (period) {
+      case 'day':
+        startDate = new Date(now.setHours(0, 0, 0, 0));
+        break;
+      case 'week':
+        startDate = new Date(now.setDate(now.getDate() - now.getDay()));
+        break;
+      case 'month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case 'all':
+        startDate = new Date(0); // 1er janvier 1970
+        break;
+      default:
+        startDate = new Date(now.setHours(0, 0, 0, 0));
+    }
+
+    // Statistiques globales
+    const orders = await this.orderModel.find({
+      createdAt: { $gte: startDate }
+    });
+
+    const totalOrders = orders.length;
+    const totalAmount = orders.reduce((sum, order) => sum + order.total, 0);
+    const ordersInDelivery = orders.filter(order => order.etat_livraison === 'en_cours').length;
+    const ordersDelivered = orders.filter(order => order.etat_livraison === 'livree').length;
+
+    // Statistiques des réclamations
+    const reclamations = await this.reclamationModel.find({
+      createdAt: { $gte: startDate }
+    });
+
+    const totalReclamations = reclamations.length;
+    const reclamationsEnAttente = reclamations.filter(r => r.status === 'en_attente').length;
+    const reclamationsRejetees = reclamations.filter(r => r.status === 'rejeter').length;
+    const reclamationsResolues = reclamations.filter(r => r.status === 'resolue').length;
+
+    // Top 5 clients les plus fidèles (tous dépôts confondus)
+    const clientOrders = await this.orderModel.aggregate([
+      { $match: { createdAt: { $gte: startDate } } },
+      { $group: { _id: '$clientId', count: { $sum: 1 }, total: { $sum: '$total' } } },
+      { $sort: { count: -1 } },
+      { $limit: 5 }
+    ]);
+
+    const topClients = await Promise.all(
+      clientOrders.map(async (client) => {
+        const clientInfo = await this.clientModel.findById(client._id);
+        const depotId = clientInfo?.affectations?.[0]?.depot;
+        let depotName = "Non assigné";
+        
+        if (depotId) {
+          const depotDoc = await this.depotModel.findById(depotId).lean();
+          if (depotDoc && typeof depotDoc.nom_depot === "string") {
+            depotName = depotDoc.nom_depot;
+          }
+        }
+
+        return {
+          clientId: client._id,
+          nom: clientInfo?.nom_client || 'Client inconnu',
+          prenom: '',
+          nombreCommandes: client.count,
+          montantTotal: client.total,
+          depotName
+        };
+      })
+    );
+
+    // Statistiques par dépôt
+    const depotStats = await this.orderModel.aggregate([
+      { $match: { createdAt: { $gte: startDate } } },
+      { $group: {
+          _id: '$depot',
+          depot_name: { $first: '$depot_name' },
+          totalOrders: { $sum: 1 },
+          totalAmount: { $sum: '$total' },
+          ordersInDelivery: {
+            $sum: { $cond: [{ $eq: ['$etat_livraison', 'en_cours'] }, 1, 0] }
+          },
+          ordersDelivered: {
+            $sum: { $cond: [{ $eq: ['$etat_livraison', 'livree'] }, 1, 0] }
+          }
+        }
+      },
+      { $sort: { totalAmount: -1 } }
+    ]);
+
+    // Top produits les plus vendus (tous dépôts confondus)
+    const productStats = await this.orderModel.aggregate([
+      { $match: { createdAt: { $gte: startDate } } },
+      { $unwind: '$items' },
+      { $group: {
+          _id: '$items.productId',
+          nom: { $first: '$items.productName' },
+          totalQuantity: { $sum: '$items.quantity' },
+          totalAmount: { $sum: { $multiply: ['$items.prix_detail', '$items.quantity'] } }
+        }
+      },
+      { $sort: { totalQuantity: -1 } },
+      { $limit: 5 }
+    ]);
+
+    return {
+      totalOrders,
+      totalAmount,
+      ordersInDelivery,
+      ordersDelivered,
+      totalReclamations,
+      reclamationsEnAttente,
+      reclamationsRejetees,
+      reclamationsResolues,
+      topClients,
+      depotStats,
       topProducts: productStats
     };
   }
