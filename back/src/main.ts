@@ -31,6 +31,8 @@ async function bootstrap() {
   // Sert le dossier public/ à la racine
   app.use('/', express.static(join(__dirname, '..', 'public')));
   app.useStaticAssets(join(__dirname, '..', 'public'), { prefix: '/public/' });
+  // Sert le dossier uploads/ à la racine
+  app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
 
   const port = process.env.PORT || 5000;
   await app.listen(port);

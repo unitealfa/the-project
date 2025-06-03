@@ -54,7 +54,17 @@ export default function TourneeDetail() {
     console.log('User:', user);
     console.log('Is Controleur:', isControleur);
     console.log('User Role:', user.role);
-  }, [user, isControleur]);
+    console.log('User Role Type:', typeof user.role);
+    console.log('Contrôleur Type:', typeof 'Contrôleur');
+    console.log('Role Comparison:', user.role === 'Contrôleur');
+    console.log('User Role Length:', user.role?.length);
+    console.log('Contrôleur Length:', 'Contrôleur'.length);
+    console.log('User Role Chars:', user.role?.split('').map((c: string) => `${c} (${c.charCodeAt(0)})`));
+    console.log('Contrôleur Chars:', 'Contrôleur'.split('').map((c: string) => `${c} (${c.charCodeAt(0)})`));
+    console.log('Tournee:', tournee);
+    console.log('Statut Chargement:', tournee?.statut_chargement);
+    console.log('Statut Type:', typeof tournee?.statut_chargement);
+  }, [user, isControleur, tournee]);
 
   useEffect(() => {
     if (!id) {
@@ -130,6 +140,15 @@ export default function TourneeDetail() {
     }
   };
 
+  useEffect(() => {
+    console.log('Rendu des boutons:', {
+      isControleur,
+      statut: tournee?.statut_chargement,
+      showValidateButton: isControleur && tournee?.statut_chargement === 'en_cours',
+      showCancelButton: isControleur && tournee?.statut_chargement === 'charge'
+    });
+  }, [isControleur, tournee]);
+
   if (loading) return <div>Chargement...</div>;
   if (error) return <div style={{ color: 'red' }}>{error}</div>;
   if (!tournee) return <div>Aucune tournée trouvée</div>;
@@ -173,6 +192,7 @@ export default function TourneeDetail() {
                 {getLoadingStatusText(tournee.statut_chargement)}
               </span>
             </p>
+            
             {isControleur && (
               <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
                 {tournee.statut_chargement === 'en_cours' && (

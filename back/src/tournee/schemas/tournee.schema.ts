@@ -41,7 +41,7 @@ export class Tournee extends Document {
   total_travel_distance?: number;
 
   /* Statut de chargement de la tournée */
-  @Prop({ default: 'en_attente', enum: ['en_attente', 'en_cours', 'charge'] })
+  @Prop({ default: 'en_cours', enum: ['en_cours', 'charge'] })
   statut_chargement!: string;
 
   /* Réponse brute complète de l'API VRP */

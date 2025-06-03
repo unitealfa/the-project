@@ -116,6 +116,13 @@ export class OrderService {
     });
   }
 
+  async findByClient(clientId: string) {
+    return this.orderModel
+      .find({ clientId })
+      .sort({ createdAt: -1 }) // Tri par date décroissante
+      .lean();
+  }
+
   async confirmOrder(orderId: string) {
     const numero = "CMD-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
     return this.orderModel.findByIdAndUpdate(

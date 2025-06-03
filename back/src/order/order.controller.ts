@@ -52,6 +52,11 @@ export class OrderController {
     return this.orderService.findByDepot(depotId);
   }
 
+  @Get('client')
+  async getClientOrders(@GetUser('id') clientId: string) {
+    return this.orderService.findByClient(clientId);
+  }
+
   @Get(':id')
   async getOrderById(@Param('id') id: string) {
     const order = await this.orderService.findById(id);

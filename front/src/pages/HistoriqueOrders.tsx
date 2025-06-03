@@ -49,7 +49,7 @@ export default function HistoriqueOrders() {
       try {
         setLoading(true);
         setError(null);
-        const data = await orderService.getOrders();
+        const data = await orderService.getClientOrders();
         if (Array.isArray(data)) {
           setOrders(data);
         } else {

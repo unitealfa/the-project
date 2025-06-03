@@ -62,6 +62,17 @@ export const orderService = {
     return Array.isArray(data) ? data : [];
   },
 
+  getClientOrders: async () => {
+    const response = await fetch(`${apiBase}/api/orders/client`, {
+      headers: getHeaders()
+    });
+    if (!response.ok) {
+      throw new Error('Erreur lors de la récupération des commandes');
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  },
+
   getOrderById: async (id: string) => {
     const response = await fetch(`${apiBase}/api/orders/${id}`, {
       headers: getHeaders()
