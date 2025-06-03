@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 
 interface User {
@@ -14,6 +14,7 @@ interface Depot {
 }
 
 export default function DashboardResponsableDepot() {
+  const navigate = useNavigate();
   const raw = localStorage.getItem("user");
   const user: User | null = raw ? JSON.parse(raw) : null;
   const token = localStorage.getItem("token") || "";
@@ -59,36 +60,50 @@ export default function DashboardResponsableDepot() {
               🏬 Dépôt assigné : <strong>{depot.nom_depot}</strong>
             </h2>
 
-            <Link
-              to={`/teams/${depot._id}`}
-              style={{
-                display: "inline-block",
-                marginTop: "1rem",
-                padding: "0.5rem 1rem",
-                backgroundColor: "#4f46e5",
-                color: "#fff",
-                borderRadius: "4px",
-                textDecoration: "none",
-              }}
-            >
-              👥 Gérer l'équipe du dépôt
-            </Link>
+            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+              <Link
+                to={`/teams/${depot._id}`}
+                style={{
+                  display: "inline-block",
+                  padding: "0.5rem 1rem",
+                  backgroundColor: "#4f46e5",
+                  color: "#fff",
+                  borderRadius: "4px",
+                  textDecoration: "none",
+                }}
+              >
+                👥 Gérer l'équipe du dépôt
+              </Link>
 
-            <Link
-              to={`/clients?depot=${depot._id}`}
-              style={{
-                display: "inline-block",
-                marginTop: "1rem",
-                marginLeft: "1rem",
-                padding: "0.5rem 1rem",
-                backgroundColor: "#10b981",
-                color: "#fff",
-                borderRadius: "4px",
-                textDecoration: "none",
-              }}
-            >
-              👥 Consulter les clients de ce dépôt
-            </Link>
+              <Link
+                to={`/clients?depot=${depot._id}`}
+                style={{
+                  display: "inline-block",
+                  padding: "0.5rem 1rem",
+                  backgroundColor: "#10b981",
+                  color: "#fff",
+                  borderRadius: "4px",
+                  textDecoration: "none",
+                }}
+              >
+                👥 Consulter les clients de ce dépôt
+              </Link>
+
+              <button
+                onClick={() => navigate(`/stats-ventes?depot=${depot._id}`)}
+                style={{
+                  display: "inline-block",
+                  padding: "0.5rem 1rem",
+                  backgroundColor: "#f59e0b",
+                  color: "#fff",
+                  borderRadius: "4px",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                📊 Voir les statistiques
+              </button>
+            </div>
           </section>
         )}
       </main>

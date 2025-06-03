@@ -558,7 +558,7 @@ export default function App() {
       <Route
         path="/stats-ventes"
         element={
-          <RequireAuth allowedRoles={["Administrateur des ventes"]}>
+          <RequireAuth allowedRoles={["responsable depot", "administrateur des ventes"]}>
             <StatsVentes />
           </RequireAuth>
         }
