@@ -2,6 +2,7 @@
 import React, { useEffect, useState, ChangeEvent } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
+import * as XLSX from 'xlsx';
 
 interface Disponibilite {
   depot_id: string;
@@ -15,6 +16,11 @@ interface Product {
   disponibilite: Disponibilite[];
 }
 
+interface ExcelRow {
+  nom_product: string;
+  quantite: number;
+}
+
 export default function GestionDepot() {
   const { depotId } = useParams<{ depotId: string }>();
   const navigate = useNavigate();
@@ -22,6 +28,8 @@ export default function GestionDepot() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
 
   // États pour la recherche et le filtre
   const [searchName, setSearchName] = useState("");
@@ -95,6 +103,88 @@ export default function GestionDepot() {
     setSelectedCategory("");
   };
 
+  const handleExcelUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadError(null);
+    setUploadSuccess(null);
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json<ExcelRow>(worksheet);
+
+          console.log("Données Excel lues:", jsonData);
+
+          // Vérifier que les colonnes requises sont présentes
+          if (jsonData.length === 0) {
+            setUploadError("Le fichier Excel est vide");
+            return;
+          }
+
+          const firstRow = jsonData[0];
+          if (!('nom_product' in firstRow) || !('quantite' in firstRow)) {
+            setUploadError("Le fichier Excel doit contenir les colonnes 'nom_product' et 'quantite'");
+            return;
+          }
+
+          let updatedCount = 0;
+          let errorCount = 0;
+
+          // Mettre à jour le stock pour chaque produit
+          for (const row of jsonData) {
+            console.log("Traitement du produit:", row.nom_product);
+            const product = products.find(p => p.nom_product.toLowerCase() === row.nom_product.toLowerCase());
+            
+            if (product) {
+              console.log("Produit trouvé:", product._id);
+              try {
+                // Trouver la quantité actuelle du produit dans ce dépôt
+                const currentDispo = product.disponibilite.find(d => d.depot_id === depotId);
+                const currentQuantity = currentDispo?.quantite || 0;
+                const newQuantity = currentQuantity + parseInt(row.quantite.toString());
+
+                const response = await axios.put(`/api/products/${product._id}/depot/${depotId}`, {
+                  quantite: newQuantity
+                });
+                console.log("Réponse de mise à jour:", response.data);
+                updatedCount++;
+              } catch (err) {
+                console.error(`Erreur lors de la mise à jour du produit ${row.nom_product}:`, err);
+                errorCount++;
+              }
+            } else {
+              console.log("Produit non trouvé:", row.nom_product);
+              errorCount++;
+            }
+          }
+
+          // Rafraîchir la liste des produits
+          const updated = await axios.get(`/api/products/by-depot/${depotId}`);
+          setProducts(updated.data);
+          
+          if (updatedCount > 0) {
+            setUploadSuccess(`${updatedCount} produits mis à jour avec succès${errorCount > 0 ? `, ${errorCount} erreurs` : ''}`);
+          } else {
+            setUploadError("Aucun produit n'a pu être mis à jour");
+          }
+        } catch (err) {
+          console.error("Erreur lors du traitement du fichier Excel:", err);
+          setUploadError("Erreur lors du traitement du fichier Excel");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } catch (err) {
+      console.error("Erreur lors de la lecture du fichier:", err);
+      setUploadError("Erreur lors de la lecture du fichier");
+    }
+  };
+
   if (loading) return <p>Chargement…</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
 
@@ -109,16 +199,47 @@ export default function GestionDepot() {
     >
       <h2>Produits de votre dépôt</h2>
 
-      <button
-        onClick={() => navigate(`/add-product?depot=${depotId}`)}
-        style={{
-          marginBottom: "1rem",
-          padding: "0.5rem 1rem",
-          fontSize: "1rem",
-        }}
-      >
-        ➕ Ajouter un nouveau produit
-      </button>
+      <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+        <button
+          onClick={() => navigate(`/add-product?depot=${depotId}`)}
+          style={{
+            padding: "0.5rem 1rem",
+            fontSize: "1rem",
+          }}
+        >
+          ➕ Ajouter un nouveau produit
+        </button>
+
+        <div style={{ position: "relative" }}>
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleExcelUpload}
+            style={{ display: "none" }}
+            id="excel-upload"
+          />
+          <label
+            htmlFor="excel-upload"
+            style={{
+              display: "inline-block",
+              padding: "0.5rem 1rem",
+              backgroundColor: "#4f46e5",
+              color: "#fff",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            📊 Mettre à jour le stock via Excel
+          </label>
+        </div>
+      </div>
+
+      {uploadError && (
+        <div style={{ color: "red", marginBottom: "1rem" }}>{uploadError}</div>
+      )}
+      {uploadSuccess && (
+        <div style={{ color: "green", marginBottom: "1rem" }}>{uploadSuccess}</div>
+      )}
 
       {/* Barre de recherche par nom et filtre par catégorie */}
       <div
