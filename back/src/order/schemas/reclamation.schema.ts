@@ -17,7 +17,7 @@ export class Reclamation extends Document {
 
   @Prop({ 
     type: String, 
-    enum: ['en_attente', 'en_cours', 'resolue'],
+    enum: ['en_attente', 'resolue', 'rejeter'],
     default: 'en_attente'
   })
   status: string;

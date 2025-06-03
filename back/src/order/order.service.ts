@@ -5,12 +5,14 @@ import { Order } from "./schemas/order.schema";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { Client } from "../client/schemas/client.schema";
 import { ProductService } from "../product/product.service";
+import { Reclamation } from "./schemas/reclamation.schema";
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectModel(Order.name) private orderModel: Model<Order>,
     @InjectModel(Client.name) private clientModel: Model<Client>,
+    @InjectModel(Reclamation.name) private reclamationModel: Model<Reclamation>,
     private productService: ProductService
   ) {}
 
@@ -163,5 +165,105 @@ export class OrderService {
     order.photosLivraison.splice(photoIdx, 1);
     await order.save();
     return order;
+  }
+
+  async getOrderStats(depotId: string, period: 'day' | 'week' | 'month' | 'all') {
+    const now = new Date();
+    let startDate: Date;
+
+    switch (period) {
+      case 'day':
+        startDate = new Date(now.setHours(0, 0, 0, 0));
+        break;
+      case 'week':
+        startDate = new Date(now.setDate(now.getDate() - now.getDay()));
+        break;
+      case 'month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case 'all':
+        startDate = new Date(0); // 1er janvier 1970
+        break;
+      default:
+        startDate = new Date(now.setHours(0, 0, 0, 0));
+    }
+
+    const orders = await this.orderModel.find({
+      depot: depotId,
+      createdAt: { $gte: startDate }
+    });
+
+    const totalOrders = orders.length;
+    const totalAmount = orders.reduce((sum, order) => sum + order.total, 0);
+    const ordersInDelivery = orders.filter(order => order.etat_livraison === 'en_cours').length;
+    const ordersDelivered = orders.filter(order => order.etat_livraison === 'livree').length;
+
+    // Récupérer les IDs des commandes pour les réclamations
+    const orderIds = orders.map(order => order._id);
+
+    // Statistiques des réclamations
+    const reclamations = await this.reclamationModel.find({
+      orderId: { $in: orderIds }
+    });
+
+    const totalReclamations = reclamations.length;
+    const reclamationsEnAttente = reclamations.filter(r => r.status === 'en_attente').length;
+    const reclamationsRejetees = reclamations.filter(r => r.status === 'rejeter').length;
+    const reclamationsResolues = reclamations.filter(r => r.status === 'resolue').length;
+
+    // Top 5 clients les plus fidèles
+    const clientOrders = await this.orderModel.aggregate([
+      { $match: { 
+        depot: depotId,
+        createdAt: { $gte: startDate }
+      }},
+      { $group: { _id: '$clientId', count: { $sum: 1 }, total: { $sum: '$total' } } },
+      { $sort: { count: -1 } },
+      { $limit: 5 }
+    ]);
+
+    const topClients = await Promise.all(
+      clientOrders.map(async (client) => {
+        const clientInfo = await this.clientModel.findById(client._id);
+        return {
+          clientId: client._id,
+          nom: clientInfo?.nom_client || 'Client inconnu',
+          prenom: '',
+          nombreCommandes: client.count,
+          montantTotal: client.total
+        };
+      })
+    );
+
+    // Top produits commandés
+    const productStats = await this.orderModel.aggregate([
+      { $match: { 
+        depot: depotId,
+        createdAt: { $gte: startDate }
+      }},
+      { $unwind: '$items' },
+      { $group: {
+          _id: '$items.productId',
+          nom: { $first: '$items.productName' },
+          totalQuantity: { $sum: '$items.quantity' },
+          totalAmount: { $sum: { $multiply: ['$items.prix_detail', '$items.quantity'] } }
+        }
+      },
+      { $sort: { totalQuantity: -1 } },
+      { $limit: 5 }
+    ]);
+
+    return {
+      totalOrders,
+      totalAmount,
+      ordersInDelivery,
+      ordersDelivered,
+      totalReclamations,
+      reclamationsEnAttente,
+      reclamationsRejetees,
+      reclamationsResolues,
+      topClients,
+      topProducts: productStats
+    };
   }
 }

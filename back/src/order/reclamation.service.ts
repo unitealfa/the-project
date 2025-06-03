@@ -41,7 +41,7 @@ export class ReclamationService {
       .lean();
   }
 
-  async updateReclamationStatus(id: string, status: 'en_attente' | 'en_cours' | 'resolue', reponse?: string) {
+  async updateReclamationStatus(id: string, status: 'en_attente' | 'resolue' | 'rejeter', reponse?: string) {
     const update: any = { status };
     if (reponse) {
       update.reponse = reponse;

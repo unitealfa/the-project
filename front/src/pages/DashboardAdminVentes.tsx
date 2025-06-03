@@ -222,6 +222,19 @@ const DashboardAdminVentes: React.FC = () => {
             >
               Voir les réclamations
             </button>
+            <button
+              onClick={() => navigate("/stats-ventes")}
+              style={{
+                background: "#4f46e5",
+                color: "white",
+                border: "none",
+                borderRadius: "0.375rem",
+                padding: "0.5rem 1rem",
+                cursor: "pointer"
+              }}
+            >
+              Voir les statistiques
+            </button>
           </div>
         </div>
 

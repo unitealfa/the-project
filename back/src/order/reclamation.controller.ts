@@ -39,7 +39,7 @@ export class ReclamationController {
   @Patch(':id/status')
   async updateReclamationStatus(
     @Param('id') id: string,
-    @Body() body: { status: 'en_attente' | 'en_cours' | 'resolue'; reponse?: string }
+    @Body() body: { status: 'en_attente' | 'resolue' | 'rejeter'; reponse?: string }
   ) {
     return this.reclamationService.updateReclamationStatus(
       id,

@@ -72,6 +72,8 @@ import ReclamationResponse from "./pages/ReclamationResponse";
 import Orders from "./pages/Orders";
 import LivreurCommandeDetail from "./pages/LivreurCommandeDetail";
 
+import StatsVentes from "./pages/StatsVentes";
+
 export default function App() {
   return (
     <Routes>
@@ -551,6 +553,15 @@ export default function App() {
       />
 
       <Route path="/livreur/commandes/:orderId" element={<LivreurCommandeDetail />} />
+
+      <Route
+        path="/stats-ventes"
+        element={
+          <RequireAuth allowedRoles={["Administrateur des ventes"]}>
+            <StatsVentes />
+          </RequireAuth>
+        }
+      />
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

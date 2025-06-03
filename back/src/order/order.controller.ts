@@ -13,7 +13,8 @@ import {
   UploadedFiles,
   UseInterceptors,
   BadRequestException,
-  Delete
+  Delete,
+  Query
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -55,6 +56,17 @@ export class OrderController {
   @Get('client')
   async getClientOrders(@GetUser('id') clientId: string) {
     return this.orderService.findByClient(clientId);
+  }
+
+  @Get('stats')
+  async getOrderStats(
+    @GetUser() user: any,
+    @Query('period') period: 'day' | 'week' | 'month' | 'all' = 'day'
+  ) {
+    if (!user.depot) {
+      throw new UnauthorizedException("Aucun dépôt associé à cet utilisateur");
+    }
+    return this.orderService.getOrderStats(user.depot, period);
   }
 
   @Get(':id')
