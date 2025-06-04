@@ -283,7 +283,7 @@ export default function ClientsList() {
           </button>
         )}
 
-        {/* Barre de recherche + bouton “Réinitialiser” */}
+        {/* Barre de recherche + bouton "Réinitialiser" */}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', alignItems: 'center' }}>
           <input
             type="text"
@@ -322,15 +322,7 @@ export default function ClientsList() {
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ backgroundColor: '#f3f4f6' }}>
-              <tr>
-                <th style={th}>Photo</th> {/* +++ */}
-                <th style={th}>Nom client</th>
-                <th style={th}>Email</th>
-                <th style={th}>Gérant</th>
-                <th style={th}>Téléphone</th>
-                <th style={th}>Entreprise</th>
-                <th style={th}>Actions</th>
-              </tr>
+              <tr><th style={th}>Photo</th><th style={th}>Nom client</th><th style={th}>Email</th><th style={th}>Gérant</th><th style={th}>Téléphone</th><th style={th}>Entreprise</th><th style={th}>Actions</th></tr>
             </thead>
             <tbody>
               {currentClients.map(client => (
@@ -353,32 +345,19 @@ export default function ClientsList() {
                   <td style={td}>{client.email}</td>
                   <td style={td}>{client.contact.nom_gerant}</td>
                   <td style={td}>{client.contact.telephone}</td>
+                  <td style={td}>{client.affectations[0]?.entreprise ?? '—'}</td>
                   <td style={td}>
-                    {client.affectations[0]?.entreprise ?? '—'}
-                  </td>
-                  <td style={td}>
-                    <button onClick={() => navigate(`/clients/${client._id}`)} style={actionBtn}>
-                      👁️ Voir
-                    </button>
+                    <button onClick={() => navigate(`/clients/${client._id}`)} style={actionBtn}>👁️ Voir</button>
                     {user?.role === 'Pré-vendeur' && (
                       <button 
                         onClick={() => navigate(`/productlist?clientId=${client._id}`)} 
-                        style={{
-                          ...actionBtn,
-                          color: '#10b981'
-                        }}
-                      >
-                        🛒 Commande
-                      </button>
+                        style={{...actionBtn, color: '#10b981'}}
+                      >🛒 Commande</button>
                     )}
                     {user?.role === 'responsable depot' && (
                       <>
-                        <button onClick={() => navigate(`/clients/${client._id}/edit`)} style={actionBtn}>
-                          ✏️ Modifier
-                        </button>
-                        <button onClick={() => handleDelete(client._id)} style={{ ...actionBtn, color: 'red' }}>
-                          🗑️ Supprimer
-                        </button>
+                        <button onClick={() => navigate(`/clients/${client._id}/edit`)} style={actionBtn}>✏️ Modifier</button>
+                        <button onClick={() => handleDelete(client._id)} style={{...actionBtn, color: 'red'}}>🗑️ Supprimer</button>
                       </>
                     )}
                   </td>
@@ -386,9 +365,7 @@ export default function ClientsList() {
               ))}
               {filteredClients.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ padding: '1rem', textAlign: 'center', color: '#999' }}>
-                    Aucun client trouvé.
-                  </td>
+                  <td colSpan={7} style={{ padding: '1rem', textAlign: 'center', color: '#999' }}>Aucun client trouvé.</td>
                 </tr>
               )}
             </tbody>

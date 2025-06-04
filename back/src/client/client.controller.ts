@@ -89,12 +89,20 @@ export class ClientController {
   )
   async getClientById(@Param('id') id: string) {
     this.logger.debug(`GET /clients/${id}`);
+    
     const client = await this.clientService.findById(id);
     if (!client) {
       this.logger.warn(`Client ${id} introuvable`);
       throw new NotFoundException(`Client ${id} introuvable`);
     }
-    return client;
+
+    const stats = await this.clientService.getClientStats(id);
+    this.logger.debug(`Stats pour client ${id}:`, stats);
+
+    return {
+      ...client,
+      stats
+    };
   }
 
   /* ───────────────────────── AFFECTATION ───────────────────────── */
@@ -116,17 +124,17 @@ export class ClientController {
   @UseInterceptors(
     FileInterceptor('pfp', {
       storage: diskStorage({
-        // → Dossier de destination EXACT : “back/public/client-pfps”
+        // → Dossier de destination EXACT : "back/public/client-pfps"
         destination: (req, file, cb) => {
           const uploadPath = 'public/client-pfps';
-          // Créer le dossier s’il n’existe pas
+          // Créer le dossier s'il n'existe pas
           if (!existsSync(uploadPath)) {
             mkdirSync(uploadPath, { recursive: true });
           }
           cb(null, uploadPath);
         },
         filename: (req, file, cb) => {
-          // Générer un nom unique : timestamp + extension d’origine
+          // Générer un nom unique : timestamp + extension d'origine
           const uniqueSuffix = Date.now().toString();
           const fileExt = extname(file.originalname);
           cb(null, `${uniqueSuffix}${fileExt}`);
@@ -157,7 +165,7 @@ export class ClientController {
      */
     const body = req.body as Record<string, any>;
 
-    // Construire l’objet CreateClientDto
+    // Construire l'objet CreateClientDto
     const dto: CreateClientDto = {
       nom_client: body.nom_client,
       email: body.email,
@@ -260,7 +268,13 @@ export class ClientController {
           },
         },
       };
-      if (file) {
+
+      // Gestion de la photo de profil
+      if (body.removePfp === 'true') {
+        // Si on veut supprimer la photo
+        dto.pfp = 'images/default-pfp-client.jpg';
+      } else if (file) {
+        // Si on veut mettre une nouvelle photo
         dto.pfp = `client-pfps/${file.filename}`;
       }
     } else {

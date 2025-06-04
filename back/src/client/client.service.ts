@@ -4,11 +4,17 @@ import { Client } from './schemas/client.schema';
 import { Model, Types } from 'mongoose';
 import { CreateClientDto } from './dto/create-client.dto';
 import * as bcrypt from 'bcrypt';
+import { Order } from '../order/schemas/order.schema';
+import * as mongoose from 'mongoose';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class ClientService {
+  private readonly logger = new Logger(ClientService.name);
+
   constructor(
     @InjectModel('Client') private readonly clientModel: Model<Client>,
+    @InjectModel('Order') private readonly orderModel: Model<Order>,
   ) {}
 
   /* ───────────── CRÉATION ───────────── */
@@ -68,6 +74,86 @@ export class ClientService {
     return this.clientModel.findOne({ email }).lean();
   }
 
+  async getClientStats(id: string) {
+    this.logger.debug(`Calcul des stats pour client ${id}`);
+    
+    try {
+      // Vérifier d'abord si le client existe
+      const client = await this.clientModel.findById(id);
+      this.logger.debug(`Client trouvé:`, client);
+      
+      if (!client) {
+        this.logger.warn(`Client ${id} non trouvé`);
+        return {
+          totalAmount: 0,
+          orderCount: 0,
+          lastOrder: null
+        };
+      }
+
+      // Vérifier toutes les commandes dans la base
+      const allOrders = await this.orderModel.find({});
+      this.logger.debug(`Nombre total de commandes dans la base:`, allOrders.length);
+      this.logger.debug(`Exemple de commande:`, allOrders[0]);
+
+      // Vérifier les commandes du client avec différentes approches
+      const ordersById = await this.orderModel.find({ clientId: id });
+      this.logger.debug(`Commandes trouvées avec clientId=${id}:`, ordersById.length);
+
+      const ordersByStringId = await this.orderModel.find({ clientId: id.toString() });
+      this.logger.debug(`Commandes trouvées avec clientId=${id.toString()}:`, ordersByStringId.length);
+
+      const ordersByObjectId = await this.orderModel.find({ 
+        clientId: new mongoose.Types.ObjectId(id) 
+      });
+      this.logger.debug(`Commandes trouvées avec ObjectId:`, ordersByObjectId.length);
+
+      // Essayer l'agrégation avec différentes approches
+      const stats = await this.orderModel.aggregate([
+        { 
+          $match: { 
+            $or: [
+              { clientId: id },
+              { clientId: id.toString() },
+              { clientId: new mongoose.Types.ObjectId(id) }
+            ]
+          } 
+        },
+        {
+          $group: {
+            _id: null,
+            totalAmount: { $sum: '$total' },
+            orderCount: { $sum: 1 },
+            lastOrder: { $max: '$createdAt' }
+          }
+        }
+      ]);
+
+      this.logger.debug(`Résultat de l'agrégation:`, stats);
+
+      if (stats.length === 0) {
+        return {
+          totalAmount: 0,
+          orderCount: 0,
+          lastOrder: null
+        };
+      }
+
+      return {
+        totalAmount: stats[0].totalAmount || 0,
+        orderCount: stats[0].orderCount || 0,
+        lastOrder: stats[0].lastOrder || null
+      };
+    } catch (error) {
+      this.logger.error(`Erreur lors du calcul des stats:`, error);
+      return {
+        totalAmount: 0,
+        orderCount: 0,
+        lastOrder: null
+      };
+    }
+  }
+
   /* ───────────── AFFECTATION ───────────── */
   async addAffectation(
     clientId: string,
@@ -109,7 +195,7 @@ export class ClientService {
       return { message: 'Aucune affectation trouvée pour ce dépôt.' };
     }
 
-    // 4. Si, après filtrage, il n’a plus d’affectations → suppression définitive
+    // 4. Si, après filtrage, il n'a plus d'affectations → suppression définitive
     if (nouvellesAffectations.length === 0) {
       await this.clientModel.findByIdAndDelete(clientId).exec();
       return {

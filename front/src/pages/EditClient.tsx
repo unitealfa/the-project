@@ -55,7 +55,8 @@ export default function EditClient() {
       },
     },
   });
-  const [pfpFile, setPfpFile] = useState<File | null>(null); // +++
+  const [pfpFile, setPfpFile] = useState<File | null>(null);
+  const [removePfp, setRemovePfp] = useState(false);
 
   const apiBase = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem('token') || '';
@@ -63,18 +64,28 @@ export default function EditClient() {
   const user = userRaw ? JSON.parse(userRaw) : null;
 
   useEffect(() => {
-    fetch(`${apiBase}/clients`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(res => res.json())
-      .then(data => {
-        const client = data.find((c: any) => c._id === id);
-        if (!client) throw new Error('Client introuvable');
-        setFormData(client);
-      })
-      .catch(err => setError(err.message));
+    const fetchClient = async () => {
+      try {
+        const response = await fetch(`${apiBase}/clients/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        
+        // On ne récupère pas le mot de passe
+        const { password, ...clientData } = data;
+        
+        setFormData({
+          ...clientData,
+          password: '', // On initialise le mot de passe à vide
+        });
+      } catch (err: any) {
+        setError(err.message);
+      }
+    };
+
+    fetchClient();
   }, [id, token]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,28 +129,36 @@ export default function EditClient() {
     setSuccess('');
 
     try {
+      const dataToSend = {
+        ...formData,
+        password: formData.password || undefined
+      };
+
       let body;
       let headers;
-
-      if (pfpFile) {
-        // Si nouvelle image → multipart/form-data
+      if (pfpFile || removePfp) {
+        // Si nouvelle image ou suppression → multipart/form-data
         body = new FormData();
-        body.append('nom_client', formData.nom_client);
-        body.append('email', formData.email);
-        if (formData.password) body.append('password', formData.password);
-        body.append('contact.nom_gerant', formData.contact.nom_gerant);
-        body.append('contact.telephone', formData.contact.telephone);
-        body.append('localisation.adresse', formData.localisation.adresse);
-        body.append('localisation.ville', formData.localisation.ville);
-        body.append('localisation.code_postal', formData.localisation.code_postal);
-        body.append('localisation.region', formData.localisation.region);
-        body.append('coordonnees.latitude', formData.localisation.coordonnees.latitude.toString());
-        body.append('coordonnees.longitude', formData.localisation.coordonnees.longitude.toString());
-        body.append('pfp', pfpFile); // +++
+        body.append('nom_client', dataToSend.nom_client);
+        body.append('email', dataToSend.email);
+        if (dataToSend.password) body.append('password', dataToSend.password);
+        body.append('contact.nom_gerant', dataToSend.contact.nom_gerant);
+        body.append('contact.telephone', dataToSend.contact.telephone);
+        body.append('localisation.adresse', dataToSend.localisation.adresse);
+        body.append('localisation.ville', dataToSend.localisation.ville);
+        body.append('localisation.code_postal', dataToSend.localisation.code_postal);
+        body.append('localisation.region', dataToSend.localisation.region);
+        body.append('coordonnees.latitude', dataToSend.localisation.coordonnees.latitude.toString());
+        body.append('coordonnees.longitude', dataToSend.localisation.coordonnees.longitude.toString());
+        if (pfpFile) {
+          body.append('pfp', pfpFile);
+        }
+        if (removePfp) {
+          body.append('removePfp', 'true');
+        }
         headers = { Authorization: `Bearer ${token}` };
       } else {
         // Sinon → JSON normal
-        const dataToSend = { ...formData, ...(formData.password ? {} : { password: undefined }) };
         body = JSON.stringify(dataToSend);
         headers = {
           'Content-Type': 'application/json',
@@ -154,8 +173,8 @@ export default function EditClient() {
       });
 
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || 'Erreur lors de la modification');
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Erreur lors de la modification du client');
       }
 
       setSuccess('Client modifié avec succès');
@@ -314,7 +333,7 @@ export default function EditClient() {
           </div>
 
           {formData.pfp && (
-            <div style={{ marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <img
                 src={`${apiBase}/public/${formData.pfp}`}
                 alt="Photo de profil"
@@ -327,10 +346,30 @@ export default function EditClient() {
                 }}
                 onError={e => (e.currentTarget.src = `${apiBase}/public/images/default-pfp-client.jpg`)}
               />
+              <button
+                type="button"
+                onClick={() => {
+                  setRemovePfp(true);
+                  setPfpFile(null);
+                  setFormData(prev => ({ ...prev, pfp: undefined }));
+                }}
+                style={{
+                  padding: '0.5rem',
+                  backgroundColor: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  maxWidth: '200px'
+                }}
+              >
+                🗑️ Supprimer la photo
+              </button>
             </div>
           )}
           <label style={{ fontSize: '0.9rem' }}>
-            Modifier la photo de profil :
+            {formData.pfp ? 'Changer la photo de profil :' : 'Ajouter une photo de profil :'}
           </label>
           <input
             name="pfp"
@@ -339,6 +378,7 @@ export default function EditClient() {
             onChange={e => {
               if (e.target.files && e.target.files[0]) {
                 setPfpFile(e.target.files[0]);
+                setRemovePfp(false);
               }
             }}
           />
