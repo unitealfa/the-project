@@ -16,6 +16,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Logger,
+  Body,
 } from "@nestjs/common";
 import { ClientService } from "./client.service";
 import { CreateClientDto } from "./dto/create-client.dto";
@@ -62,12 +63,17 @@ export class ClientController {
       `GET /clients – role=${user.role} depotQuery=${depotId ?? "∅"}`
     );
 
-    // Responsables / superviseurs / admin-ventes / prévendeurs ⇒ uniquement leur dépôt
+    // Pré-vendeurs ⇒ uniquement leurs clients assignés
+    if (user.role === "Pré-vendeur") {
+      this.logger.debug(` → findByDepot(${user.depot}, ${user.id})`);
+      return this.clientService.findByDepot(user.depot, user.id);
+    }
+
+    // Responsables / superviseurs / admin-ventes ⇒ uniquement leur dépôt
     if (
       user.role === "responsable depot" ||
       user.role === "superviseur des ventes" ||
-      user.role === "Administrateur des ventes" ||
-      user.role === "Pré-vendeur"
+      user.role === "Administrateur des ventes"
     ) {
       this.logger.debug(` → findByDepot(${user.depot})`);
       return this.clientService.findByDepot(user.depot);
@@ -339,5 +345,32 @@ export class ClientController {
       `DELETE /clients/${id} (soft delete from depot=${user.depot})`
     );
     return this.clientService.removeAffectation(id, user.depot);
+  }
+
+  @Post(':clientId/assign-prevendeur')
+  @Roles('superviseur des ventes')
+  async assignPrevendeur(
+    @Param('clientId') clientId: string,
+    @Body('prevendeurId') prevendeurId: string,
+    @Req() req
+  ) {
+    const user = req.user;
+    this.logger.debug(
+      `POST /clients/${clientId}/assign-prevendeur – superviseur=${user.id} prevendeur=${prevendeurId}`
+    );
+    return this.clientService.assignPrevendeur(clientId, prevendeurId, user.depot);
+  }
+
+  @Post(':clientId/unassign-prevendeur')
+  @Roles('superviseur des ventes')
+  async unassignPrevendeur(
+    @Param('clientId') clientId: string,
+    @Req() req
+  ) {
+    const user = req.user;
+    this.logger.debug(
+      `POST /clients/${clientId}/unassign-prevendeur – superviseur=${user.id}`
+    );
+    return this.clientService.unassignPrevendeur(clientId, user.depot);
   }
 }

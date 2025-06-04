@@ -33,6 +33,7 @@ class Statistiques {
 class Affectation {
   @Prop({ type: Types.ObjectId, ref: 'Entreprise' }) entreprise: Types.ObjectId;
   @Prop({ type: Types.ObjectId, ref: 'Depot' }) depot: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'User' }) prevendeur_id?: Types.ObjectId;
 }
 
 @Schema({ timestamps: true })

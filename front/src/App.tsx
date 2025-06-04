@@ -75,6 +75,8 @@ import LivreurCommandeDetail from "./pages/LivreurCommandeDetail";
 import StatsVentes from "./pages/StatsVentes";
 import AdminStats from "./pages/AdminStats";
 
+import AssignPrevendeurs from './pages/AssignPrevendeurs';
+
 export default function App() {
   return (
     <Routes>
@@ -581,6 +583,12 @@ export default function App() {
           </RequireAuth>
         }
       />
+
+      <Route path="/assign-prevendeurs" element={
+        <RequireAuth allowedRoles={['superviseur des ventes']}>
+          <AssignPrevendeurs />
+        </RequireAuth>
+      } />
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

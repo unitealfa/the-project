@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Client } from './schemas/client.schema';
 import { Model, Types } from 'mongoose';
@@ -55,15 +55,20 @@ export class ClientService {
     return this.clientModel.find().lean();
   }
 
-  async findByDepot(depotId: string): Promise<Client[]> {
-    return this.clientModel
-      .find({
-        $or: [
-          { 'affectations.depot': depotId }, // string
-          { 'affectations.depot': new Types.ObjectId(depotId) }, // ObjectId
-        ],
-      })
-      .lean();
+  async findByDepot(depotId: string, prevendeurId?: string): Promise<Client[]> {
+    const query: any = {
+      $or: [
+        { 'affectations.depot': depotId },
+        { 'affectations.depot': new Types.ObjectId(depotId) },
+      ],
+    };
+
+    // Si un prévendeur est spécifié, ne retourner que ses clients
+    if (prevendeurId) {
+      query['affectations.prevendeur_id'] = new Types.ObjectId(prevendeurId);
+    }
+
+    return this.clientModel.find(query).lean();
   }
 
   async findById(id: string): Promise<Client | null> {
@@ -214,6 +219,44 @@ export class ClientService {
       message: 'Affectation retirée. Le client reste actif (autres dépôts).',
       client: clientMisAJour,
     };
+  }
+
+  async assignPrevendeur(clientId: string, prevendeurId: string, depotId: string) {
+    const client = await this.clientModel.findById(clientId);
+    if (!client) {
+      throw new NotFoundException('Client non trouvé');
+    }
+
+    // Vérifier que le client est bien affecté au dépôt
+    const affectation = client.affectations.find(
+      a => a.depot.toString() === depotId
+    );
+    if (!affectation) {
+      throw new BadRequestException('Ce client n\'est pas affecté à ce dépôt');
+    }
+
+    // Mettre à jour l'affectation avec l'ID du prévendeur
+    affectation.prevendeur_id = new Types.ObjectId(prevendeurId);
+    return client.save();
+  }
+
+  async unassignPrevendeur(clientId: string, depotId: string) {
+    const client = await this.clientModel.findById(clientId);
+    if (!client) {
+      throw new NotFoundException('Client non trouvé');
+    }
+
+    // Vérifier que le client est bien affecté au dépôt
+    const affectation = client.affectations.find(
+      a => a.depot.toString() === depotId
+    );
+    if (!affectation) {
+      throw new BadRequestException('Ce client n\'est pas affecté à ce dépôt');
+    }
+
+    // Retirer l'ID du prévendeur
+    affectation.prevendeur_id = undefined;
+    return client.save();
   }
 
   /* ───────────── MISE À JOUR ───────────── */

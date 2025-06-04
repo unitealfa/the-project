@@ -9,8 +9,10 @@ interface Client {
   nom_client:  string;
   email:       string;
   contact:     { nom_gerant: string; telephone: string };
-  affectations:{ entreprise: string; depot: string }[];
+  affectations:{ entreprise: string; depot: string; prevendeur_id?: string }[];
   pfp?:        string; // +++
+  nom:         string;
+  prenom:      string;
 }
 
 interface Prevendeur {
@@ -45,6 +47,8 @@ export default function ClientsList() {
   const [loadingVehicules, setLoadingVehicules] = useState(false);
   const [vehiculesError, setVehiculesError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const navigate = useNavigate();
   const query    = useQuery();
 
@@ -223,6 +227,81 @@ export default function ClientsList() {
   };
   const goToPrevPage = () => {
     setCurrentPage(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleAssignPrevendeur = async (clientId: string, prevendeurId: string) => {
+    try {
+      const res = await apiFetch(`/clients/${clientId}/assign-prevendeur`, {
+        method: 'POST',
+        body: JSON.stringify({ prevendeurId }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Erreur lors de l\'affectation du prévendeur');
+      }
+
+      // Mettre à jour la liste des clients
+      setClients(prev => prev.map(client => {
+        if (client._id === clientId) {
+          return {
+            ...client,
+            affectations: client.affectations.map(aff => {
+              if (aff.depot === depot) {
+                return { ...aff, prevendeur_id: prevendeurId };
+              }
+              return aff;
+            }),
+          };
+        }
+        return client;
+      }));
+
+      setIsAssignModalOpen(false);
+      setSelectedClient(null);
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleUnassignPrevendeur = async (clientId: string) => {
+    try {
+      const res = await apiFetch(`/clients/${clientId}/unassign-prevendeur`, {
+        method: 'POST',
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Erreur lors de la désaffectation du prévendeur');
+      }
+
+      // Mettre à jour la liste des clients
+      setClients(prev => prev.map(client => {
+        if (client._id === clientId) {
+          return {
+            ...client,
+            affectations: client.affectations.map(aff => {
+              if (aff.depot === depot) {
+                return { ...aff, prevendeur_id: undefined };
+              }
+              return aff;
+            }),
+          };
+        }
+        return client;
+      }));
+
+      setIsAssignModalOpen(false);
+      setSelectedClient(null);
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const getPrevendeurName = (prevendeurId: string | undefined) => {
+    if (!prevendeurId) return 'Non assigné';
+    const prevendeur = prevendeurs.find(p => p._id === prevendeurId);
+    return prevendeur ? `${prevendeur.prenom} ${prevendeur.nom}` : 'Inconnu';
   };
 
   return (
@@ -495,6 +574,81 @@ export default function ClientsList() {
                     )}
                   </tbody>
                 </table>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Modal d'affectation de prévendeur */}
+        {isAssignModalOpen && selectedClient && (
+          <div style={modalStyles.overlay}>
+            <div style={modalStyles.content}>
+              <button
+                onClick={() => {
+                  setIsAssignModalOpen(false);
+                  setSelectedClient(null);
+                }}
+                style={modalStyles.closeButton}
+              >
+                ✕
+              </button>
+              <h2 style={{ marginTop: 0 }}>Affecter un prévendeur</h2>
+              <p>Client : {selectedClient.prenom} {selectedClient.nom}</p>
+              
+              {loadingPrevendeurs ? (
+                <p>Chargement des prévendeurs...</p>
+              ) : (
+                <>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <button
+                      onClick={() => handleUnassignPrevendeur(selectedClient._id)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#ef4444',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        marginRight: '1rem',
+                      }}
+                    >
+                      Retirer l'affectation
+                    </button>
+                  </div>
+                  
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+                    <thead>
+                      <tr>
+                        <th style={th}>Nom</th>
+                        <th style={th}>Prénom</th>
+                        <th style={th}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {prevendeurs.map(p => (
+                        <tr key={p._id} style={{ borderBottom: '1px solid #ddd' }}>
+                          <td style={td}>{p.nom}</td>
+                          <td style={td}>{p.prenom}</td>
+                          <td style={td}>
+                            <button
+                              onClick={() => handleAssignPrevendeur(selectedClient._id, p._id)}
+                              style={{
+                                padding: '0.25rem 0.5rem',
+                                backgroundColor: '#4f46e5',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Assigner
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </>
               )}
             </div>
           </div>
