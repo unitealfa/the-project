@@ -4,7 +4,14 @@ import Header from '../components/Header';
 import { PaginationSearch } from '../components/PaginationSearch';
 import { apiFetch } from '../utils/api';
 
-interface Member { _id: string; nom: string; prenom: string; role: string }
+/* ─── 1. Étendre l’interface Member pour inclure `pfp` ──────── */
+interface Member {
+  _id:    string;
+  nom:    string;
+  prenom: string;
+  role:   string;
+  pfp:    string; // ← nouveau champ
+}
 
 export default function PreventeTeam() {
   const { depotId = '' } = useParams<{ depotId: string }>();
@@ -26,7 +33,10 @@ export default function PreventeTeam() {
       try {
         const r = await apiFetch(`/api/teams/${depotId}?role=prevente`);
         const data = await r.json();
-        const membersData = Array.isArray(data.prevente) ? data.prevente : data.prevente ?? [];
+        // data.prevente doit être un tableau de Member (incluant pfp)
+        const membersData: Member[] = Array.isArray(data.prevente)
+          ? data.prevente
+          : data.prevente ?? [];
         setList(membersData);
         setFilteredList(membersData);
       } catch {
@@ -38,17 +48,15 @@ export default function PreventeTeam() {
   }, [depotId, loc.key]);
 
   useEffect(() => {
-    // Filtrer les membres en fonction du terme de recherche
-    const filtered = list.filter(member => 
+    const filtered = list.filter(member =>
       member.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.role.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredList(filtered);
-    setCurrentPage(1); // Réinitialiser la page courante lors d'une nouvelle recherche
+    setCurrentPage(1);
   }, [searchTerm, list]);
 
-  // Calculer les membres à afficher pour la page courante
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredList.slice(indexOfFirstItem, indexOfLastItem);
@@ -68,15 +76,25 @@ export default function PreventeTeam() {
       <Header />
       <div style={{ padding:'1rem', fontFamily:'Arial, sans-serif' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <h1 style={{ margin:0 }}>Équipe Pré-vente</h1>
+          <h1 style={{ margin: 0 }}>Équipe Pré-vente</h1>
           {user.role === 'responsable depot' && (
-            <button onClick={() => nav(`/teams/${depotId}/prevente/add`)}
-                    style={{ padding:'.5rem 1rem', background:'#4f46e5', color:'#fff', border:'none', borderRadius:8 }}>
+            <button
+              onClick={() => nav(`/teams/${depotId}/prevente/add`)}
+              style={{
+                padding: '.5rem 1rem',
+                background: '#4f46e5',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+              }}
+            >
               + Ajouter un membre
             </button>
           )}
         </div>
+
         {error && <p style={{ color:'red' }}>{error}</p>}
+
         {loading ? (
           <p>Chargement…</p>
         ) : (
@@ -90,44 +108,82 @@ export default function PreventeTeam() {
               onSearchChange={setSearchTerm}
               placeholder="Rechercher un membre..."
             />
+
             <table style={{ width:'100%', borderCollapse:'collapse', marginTop:'1rem' }}>
               <thead>
                 <tr>
-                  {['Nom','Prénom','Rôle','Actions'].map(h => (
-                    <th key={h} style={{ padding:'.5rem', borderBottom:'1px solid #ccc', textAlign:'left' }}>{h}</th>
+                  {/* ─── Colonne “Photo” ajoutée ──────────────────────── */}
+                  {['Photo','Nom','Prénom','Rôle','Actions'].map(h => (
+                    <th
+                      key={h}
+                      style={{
+                        padding: '.5rem',
+                        borderBottom: '1px solid #ccc',
+                        textAlign: 'left'
+                      }}
+                    >
+                      {h}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {currentItems.map(m => (
-                  <tr key={m._id}>
-                    <td style={{ padding:'.5rem 0' }}>{m.nom}</td>
-                    <td style={{ padding:'.5rem 0' }}>{m.prenom}</td>
-                    <td style={{ padding:'.5rem 0' }}>{m.role}</td>
-                    <td>
-                      <button
-                        style={{ marginRight:8 }}
-                        onClick={() => nav(`/teams/members/${m._id}/detail-prevente`)}
-                      >
-                        Détails
-                      </button>
-                      <button
-                        style={{ marginRight:8 }}
-                        onClick={() => nav(`/teams/members/${m._id}/edit-prevente`)}
-                      >
-                        Éditer
-                      </button>
-                      <button
-                        style={{ color:'#fff', background:'#dc2626', border:'none', borderRadius:4, padding:'0.25rem 0.75rem' }}
-                        onClick={() => handleDelete(m._id)}
-                      >
-                        Supprimer
-                      </button>
+                {currentItems.length > 0 ? (
+                  currentItems.map(m => (
+                    <tr key={m._id}>
+                      {/* ◀◀ Affichage de la miniature 32×32 px */}
+                      <td style={{ padding: '.5rem 0' }}>
+                        <img
+                          src={`${import.meta.env.VITE_API_URL}/${m.pfp}`}
+                          alt={`Profil de ${m.nom} ${m.prenom}`}
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                            border: '1px solid #ccc'
+                          }}
+                        />
+                      </td>
+
+                      <td style={{ padding: '.5rem 0' }}>{m.nom}</td>
+                      <td style={{ padding: '.5rem 0' }}>{m.prenom}</td>
+                      <td style={{ padding: '.5rem 0' }}>{m.role}</td>
+                      <td>
+                        <button
+                          style={{ marginRight: 8 }}
+                          onClick={() => nav(`/teams/members/${m._id}/detail-prevente`)}
+                        >
+                          Détails
+                        </button>
+                        <button
+                          style={{ marginRight: 8 }}
+                          onClick={() => nav(`/teams/members/${m._id}/edit-prevente`)}
+                        >
+                          Éditer
+                        </button>
+                        <button
+                          style={{
+                            color: '#fff',
+                            background: '#dc2626',
+                            border: 'none',
+                            borderRadius: 4,
+                            padding: '0.25rem 0.75rem',
+                          }}
+                          onClick={() => handleDelete(m._id)}
+                        >
+                          Supprimer
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    {/* ─── colSpan passe à 5 (Photo, Nom, Prénom, Rôle, Actions) ─── */}
+                    <td colSpan={5} style={{ padding: '.75rem', fontStyle: 'italic' }}>
+                      Aucun membre trouvé
                     </td>
                   </tr>
-                ))}
-                {currentItems.length === 0 && (
-                  <tr><td colSpan={4} style={{ padding:'.75rem', fontStyle:'italic' }}>Aucun membre trouvé</td></tr>
                 )}
               </tbody>
             </table>

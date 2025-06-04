@@ -1,10 +1,10 @@
-import React, { useRef, useState, useCallback } from 'react';
-import { Edit } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import Cropper from 'react-easy-crop';
-import { getCroppedImg } from '../utils/cropImage'; // utilitaire de recadrage
+import React, { useRef, useState, useCallback } from "react";
+import { Edit } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import Cropper from "react-easy-crop";
+import { getCroppedImg } from "../utils/cropImage"; // utilitaire de recadrage
 
-const ACCENT = '#4f46e5';
+const ACCENT = "#4f46e5";
 
 export default function Header() {
   const navigate = useNavigate();
@@ -21,12 +21,12 @@ export default function Header() {
     contact?: { telephone?: string };
     pfp?: string;
   } | null>(() => {
-    const raw = localStorage.getItem('user');
+    const raw = localStorage.getItem("user");
     return raw ? JSON.parse(raw) : null;
   });
 
   if (!user) {
-    navigate('/', { replace: true });
+    navigate("/", { replace: true });
     return null;
   }
 
@@ -78,7 +78,9 @@ export default function Header() {
       });
 
       // Nouvelle confirmation avant envoi
-      const ok = window.confirm('Voulez-vous vraiment modifier votre photo de profil ?');
+      const ok = window.confirm(
+        "Voulez-vous vraiment modifier votre photo de profil ?"
+      );
       if (!ok) {
         // Annule le cropper et on ne touche pas à l’ancien pfp
         setSelectedFile(null);
@@ -90,27 +92,27 @@ export default function Header() {
 
       // Si confirmé, on prépare le FormData et on envoie au backend
       const form = new FormData();
-      form.append('pfp', croppedFile);
+      form.append("pfp", croppedFile);
 
-      const token = localStorage.getItem('token') || '';
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/clients/${user.id}/pfp`,
-        {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${token}` },
-          body: form,
-        }
-      );
-      if (!res.ok) throw new Error('Erreur lors du téléversement');
+      const token = localStorage.getItem("token") || "";
+      const endpoint = isClient
+        ? `/clients/${user.id}/pfp`
+        : `/api/teams/members/${user.id}/pfp`;
+      const res = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+      if (!res.ok) throw new Error("Erreur lors du téléversement");
 
       const data = await res.json();
       // On met à jour le localStorage et l’état avec la nouvelle URL
       const updated = { ...user, pfp: data.pfp };
-      localStorage.setItem('user', JSON.stringify(updated));
+      localStorage.setItem("user", JSON.stringify(updated));
       setUser(updated);
     } catch (err) {
       console.error(err);
-      alert('Impossible de mettre à jour la photo');
+      alert("Impossible de mettre à jour la photo");
     } finally {
       // Dans tous les cas, on ferme le cropper
       setSelectedFile(null);
@@ -129,70 +131,68 @@ export default function Header() {
   };
 
   // ------------------- rendu du Header + Modal Profil -------------------
-  const isClient = user.role.toLowerCase().includes('client');
+const isClient = user.role.toLowerCase().includes('client');
   const displayName = isClient
     ? user.nom_client || ''
     : `${user.nom ?? ''} ${user.prenom ?? ''}`.trim();
   const pfpSrc =
-    isClient && user.pfp
-      ? `${import.meta.env.VITE_API_URL}/${user.pfp}`
-      : null;
+    user.pfp ? `${import.meta.env.VITE_API_URL}/${user.pfp}` : null;
   const phone = user.contact?.telephone ?? '';
 
   return (
     <>
       <header
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '0.75rem 1.25rem',
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "0.75rem 1.25rem",
           background: ACCENT,
-          color: '#fff',
-          fontFamily: 'Arial, sans-serif',
+          color: "#fff",
+          fontFamily: "Arial, sans-serif",
         }}
       >
         <h1
-          style={{ margin: 0, fontSize: '1.25rem', cursor: 'pointer' }}
-          onClick={() => navigate('/dashboard')}
+          style={{ margin: 0, fontSize: "1.25rem", cursor: "pointer" }}
+          onClick={() => navigate("/dashboard")}
         >
           Routimize
         </h1>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
           {pfpSrc && (
             <div
               onClick={() => setShowProfile(true)}
               style={{
                 width: 32,
                 height: 32,
-                borderRadius: '50%',
-                overflow: 'hidden',
-                border: '2px solid #fff',
-                cursor: 'pointer',
+                borderRadius: "50%",
+                overflow: "hidden",
+                border: "2px solid #fff",
+                cursor: "pointer",
               }}
             >
               <img
                 src={pfpSrc}
                 alt="Profil"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
             </div>
           )}
           <span>
-            Bonjour <strong>{displayName}</strong>{' '}
+            Bonjour <strong>{displayName}</strong>{" "}
             <em style={{ opacity: 0.8 }}>({user.role})</em>
           </span>
 
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate("/dashboard")}
             style={{
-              padding: '.35rem .9rem',
-              background: '#fff',
+              padding: ".35rem .9rem",
+              background: "#fff",
               color: ACCENT,
-              border: 'none',
+              border: "none",
               borderRadius: 6,
-              cursor: 'pointer',
+              cursor: "pointer",
               fontWeight: 600,
             }}
           >
@@ -202,15 +202,15 @@ export default function Header() {
           <button
             onClick={() => {
               localStorage.clear();
-              navigate('/', { replace: true });
+              navigate("/", { replace: true });
             }}
             style={{
-              padding: '.35rem .9rem',
-              background: 'transparent',
-              color: '#fff',
-              border: '1px solid rgba(255,255,255,.8)',
+              padding: ".35rem .9rem",
+              background: "transparent",
+              color: "#fff",
+              border: "1px solid rgba(255,255,255,.8)",
               borderRadius: 6,
-              cursor: 'pointer',
+              cursor: "pointer",
             }}
           >
             Déconnexion
@@ -222,15 +222,15 @@ export default function Header() {
       {showProfile && (
         <div
           style={{
-            position: 'fixed',
+            position: "fixed",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             zIndex: 1000,
           }}
           onClick={() => setShowProfile(false)}
@@ -238,25 +238,25 @@ export default function Header() {
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: '#fff',
-              padding: '1.5rem',
+              background: "#fff",
+              padding: "1.5rem",
               borderRadius: 8,
-              width: '90%',
+              width: "90%",
               maxWidth: 320,
-              position: 'relative',
-              textAlign: 'center',
+              position: "relative",
+              textAlign: "center",
             }}
           >
             <button
               onClick={() => setShowProfile(false)}
               style={{
-                position: 'absolute',
+                position: "absolute",
                 top: 8,
                 right: 8,
-                background: 'transparent',
-                border: 'none',
+                background: "transparent",
+                border: "none",
                 fontSize: 24,
-                cursor: 'pointer',
+                cursor: "pointer",
               }}
             >
               ×
@@ -265,34 +265,34 @@ export default function Header() {
             {pfpSrc && (
               <div
                 style={{
-                  position: 'relative',
+                  position: "relative",
                   width: 80,
                   height: 80,
-                  margin: '0 auto',
+                  margin: "0 auto",
                 }}
               >
                 <img
                   src={pfpSrc}
                   alt="Profil"
                   style={{
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: '50%',
-                    objectFit: 'cover',
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: "50%",
+                    objectFit: "cover",
                   }}
                 />
                 <button
                   onClick={handleEditClick}
                   style={{
-                    position: 'absolute',
+                    position: "absolute",
                     bottom: 0,
                     right: 0,
-                    transform: 'translate(25%, 25%)',
-                    background: '#fff',
-                    borderRadius: '50%',
-                    border: '1px solid #ccc',
+                    transform: "translate(25%, 25%)",
+                    background: "#fff",
+                    borderRadius: "50%",
+                    border: "1px solid #ccc",
                     padding: 4,
-                    cursor: 'pointer',
+                    cursor: "pointer",
                   }}
                 >
                   <Edit size={16} />
@@ -301,13 +301,13 @@ export default function Header() {
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  style={{ display: 'none' }}
+                  style={{ display: "none" }}
                   onChange={handleFileChange}
                 />
               </div>
             )}
 
-            <h3 style={{ margin: '0.75rem 0 0.25rem' }}>{displayName}</h3>
+            <h3 style={{ margin: "0.75rem 0 0.25rem" }}>{displayName}</h3>
             {user.email && <p style={{ margin: 0 }}>{user.email}</p>}
             {phone && <p style={{ margin: 0 }}>{phone}</p>}
           </div>
@@ -318,27 +318,27 @@ export default function Header() {
       {selectedFile && (
         <div
           style={{
-            position: 'fixed',
+            position: "fixed",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.75)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
+            backgroundColor: "rgba(0,0,0,0.75)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
             zIndex: 1100,
-            padding: '1rem',
+            padding: "1rem",
           }}
         >
           <div
             style={{
-              position: 'relative',
-              width: '100%',
+              position: "relative",
+              width: "100%",
               maxWidth: 400,
               height: 400,
-              background: '#333',
+              background: "#333",
             }}
           >
             <Cropper
@@ -354,20 +354,20 @@ export default function Header() {
 
           <div
             style={{
-              marginTop: '1rem',
-              display: 'flex',
-              gap: '0.5rem',
+              marginTop: "1rem",
+              display: "flex",
+              gap: "0.5rem",
             }}
           >
             <button
               onClick={handleCropCancel}
               style={{
-                padding: '0.5rem 1rem',
-                background: '#bbb',
-                border: 'none',
+                padding: "0.5rem 1rem",
+                background: "#bbb",
+                border: "none",
                 borderRadius: 4,
-                cursor: 'pointer',
-                color: '#000',
+                cursor: "pointer",
+                color: "#000",
               }}
             >
               Annuler
@@ -375,12 +375,12 @@ export default function Header() {
             <button
               onClick={handleCropConfirm}
               style={{
-                padding: '0.5rem 1rem',
+                padding: "0.5rem 1rem",
                 background: ACCENT,
-                border: 'none',
+                border: "none",
                 borderRadius: 4,
-                cursor: 'pointer',
-                color: '#fff',
+                cursor: "pointer",
+                color: "#fff",
               }}
             >
               Confirmer

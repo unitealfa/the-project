@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import { PaginationSearch } from '../components/PaginationSearch';
 import { apiFetch } from '../utils/api';
 
-interface Member { _id: string; nom: string; prenom: string; role: string }
+interface Member { _id: string; nom: string; prenom: string; role: string; pfp: string }
 interface Depot  { _id: string; nom_depot: string }
 
 export default function DeliveryTeam() {
@@ -104,7 +104,7 @@ export default function DeliveryTeam() {
             <table style={{ width:'100%', borderCollapse:'collapse', marginTop:'1rem' }}>
               <thead>
                 <tr>
-                  {['Nom','Prénom','Rôle','Actions'].map(h => (
+                  {['Photo', 'Nom','Prénom','Rôle','Actions'].map(h => (
                     <th key={h} style={{ padding:'.5rem', borderBottom:'1px solid #ccc', textAlign:'left' }}>{h}</th>
                   ))}
                 </tr>
@@ -112,6 +112,19 @@ export default function DeliveryTeam() {
               <tbody>
                 {currentItems.map(m => (
                   <tr key={m._id}>
+                    <td style={{ padding:'.5rem 0' }}>
+                      <img
+                        src={`${import.meta.env.VITE_API_URL}/${m.pfp}`}
+                        alt={`Profil de ${m.nom} ${m.prenom}`}
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: '50%',
+                          objectFit: 'cover',
+                          border: '1px solid #ccc',
+                        }}
+                      />
+                    </td>
                     <td style={{ padding:'.5rem 0' }}>{m.nom}</td>
                     <td style={{ padding:'.5rem 0' }}>{m.prenom}</td>
                     <td style={{ padding:'.5rem 0' }}>{m.role}</td>
@@ -140,7 +153,7 @@ export default function DeliveryTeam() {
                   </tr>
                 ))}
                 {currentItems.length === 0 && (
-                  <tr><td colSpan={4} style={{ padding:'.75rem', fontStyle:'italic' }}>Aucun membre trouvé</td></tr>
+                  <tr><td colSpan={5} style={{ padding:'.75rem', fontStyle:'italic' }}>Aucun membre trouvé</td></tr>
                 )}
               </tbody>
             </table>

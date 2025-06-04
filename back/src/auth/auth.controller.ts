@@ -38,6 +38,7 @@ export class AuthController {
               : null,
           num: user.num,
           depot: user.depot?.toString() || null,
+          pfp: user.pfp,
         },
       };
     } catch {

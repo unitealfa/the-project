@@ -9,6 +9,7 @@ interface Member {
   nom:    string;
   prenom: string;
   role:   string;
+  pfp?:   string; // Champ optionnel pour l'URL de la photo de profil
 }
 interface Depot {
   _id:       string;
@@ -16,7 +17,7 @@ interface Depot {
 }
 interface UserLocal {
   role:  string;
-  depot: string | null;
+  depot: string | null; // Add depot property to resolve TypeScript errors
 }
 
 export default function EntrepotTeam() {
@@ -137,7 +138,7 @@ export default function EntrepotTeam() {
             <table style={{ width:'100%', borderCollapse:'collapse', marginTop:'1rem' }}>
               <thead>
                 <tr>
-                  {['Nom','Prénom','Rôle','Actions'].map(h => (
+                  {['Photo','Nom','Prénom','Rôle','Actions'].map(h => (
                     <th
                       key={h}
                       style={{ padding:'.5rem', borderBottom:'1px solid #ccc', textAlign:'left' }}
@@ -151,6 +152,19 @@ export default function EntrepotTeam() {
                 {currentItems.length > 0 ? (
                   currentItems.map(m => (
                     <tr key={m._id}>
+                      <td style={{ padding:'.5rem 0' }}>
+                        <img
+                          src={`${import.meta.env.VITE_API_URL}/${m.pfp}`}
+                          alt={`Profil de ${m.nom} ${m.prenom}`}
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                            border: '1px solid #ccc',
+                          }}
+                        />
+                      </td>
                       <td style={{ padding:'.5rem 0' }}>{m.nom}</td>
                       <td style={{ padding:'.5rem 0' }}>{m.prenom}</td>
                       <td style={{ padding:'.5rem 0' }}>{m.role}</td>
@@ -178,7 +192,7 @@ export default function EntrepotTeam() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} style={{ padding:'.75rem', fontStyle:'italic' }}>
+                    <td colSpan={5} style={{ padding:'.75rem', fontStyle:'italic' }}>
                       Aucun membre trouvé
                     </td>
                   </tr>

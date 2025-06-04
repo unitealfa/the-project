@@ -4,13 +4,14 @@ import Header from '@/components/Header';
 import { apiFetch } from '@/utils/api';
 
 interface Member {
-  _id: string;
-  nom: string;
+  _id:    string;
+  nom:    string;
   prenom: string;
-  email: string;
-  num: string;
-  role: string;
+  email:  string;
+  num:    string;
+  role:   string;
   poste?: string;
+  pfp:    string; // ← nouveau champ
 }
 
 export default function DetailEntrepotMember() {
@@ -31,21 +32,62 @@ export default function DetailEntrepotMember() {
     })();
   }, [memberId]);
 
-  if (error) return <><Header /><p style={{ color: 'red', padding: '1rem' }}>{error}</p></>;
-  if (!member) return <><Header /><p style={{ padding: '1rem' }}>Chargement…</p></>;
+  if (error) {
+    return (
+      <>
+        <Header />
+        <p style={{ color: 'red', padding: '1rem' }}>{error}</p>
+      </>
+    );
+  }
+  if (!member) {
+    return (
+      <>
+        <Header />
+        <p style={{ padding: '1rem' }}>Chargement…</p>
+      </>
+    );
+  }
 
   return (
     <>
       <Header />
       <main style={{ maxWidth: 480, margin: '2rem auto', fontFamily: 'Arial, sans-serif' }}>
         <h1>Détail membre Entrepôt</h1>
+        {/* Affichage de la photo de profil */}
+        <div style={{ margin: '1rem 0' }}>
+          <img
+            src={`${import.meta.env.VITE_API_URL}/${member.pfp}`}
+            alt={`Profil de ${member.nom} ${member.prenom}`}
+            style={{
+              width: 100,
+              height: 100,
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: '2px solid #ccc',
+            }}
+          />
+        </div>
         <p><strong>Nom :</strong> {member.nom}</p>
         <p><strong>Prénom :</strong> {member.prenom}</p>
         <p><strong>Email :</strong> {member.email}</p>
         <p><strong>Téléphone :</strong> {member.num}</p>
         <p><strong>Rôle :</strong> {member.role}</p>
         {member.poste && <p><strong>Poste :</strong> {member.poste}</p>}
-        <button onClick={() => nav(-1)} style={{ marginTop: 16 }}>Retour</button>
+        <button
+          onClick={() => nav(-1)}
+          style={{
+            marginTop: 16,
+            padding: '0.5rem 1rem',
+            background: '#4f46e5',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 4,
+            cursor: 'pointer',
+          }}
+        >
+          Retour
+        </button>
       </main>
     </>
   );

@@ -1,12 +1,17 @@
 import {
   Controller, Get, Post, Put, Delete, Param, Body, Req, Query,
   UseGuards, Logger, BadRequestException, ForbiddenException,
+   UseInterceptors, UploadedFile,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { TeamService } from './team.service';
 import { CreateMemberDto, UpdateMemberDto } from './dto/create-member.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -106,6 +111,46 @@ export class TeamController {
       this.logger.error('updateMember failed', e.stack || e.message);
       throw new BadRequestException(e.message);
     }
+  }
+
+
+  /** Mise à jour de la photo de profil d'un membre (utilisateur lui-même) */
+  @Put('members/:memberId/pfp')
+  @UseInterceptors(
+    FileInterceptor('pfp', {
+      storage: diskStorage({
+        destination: (req, file, cb) => {
+          const uploadPath = 'public/user-pfps';
+          if (!existsSync(uploadPath)) {
+            mkdirSync(uploadPath, { recursive: true });
+          }
+          cb(null, uploadPath);
+        },
+        filename: (_req, file, cb) => {
+          const uniqueSuffix = Date.now().toString();
+          const ext = extname(file.originalname);
+          cb(null, `${uniqueSuffix}${ext}`);
+        },
+      }),
+      fileFilter: (_req, file, cb) => {
+        if (file.mimetype.match(/\/(jpg|jpeg|png)$/)) cb(null, true);
+        else cb(new Error('Seules les images JPG/PNG sont autorisées.'), false);
+      },
+      limits: { fileSize: 2 * 1024 * 1024 },
+    }),
+  )
+  async updatePfp(
+    @Param('memberId') memberId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
+  ) {
+    if (!file) throw new BadRequestException('Aucune image reçue');
+    if (req.user?.id !== memberId) throw new ForbiddenException('Accès refusé');
+    const updated = await this.svc.updateOwnPfp(
+      memberId,
+      `user-pfps/${file.filename}`,
+    );
+    return { pfp: updated.pfp };
   }
 
   /** Suppression d'un membre */

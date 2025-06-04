@@ -31,6 +31,7 @@ export class CreateMemberDto {
   @IsString() @IsNotEmpty() email!   : string;
   @IsString() @IsNotEmpty() password!: string;
   @IsString() @IsNotEmpty() num!     : string;
+  @IsString() @IsOptional() pfp?: string;
 }
 export class UpdateMemberDto {
   @IsString() @IsIn(JOB_TITLES) @IsOptional()
@@ -43,5 +44,6 @@ export class UpdateMemberDto {
   @IsString() @IsOptional() prenom?  : string;
   @IsString() @IsOptional() email?   : string;
   @IsString() @IsOptional() num?     : string;
-  @IsString() @IsOptional() password?: string; 
+  @IsString() @IsOptional() password?: string;
+  @IsString() @IsOptional() pfp?: string;
 }

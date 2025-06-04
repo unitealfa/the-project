@@ -72,6 +72,7 @@ export class TeamService {
       poste   : dto.poste,
       company : depot.company_id,
       depot   : new Types.ObjectId(depotId),
+      pfp     : dto.pfp || 'images/default-user.webp',
     });
     await user.save();
 
@@ -135,6 +136,17 @@ export class TeamService {
     Object.assign(member, dto);
     await member.save();
 
+    const { password, ...safe } = member.toObject();
+    return safe;
+  }
+
+  
+
+    async updateOwnPfp(memberId: string, pfpPath: string) {
+    const member = await this.userModel.findById(memberId);
+    if (!member) throw new NotFoundException('Membre introuvable');
+    member.pfp = pfpPath;
+    await member.save();
     const { password, ...safe } = member.toObject();
     return safe;
   }
