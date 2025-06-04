@@ -150,4 +150,17 @@ export class TeamService {
     const { password, ...safe } = member.toObject();
     return safe;
   }
+  
+  async updateMemberPfp(memberId: string, pfpPath: string, adminId: string) {
+    const member = await this.userModel.findById(memberId);
+    if (!member) throw new NotFoundException('Membre introuvable');
+
+    await this.guardDepot(member.depot.toString(), adminId);
+
+    member.pfp = pfpPath;
+    await member.save();
+
+    const { password, ...safe } = member.toObject();
+    return safe;
+  }
 }

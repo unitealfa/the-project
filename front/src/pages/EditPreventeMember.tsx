@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Header from '@/components/Header';
+import Header, { uploadMemberPfp } from '@/components/Header';
 import { apiFetch } from '@/utils/api';
 
 interface FormState {
@@ -10,6 +10,7 @@ interface FormState {
   num: string;
   poste: 'Prévente';
   role: string;
+  pfp?: string;
 }
 
 const PREVENTE_ROLES = [
@@ -23,6 +24,8 @@ export default function EditPreventeMember() {
   const [f, setF] = useState<FormState | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [pfpFile, setPfpFile] = useState<File | null>(null);
+  const [pfpPreview, setPfpPreview] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -37,12 +40,28 @@ export default function EditPreventeMember() {
           num: data.num,
           poste: 'Prévente',
           role: PREVENTE_ROLES.includes(data.role) ? data.role : PREVENTE_ROLES[0],
+          pfp: data.pfp,
         });
+        if (data.pfp) {
+          setPfpPreview(`${import.meta.env.VITE_API_URL}/${data.pfp}`);
+        }
       } catch (err: any) {
         setError(err.message || 'Erreur');
       }
     })();
   }, [memberId]);
+
+  useEffect(() => {
+    if (pfpFile) {
+      const url = URL.createObjectURL(pfpFile);
+      setPfpPreview(url);
+      return () => URL.revokeObjectURL(url);
+    } else if (f?.pfp) {
+      setPfpPreview(`${import.meta.env.VITE_API_URL}/${f.pfp}`);
+    } else {
+      setPfpPreview('');
+    }
+  }, [pfpFile, f?.pfp]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +72,9 @@ export default function EditPreventeMember() {
         method: 'PUT',
         body: JSON.stringify(f),
       });
+      if (pfpFile) {
+        await uploadMemberPfp(memberId, pfpFile);
+      }
       nav(-1);
     } catch (err: any) {
       setError(err.message || 'Erreur');
@@ -82,6 +104,24 @@ export default function EditPreventeMember() {
             <option key={jt} value={jt}>{jt}</option>
           ))}
         </select>
+        {pfpPreview && (
+          <img
+            src={pfpPreview}
+            alt="Photo de profil"
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: '1px solid #ccc',
+            }}
+          />
+        )}
+        <input
+          type="file"
+          accept="image/*"
+          onChange={e => setPfpFile(e.target.files?.[0] || null)}
+        />
         <button type="submit" disabled={saving} style={{ padding: '.6rem 1.4rem', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 8 }}>
           {saving ? 'Enregistrement…' : 'Enregistrer'}
         </button>

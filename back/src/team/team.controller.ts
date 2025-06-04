@@ -145,10 +145,23 @@ export class TeamController {
     @Req() req: any,
   ) {
     if (!file) throw new BadRequestException('Aucune image reçue');
-    if (req.user?.id !== memberId) throw new ForbiddenException('Accès refusé');
-    const updated = await this.svc.updateOwnPfp(
+     if (req.user?.id === memberId) {
+      const updated = await this.svc.updateOwnPfp(
+        memberId,
+        `user-pfps/${file.filename}`,
+      );
+      return { pfp: updated.pfp };
+    }
+
+    // Responsable ou admin peut mettre à jour ses membres
+    if (!['Admin', 'responsable depot'].includes(req.user.role)) {
+      throw new ForbiddenException('Accès refusé');
+    }
+
+    const updated = await this.svc.updateMemberPfp(
       memberId,
       `user-pfps/${file.filename}`,
+      req.user.id,
     );
     return { pfp: updated.pfp };
   }

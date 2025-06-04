@@ -391,3 +391,18 @@ const isClient = user.role.toLowerCase().includes('client');
     </>
   );
 }
+export async function uploadMemberPfp(memberId: string, file: File) {
+  const form = new FormData();
+  form.append('pfp', file);
+  const token = localStorage.getItem('token') || '';
+  const res = await fetch(
+    `${import.meta.env.VITE_API_URL}/api/teams/members/${memberId}/pfp`,
+    {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    },
+  );
+  if (!res.ok) throw new Error('Erreur lors de la mise à jour');
+  return res.json();
+}
