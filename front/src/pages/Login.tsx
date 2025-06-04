@@ -17,6 +17,7 @@ interface LoginResponse {
     depot_name?: string;
     entreprise?: { nom_company?: string };
     contact?: { telephone?: string };
+    pfp?: string;
     // tout ce que tu mets côté back dans le user envoyé !
   };
 }

@@ -97,6 +97,7 @@ async loginClient(client: any): Promise<{ access_token: string, user: any }> {
     nom_client: client.nom_client,
     contact: client.contact,
     num: client.contact?.telephone || "",
+    pfp: client.pfp,
     depot: affectation?.depot?.toString() || "",
     depot_name,
     entreprise: { nom_company: entreprise_name },
