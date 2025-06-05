@@ -1,13 +1,27 @@
 /* src/pages-css/login/LogoAnimation.css */
 
-/* 1) Reset minimal (pour l’intro) */
+/* --------------------------------------------------------
+   1) Reset minimal (pour l’intro)
+   -------------------------------------------------------- */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
+html, body {
+  height: 100%;
+}
+body {
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+}
 
-/* 2) Conteneur .logo en plein écran pendant l’intro */
+/* --------------------------------------------------------
+   2) Conteneur .logo en plein écran pendant l’intro
+   -------------------------------------------------------- */
 .logo {
   position: absolute;
   top: 0;
@@ -23,19 +37,19 @@
   background-color: #000;
 
   /* Indiquer qu’on animera transform → accélère sur GPU */
-  will-change: transform;
+  will-change: transform, opacity;
 
-  /* Zoom autour du centre de l’écran (SVG centré) */
+  /* Par défaut, on centre le SVG et on zoome autour de son centre */
   transform-origin: 46.7% 43.5%;
   transform: scale(1);
 
-  /* 
+  /*
     - 1.5s pour le scale via cubic-bezier « plus fluide »
     - 0.5s pour l’opacity à la fin
   */
   transition:
-    transform 1.5s cubic-bezier(0.25, 0.1, 0.25, 1),
-    opacity 0.5s ease-in;
+    transform 1.5s cubic-bezier(0.25, 0.10, 0.25, 1),
+    opacity    0.5s ease-in;
 
   z-index: 100; /* au-dessus de tout le reste pendant l’intro */
 }
@@ -50,7 +64,9 @@
   opacity: 0;
 }
 
-/* 3) SVG – Cercles + chemin */
+/* --------------------------------------------------------
+   3) SVG – Cercles + chemin
+   -------------------------------------------------------- */
 .logo svg {
   width: 200px;
   height: 200px;
@@ -156,7 +172,9 @@
   }
 }
 
-/* 4) Texte “Routimize” – apparition lettre par lettre */
+/* --------------------------------------------------------
+   4) Texte “Routimize” – apparition lettre par lettre
+   -------------------------------------------------------- */
 .text {
   margin-top: 20px;
   font-size: 55px;
@@ -174,4 +192,25 @@
 @keyframes fadein {
   from { opacity: 0; }
   to   { opacity: 1; }
+}
+
+/* --------------------------------------------------------
+   5) Adaptation pour mobile
+   -------------------------------------------------------- */
+@media (max-width: 600px) {
+  /* On réduit légèrement la taille du SVG */
+  .logo svg {
+    width: 150px;
+    height: 150px;
+  }
+
+  /* On ajuste le transform-origin pour qu’il pointe bien vers le centre visuel du SVG mobile */
+  .logo {
+    transform-origin: 40% 45%;
+  }
+
+  /* On réduit le facteur de zoom pour que le cercle ne déborde pas trop hors de l’écran */
+  .logo.zoom {
+    transform: scale(40);
+  }
 }
