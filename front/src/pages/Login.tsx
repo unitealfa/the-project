@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// src/pages/Login.tsx
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import "../pages-css/login/Login.css";
+import Hyperspeed from "../pages-css/login/Hyperspeed";
+import LogoAnimation from "../pages-css/login/LogoAnimation";
 
 interface LoginResponse {
   access_token: string;
   user: {
     id: string;
-    nom_client?: string; // pour les clients
-    nom?: string;        // pour les utilisateurs internes
+    nom_client?: string;
+    nom?: string;
     prenom?: string;
     email: string;
     role: string;
@@ -18,7 +22,6 @@ interface LoginResponse {
     entreprise?: { nom_company?: string };
     contact?: { telephone?: string };
     pfp?: string;
-    // tout ce que tu mets côté back dans le user envoyé !
   };
 }
 
@@ -26,82 +29,140 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const apiBase: string = import.meta.env.VITE_API_URL;
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [skipIntro, setSkipIntro] = useState<boolean>(() => {
+    // On lit la valeur stockée (si elle existe) au chargement de la page
+    const stored = localStorage.getItem("skipIntro");
+    return stored === "true";
+  });
+  const [introDone, setIntroDone] = useState(false);
+  const timerRef = useRef<number | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
 
   // Redirection si déjà connecté
   useEffect(() => {
-    if (localStorage.getItem('token') && localStorage.getItem('user')) {
-      navigate('/dashboard', { replace: true });
+    if (localStorage.getItem("token") && localStorage.getItem("user")) {
+      navigate("/dashboard", { replace: true });
     }
   }, [navigate]);
 
+  // Timer d'intro (5.5 s) ou skip immédiat
+  useEffect(() => {
+    if (skipIntro) {
+      setIntroDone(true);
+      return;
+    }
+    timerRef.current = window.setTimeout(() => {
+      setIntroDone(true);
+    }, 5500);
+    return () => {
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [skipIntro]);
+
+  // Appeler l'entrée du formulaire dès que introDone === true
+  useEffect(() => {
+    if (introDone) {
+      formRef.current?.classList.add("enter");
+    }
+  }, [introDone]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setError(null);
     try {
-      // On tente d'abord la connexion classique (utilisateur interne)
       let res = await fetch(`${apiBase}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
       let payload = await res.json();
 
-      // Si échec (utilisateur inexistant OU mauvais mot de passe), on tente comme client
       if (!res.ok) {
-        // On tente l'endpoint client si présent (exemple /auth/login-client)
         res = await fetch(`${apiBase}/auth/login-client`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
         });
         payload = await res.json();
-        if (!res.ok) throw new Error(payload.message || 'Échec de la connexion');
+        if (!res.ok) {
+          throw new Error(payload.message || "Échec de la connexion");
+        }
       }
 
       const data = payload as LoginResponse;
-      console.log("Données utilisateur reçues:", data.user);
-
-      // Stocke token et user
-      localStorage.setItem('token', data.access_token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-
-      navigate('/dashboard', { replace: true });
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      navigate("/dashboard", { replace: true });
     } catch (err: any) {
-      alert(err.message || 'Erreur réseau');
+      setError(err.message || "Erreur réseau");
     }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{ maxWidth: 320, margin: '2rem auto', fontFamily: 'Arial, sans-serif' }}
-    >
-      <h2>Connexion</h2>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <label>Email</label>
-        <input
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
-        />
+    <div className="login-page">
+      {!introDone && <LogoAnimation />}
+
+      {introDone && (
+        <>
+          <Hyperspeed />
+
+          <form className="form" ref={formRef} onSubmit={handleSubmit}>
+            <div className="title">
+              Welcome to
+              <br />
+              routimize.
+            </div>
+
+            <input
+              className="input"
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            <input
+              className="input"
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            {error && <div className="error-message">{error}</div>}
+
+            <button className="button-confirm" type="submit">
+              Let’s go →
+            </button>
+          </form>
+        </>
+      )}
+
+      {/* Checkbox "Skip intro" toujours affichée sur la page */}
+      <div className="skip-container">
+        <label className="skip-label">
+          <input
+            type="checkbox"
+            className="skip-checkbox"
+            checked={skipIntro}
+            onChange={(e) => {
+              setSkipIntro(e.target.checked);
+              localStorage.setItem("skipIntro", e.target.checked.toString());
+            }}
+          />
+          Skip intro
+        </label>
       </div>
-      <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <label>Mot de passe</label>
-        <input
-          type="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-        />
-      </div>
-      <button type="submit" style={{ marginTop: '1.5rem', padding: '.5rem 1rem' }}>
-        Se connecter
-      </button>
-    </form>
+    </div>
   );
 };
 

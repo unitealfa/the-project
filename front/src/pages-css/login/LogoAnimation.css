@@ -1,0 +1,177 @@
+/* src/pages-css/login/LogoAnimation.css */
+
+/* 1) Reset minimal (pour l’intro) */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 2) Conteneur .logo en plein écran pendant l’intro */
+.logo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  background-color: #000;
+
+  /* Indiquer qu’on animera transform → accélère sur GPU */
+  will-change: transform;
+
+  /* Zoom autour du centre de l’écran (SVG centré) */
+  transform-origin: 46.7% 43.5%;
+  transform: scale(1);
+
+  /* 
+    - 1.5s pour le scale via cubic-bezier « plus fluide »
+    - 0.5s pour l’opacity à la fin
+  */
+  transition:
+    transform 1.5s cubic-bezier(0.25, 0.1, 0.25, 1),
+    opacity 0.5s ease-in;
+
+  z-index: 100; /* au-dessus de tout le reste pendant l’intro */
+}
+
+/* Classe qu’on ajoute à 4 000 ms pour déclencher le zoom */
+.logo.zoom {
+  transform: scale(50);
+}
+
+/* Classe qu’on ajoute à 5 500 ms pour disparaître en fondu */
+.logo.hidden {
+  opacity: 0;
+}
+
+/* 3) SVG – Cercles + chemin */
+.logo svg {
+  width: 200px;
+  height: 200px;
+  overflow: visible;
+}
+
+/* 3.1) Cercles “boules” */
+.circle {
+  fill: #fff;
+  opacity: 0;
+  transform-origin: center;
+}
+/* TL */
+.circle.tl {
+  animation: move-tl 1s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  animation-delay: 0.3s;
+}
+@keyframes move-tl {
+  from {
+    transform: translate(0, -100px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+}
+/* ML */
+.circle.ml {
+  animation: move-ml 1s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  animation-delay: 0.5s;
+}
+@keyframes move-ml {
+  from {
+    transform: translate(-100px, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+}
+/* BL */
+.circle.bl {
+  animation: move-bl 1s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  animation-delay: 0.7s;
+}
+@keyframes move-bl {
+  from {
+    transform: translate(0, 100px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+}
+/* TR */
+.circle.tr {
+  animation: move-tr 1s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  animation-delay: 0.9s;
+}
+@keyframes move-tr {
+  from {
+    transform: translate(100px, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+}
+/* MR */
+.circle.mr {
+  animation: move-mr 1s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  animation-delay: 1.1s;
+}
+@keyframes move-mr {
+  from {
+    transform: translate(100px, -100px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+}
+
+/* 3.2) Chemin SVG “sans lever le stylo” */
+.path {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 800;   /* longueur ≥ 707px */
+  stroke-dashoffset: 800;  /* masqué au départ */
+  animation: draw-path 1.4s ease-in-out forwards;
+  animation-delay: 2.2s;
+}
+@keyframes draw-path {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* 4) Texte “Routimize” – apparition lettre par lettre */
+.text {
+  margin-top: 20px;
+  font-size: 55px;
+  color: #fff;
+  font-weight: 200;
+  text-align: center;
+  letter-spacing: -3.5px;
+  font-family: sans-serif;
+}
+.letter {
+  display: inline-block;
+  opacity: 0;
+  animation: fadein 0.4s ease-out forwards;
+}
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
