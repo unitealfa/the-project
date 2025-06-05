@@ -60,7 +60,7 @@ export default function ClientsList() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 
-  // ==> la position GPS du prévendeur. Tant que c’est null, on ne rend pas la carte.
+  // ==> la position GPS du prévendeur. Tant que c'est null, on ne rend pas la carte.
   const [currentPos, setCurrentPos] = useState<[number, number] | null>(null);
 
   const navigate = useNavigate();
@@ -77,7 +77,7 @@ export default function ClientsList() {
 
   const apiBase = import.meta.env.VITE_API_URL;
 
-  // Icône “moto” en ligne
+  // Icône "moto" en ligne
   const motoIcon = L.icon({
     iconUrl: "https://cdn-icons-png.flaticon.com/512/6951/6951721.png",
     iconSize: [32, 32],
@@ -87,7 +87,7 @@ export default function ClientsList() {
     shadowSize: [41, 41],
   });
 
-  // Réf pour récupérer l’instance Leaflet
+  // Réf pour récupérer l'instance Leaflet
   const mapRef = useRef<any>(null);
 
   // ── 1) On charge la liste de tous les clients dès que possible ─────────
@@ -102,18 +102,18 @@ export default function ClientsList() {
       .catch((err) => setError(err.message));
   }, [depot, user?.company]);
 
-  // ── 2) On démarre immédiatement la géolocalisation si le rôle est “Pré-vendeur” ──
-  // Tant que currentPos === null, on n’affiche pas la carte : on attend la position.
+  // ── 2) On démarre immédiatement la géolocalisation si le rôle est "Pré-vendeur" ──
+  // Tant que currentPos === null, on n'affiche pas la carte : on attend la position.
   useEffect(() => {
     if (user?.role === "Pré-vendeur" && "geolocation" in navigator) {
       const id = navigator.geolocation.watchPosition(
         (pos) => {
-          // Dès qu’on reçoit un point GPS, on le stocke
+          // Dès qu'on reçoit un point GPS, on le stocke
           setCurrentPos([pos.coords.latitude, pos.coords.longitude]);
         },
         (err) => {
           console.error("Erreur Geolocation :", err);
-          // Si échec, on pourrait afficher un message d’erreur ou un fallback
+          // Si échec, on pourrait afficher un message d'erreur ou un fallback
         },
         { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 }
       );
@@ -121,7 +121,7 @@ export default function ClientsList() {
     }
   }, [user?.role]);
 
-  // ── 3) Dès qu’on a currentPos ET que la carte est instanciée, on la recentre ──
+  // ── 3) Dès qu'on a currentPos ET que la carte est instanciée, on la recentre ──
   useEffect(() => {
     if (currentPos && mapRef.current) {
       mapRef.current.setView(currentPos, 13);
@@ -154,7 +154,7 @@ export default function ClientsList() {
     // On met à jour lastReqRef
     lastReqRef.current = currentPos;
 
-    // On construit la liste “lon,lat” du trip (début = currentPos, puis tous les clients)
+    // On construit la liste "lon,lat" du trip (début = currentPos, puis tous les clients)
     const validClients = clients.filter((c) => {
       const lat = Number(c.localisation?.coordonnees?.latitude);
       const lon = Number(c.localisation?.coordonnees?.longitude);
@@ -200,7 +200,7 @@ export default function ClientsList() {
       });
   }, [currentPos, clients]);
 
-  // ── 5) Suppression d’un client ─────────────────────────────────────────
+  // ── 5) Suppression d'un client ─────────────────────────────────────────
   const handleDelete = async (id: string) => {
     if (!confirm("Confirmer la suppression de ce client de ce dépôt ?")) return;
     try {
@@ -341,7 +341,7 @@ export default function ClientsList() {
     return !Number.isNaN(lat) && !Number.isNaN(lon);
   });
 
-  // Centre si jamais GPS n’a pas répondu, on met sur le premier client existant
+  // Centre si jamais GPS n'a pas répondu, on met sur le premier client existant
   const fallbackCenter: [number, number] = validClients.length
     ? [
         Number(validClients[0].localisation!.coordonnees!.latitude),
@@ -397,12 +397,12 @@ export default function ClientsList() {
       );
     } catch (err: any) {
       console.error(err);
-      alert("Erreur lors de l’assignation du prévendeur");
+      alert("Erreur lors de l'assignation du prévendeur");
     }
   };
 
   // ── 10) Affichage du composant ─────────────────────────────────────────
-  // Tant que la géolocalisation n’a pas renvoyé de coordonnée, on affiche un petit message
+  // Tant que la géolocalisation n'a pas renvoyé de coordonnée, on affiche un petit message
   if (user?.role === "Pré-vendeur" && currentPos === null) {
     return (
       <>
@@ -526,6 +526,7 @@ export default function ClientsList() {
           </button>
         </div>
 
+        {/* Carte des clients */}
         {user?.role === "Pré-vendeur" ? (
           <div style={{ height: 500, width: "100%" }}>
             <AnyMapContainer
@@ -543,7 +544,7 @@ export default function ClientsList() {
                 <Popup>Vous êtes ici</Popup>
               </AnyMarker>
 
-              {/* Tracer l’itinéraire optimisé en noir */}
+              {/* Tracer l'itinéraire optimisé en noir */}
               {optimizedRoute.length > 0 && (
                 <Polyline
                   positions={optimizedRoute}
@@ -731,6 +732,59 @@ export default function ClientsList() {
             </table>
           </div>
         )}
+
+        {/* Liste des clients */}
+        <div style={{ marginTop: "2rem" }}>
+          <h2>Liste des clients</h2>
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", 
+            gap: "1rem",
+            marginTop: "1rem" 
+          }}>
+            {currentClients.map((client) => (
+              <div
+                key={client._id}
+                style={{
+                  padding: "1rem",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "8px",
+                  backgroundColor: "white",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
+                }}
+              >
+                <h3 style={{ margin: "0 0 0.5rem 0", color: "#1f2937" }}>
+                  {client.nom_client}
+                </h3>
+                <p style={{ margin: "0.25rem 0", color: "#4b5563" }}>
+                  Contact: {client.contact.nom_gerant}
+                </p>
+                <p style={{ margin: "0.25rem 0", color: "#4b5563" }}>
+                  Tél: {client.contact.telephone}
+                </p>
+                <p style={{ margin: "0.25rem 0", color: "#4b5563" }}>
+                  Email: {client.email}
+                </p>
+                <div style={{ marginTop: "1rem" }}>
+                  <button
+                    onClick={() => navigate(`/productlist?clientId=${client._id}`)}
+                    style={{
+                      padding: "0.5rem 1rem",
+                      backgroundColor: "#10b981",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      width: "100%"
+                    }}
+                  >
+                    🛒 Passer commande
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Pagination */}
         {clients.length > clientsPerPage && (
