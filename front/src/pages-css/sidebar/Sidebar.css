@@ -1,0 +1,205 @@
+/* Sidebar.css
+   ==================
+   Même style « brutalist » que pour le header / pop-up, adapté au sidebar
+   Inspiré de “From Uiverse.io by 0xnihilism”
+*/
+
+/* 1) Reset général */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Arial", sans-serif;
+}
+
+/* 2) Conteneur principal du sidebar (équivalent à .brutalist-card) */
+#sidebar {
+  position: absolute;
+  top: 0;
+  left: -240px;                  /* caché hors écran par défaut */
+  width: 240px;                  /* largeur fixe du sidebar */
+  height: 100%;
+  background-color: #fff;        /* fond blanc brut */
+  border: 4px solid #000;        /* contour épais noir */
+  box-shadow: 10px 10px 0 #000;  /* grosse ombre longue */
+  transition: left 300ms ease;
+  z-index: 200;
+}
+
+#sidebar.active {
+  left: 0;
+}
+
+/* 3) Overlay pour fermer au clic à l’extérieur */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5); /* semi-transparent sombre */
+  z-index: 100; /* en dessous du sidebar (z-index:200) */
+}
+
+/* 4) Bouton toggle
+   Style similaire à .brutalist-card__button (mais dimension fixe) */
+.toggle-btn {
+  position: absolute;
+  top: 3px;
+  left: 250px;                   /* collé au bord droit du sidebar */
+  width: 48px;
+  height: 48px;
+  cursor: pointer;
+  background-color: #fff;
+  border: 4px solid #000;
+  box-shadow: 5px 5px 0 #000;
+  transition: all 0.2s ease;
+  z-index: 300;
+}
+.toggle-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0 #000;
+}
+/* Si vous souhaitez un effet “shine” identique :
+   (facultatif pour le toggle, mais on peut l’ajouter) */
+.toggle-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+
+  transition: all 0.6s;
+}
+.toggle-btn:hover::before {
+  left: 100%;
+}
+
+/* 4.1) Image du logo à l’intérieur du toggle */
+.toggle-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: invert(1); /* Inverser les couleurs pour un logo blanc sur blanc */
+}
+
+/* 5) Liste principale des items du sidebar
+   Style inspiré de .brutalist-card__message et .brutalist-card__actions */
+#sidebar .list {
+  margin-top: 80px; /* laisser la place au toggle en haut */
+  overflow-y: auto;
+  max-height: calc(100% - 80px);
+}
+
+/* 5.1) Chaque item: 
+   contenu sur fond blanc, séparation épaisse, texte noir */
+#sidebar .list .item {
+  padding: 1rem;                 /* 1rem ≃ 16px pour de l’espacement brutalist */
+  border-bottom: 2px solid #000; /* séparation épaisse */
+  transition: background 200ms ease, transform 200ms ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #fff;
+}
+
+/* 5.2) Lien dans chaque item */
+#sidebar .list .item a {
+  color: #000;                  /* texte noir */
+  text-decoration: none;
+  font-weight: 700;
+  text-transform: uppercase;
+  width: 100%;
+}
+
+/* 5.3) Icône éventuelle (facultatif) */
+#sidebar .list .item i {
+  color: #000;                  /* icône noire */
+  min-width: 20px;
+  text-align: center;
+}
+
+/* 5.4) Hover / actif : fond noir, texte blanc */
+#sidebar .list .item:hover {
+  background-color: #000;
+}
+#sidebar .list .item:hover a,
+#sidebar .list .item:hover i {
+  color: #fff;
+}
+
+/* 5.5) Si vous marquez un item “actif” (avec .active) */
+#sidebar .list .item.active {
+  background-color: #000;
+}
+#sidebar .list .item.active a,
+#sidebar .list .item.active i {
+  color: #fff;
+}
+
+/* 6) Scrollbar custom (facultatif) */
+#sidebar .list::-webkit-scrollbar {
+  width: 6px;
+}
+#sidebar .list::-webkit-scrollbar-thumb {
+  background-color: #000;
+  border-radius: 3px;
+}
+
+/* 7) Footer du sidebar (facultatif)
+   Exemple d’utilisation d’un bouton brutalist en bas du menu */
+#sidebar .footer {
+  margin-top: auto;
+  padding: 1rem;
+  border-top: 2px solid #000;
+  text-align: center;
+  background-color: #fff;
+}
+
+#sidebar .footer .footer-button {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 3px solid #000;
+  background-color: #fff;
+  color: #000;
+  position: relative;
+  transition: all 0.2s ease;
+  box-shadow: 5px 5px 0 #000;
+  overflow: hidden;
+  text-decoration: none;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+#sidebar .footer .footer-button:hover::before {
+  left: 100%;
+}
+#sidebar .footer .footer-button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0 #000;
+}
+#sidebar .footer .footer-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: all 0.6s;
+}
+#sidebar .footer .footer-button:active {
+  transform: translate(5px, 5px);
+  box-shadow: none;
+}

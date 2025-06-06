@@ -1,0 +1,227 @@
+/* -------------------------------------------
+   From Uiverse.io by 0xnihilism (adapté)
+   Appliqué au <header> pour un style brutalist
+   ------------------------------------------- */
+
+/* 1) Reset minimal pour le header */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Arial", sans-serif;
+}
+
+/* 2) Container principal du header */
+.brutalist-header {
+  width: 100%;
+  border: 4px solid #000;
+  background-color: #fff;
+  box-shadow: 10px 10px 0 #000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 1.25rem;
+  position: relative;
+  z-index: 100; /* Au-dessus du reste */
+}
+
+/* 3) Conteneur interne pour le bloc gauche / droit */
+.brutalist-header__content {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+/* 4) Style du titre (logo textuel) */
+.brutalist-header__title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #000;
+  text-decoration: none;
+}
+
+/* 5) Style du nom d’utilisateur */
+.brutalist-header__username {
+  font-weight: 700;
+  color: #000;
+}
+
+/* 6) Bouton “Déconnexion” (sera dans la popup) */
+.brutalist-button {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 4px solid #000;
+  background-color: #fff;
+  color: #000;
+  position: relative;
+  transition: all 0.2s ease;
+  box-shadow: 5px 5px 0 #000;
+  overflow: hidden;
+  text-decoration: none;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+/* Effet “shine” sur le bouton */
+.brutalist-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: all 0.6s;
+}
+
+.brutalist-button:hover::before {
+  left: 100%;
+}
+
+.brutalist-button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0 #000;
+}
+
+.brutalist-button:active {
+  transform: translate(5px, 5px);
+  box-shadow: none;
+}
+
+/* 7) Popup “Profil” (fond + carte brutalist) */
+.brutalist-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+}
+
+.brutalist-popup {
+  width: 320px;
+  border: 4px solid #000;
+  background-color: #fff;
+  padding: 1.5rem;
+  box-shadow: 10px 10px 0 #000;
+  position: relative;
+}
+
+/* 7.1) En-tête de la popup (avatar + nom + email) */
+.brutalist-popup__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #000;
+  padding-bottom: 1rem;
+}
+
+.brutalist-popup__avatar {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid #000;
+}
+
+.brutalist-popup__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.brutalist-popup__name {
+  font-weight: 900;
+  color: #000;
+  font-size: 1.25rem;
+  text-transform: uppercase;
+}
+
+.brutalist-popup__email,
+.brutalist-popup__phone {
+  font-size: 0.9rem;
+  color: #000;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+/* 7.2) Bouton de fermeture (croix) */
+.brutalist-popup__close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #000;
+}
+
+/* 8) Container cropper (fondu plus sombre) */
+.cropper-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 1rem;
+}
+
+.cropper-container {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  height: 400px;
+  background: #333;
+}
+
+/* Boutons “Annuler / Confirmer” du cropper */
+.cropper-buttons {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.cropper-buttons button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.cropper-buttons .btn-cancel {
+  background: #bbb;
+  color: #000;
+}
+
+.cropper-buttons .btn-confirm {
+  background: #4f46e5; /* #ACCENT */
+  color: #fff;
+}
