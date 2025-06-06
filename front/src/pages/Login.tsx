@@ -25,6 +25,18 @@ interface LoginResponse {
   };
 }
 
+function getCookie(name: string): string | null {
+  const matches = document.cookie.match(
+    new RegExp(`(?:^|; )${name.replace(/([.$?*|{}()[\]\/+^])/g, '\\$1')}=([^;]*)`)
+  );
+  return matches ? decodeURIComponent(matches[1]) : null;
+}
+
+function setCookie(name: string, value: string, days = 365) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+}
+
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const apiBase: string = import.meta.env.VITE_API_URL;
@@ -33,9 +45,7 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [skipIntro, setSkipIntro] = useState<boolean>(() => {
-    // On lit la valeur stockée (si elle existe) au chargement de la page
-    const stored = localStorage.getItem("skipIntro");
-    return stored === "true";
+    return getCookie("skipIntro") === "true";
   });
   const [introDone, setIntroDone] = useState(false);
   const timerRef = useRef<number | null>(null);
@@ -147,7 +157,7 @@ const Login: React.FC = () => {
         </>
       )}
 
-      {/* Checkbox "Skip intro" toujours affichée sur la page */}
+      {/* Checkbox "Skip intro" toujours visible */}
       <div className="skip-container">
         <label className="skip-label">
           <input
@@ -155,11 +165,12 @@ const Login: React.FC = () => {
             className="skip-checkbox"
             checked={skipIntro}
             onChange={(e) => {
-              setSkipIntro(e.target.checked);
-              localStorage.setItem("skipIntro", e.target.checked.toString());
+              const shouldSkip = e.target.checked;
+              setSkipIntro(shouldSkip);
+              setCookie("skipIntro", shouldSkip.toString(), 365);
             }}
           />
-          Skip intro
+          Skip 
         </label>
       </div>
     </div>
