@@ -11,14 +11,28 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// ── Icônes Leaflet (comme avant) ───────────────────────────────────────────
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+// Importer les images des icônes par défaut de Leaflet.
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconRetina from 'leaflet/dist/images/marker-icon-2x.png';
+import shadow from 'leaflet/dist/images/marker-shadow.png';
+
+// Contournement pour le problème de chargement des icônes par défaut dans certains environnements de build.
+// En important les assets et en supprimant les méthodes de Leaflet qui construisent les URLs, on s'assure
+// que les images importées sont utilisées directement.
+delete L.Icon.Default.prototype._getIconUrl;
+delete L.Icon.Default.prototype._getShadowUrl;
+
+// Configurer les options par défaut de l'icône avec les images importées.
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconRetinaUrl: iconRetina,
+  iconUrl: icon,
+  shadowUrl: shadow,
+  iconSize: [25, 41],       // Taille par défaut de l'icône
+  iconAnchor: [12, 41],     // Point d'ancrage de l'icône
+  popupAnchor: [1, -34],    // Point d'ancrage du popup
+  shadowSize: [41, 41],     // Taille de l'ombre
 });
+
 const redIcon = new L.Icon({
   iconUrl:
     'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
@@ -64,9 +78,10 @@ export default function ChauffeurTours() {
   const [error, setError] = useState('');
   const [etape, setEtape] = useState(0);
   const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
+  const [driverPosition, setDriverPosition] = useState<[number, number] | null>(null);
+  const mapRef = useRef<any>(null);
 
   // ── Position « live » du chauffeur (icône camion de livraison) ────────────
-  const [driverPosition, setDriverPosition] = useState<[number, number] | null>(null);
   useEffect(() => {
     if (!navigator.geolocation) {
       console.warn('Geolocation non supportée');
@@ -92,7 +107,6 @@ export default function ChauffeurTours() {
 
   const chauffeurId = JSON.parse(localStorage.getItem('user') || '{}').id;
   const apiBase = import.meta.env.VITE_API_URL;
-  const mapRef = useRef<any>(null);
 
   // ── 1) FETCH dépôt + arrêts ─────────────────────────────────────────────────
   useEffect(() => {
@@ -159,7 +173,7 @@ export default function ChauffeurTours() {
       .catch(() => setRouteCoords([]));
   }, [etape, stops, waypoints]);
 
-  // ── 5) États « loading », « error », pas de dépôt, pas d’arrêts ─────────────────
+  // ── 5) États « loading », « error », pas de dépôt, pas d'arrêts ─────────────────
   if (loading) {
     return (
       <>
@@ -196,7 +210,7 @@ export default function ChauffeurTours() {
         <Header />
         <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
           <h1>🛣️ Pas de tournée pour vous</h1>
-          <p>Il n’y a actuellement aucune tournée assignée à ce chauffeur.</p>
+          <p>Il n'y a actuellement aucune tournée assignée à ce chauffeur.</p>
         </main>
       </>
     );
@@ -267,8 +281,9 @@ export default function ChauffeurTours() {
 
             {/* Cas 1 : Dépôt → Arrêt #1 */}
             {etape === 0 && (
-              <>
+              <div key={`stage-0-${etape}`}>
                 <AnyMarker
+                  key={`marker-depot-${etape}`}
                   position={[depot.latitude, depot.longitude]}
                   icon={redIcon}
                 >
@@ -297,7 +312,10 @@ export default function ChauffeurTours() {
                     </div>
                   </Popup>
                 </AnyMarker>
-                <AnyMarker position={waypoints[1].coords}>
+                <AnyMarker
+                  key={`marker-stop1-${etape}`}
+                  position={waypoints[1].coords}
+                >
                   <Popup>
                     <div style={{ textAlign: 'center' }}>
                       <div><strong>{waypoints[1].label}</strong></div>
@@ -325,17 +343,18 @@ export default function ChauffeurTours() {
                 </AnyMarker>
                 {routeCoords.length > 0 && (
                   <Polyline
+                    key={`route-${etape}`}
                     positions={routeCoords}
                     pathOptions={{ color: '#1f2937', weight: 4 }}
                   />
                 )}
-              </>
+              </div>
             )}
 
             {/* Cas 2 : Arrêt i → Arrêt i+1 */}
             {etape > 0 && etape < waypoints.length - 2 && (
-              <>
-                <AnyMarker position={waypoints[etape].coords}>
+              <div key={`stage-i-${etape}`}>
+                <AnyMarker key={`marker-start-${etape}`} position={waypoints[etape].coords}>
                   <Popup>
                     <div style={{ textAlign: 'center' }}>
                       <div><strong>{waypoints[etape].label}</strong></div>
@@ -361,7 +380,7 @@ export default function ChauffeurTours() {
                     </div>
                   </Popup>
                 </AnyMarker>
-                <AnyMarker position={waypoints[etape + 1].coords}>
+                <AnyMarker key={`marker-end-${etape}`} position={waypoints[etape + 1].coords}>
                   <Popup>
                     <div style={{ textAlign: 'center' }}>
                       <div><strong>{waypoints[etape + 1].label}</strong></div>
@@ -389,17 +408,18 @@ export default function ChauffeurTours() {
                 </AnyMarker>
                 {routeCoords.length > 0 && (
                   <Polyline
+                    key={`route-${etape}`}
                     positions={routeCoords}
                     pathOptions={{ color: '#1f2937', weight: 4 }}
                   />
                 )}
-              </>
+              </div>
             )}
 
             {/* Cas 3 : Dernier Arrêt → Dépôt */}
             {etape === waypoints.length - 2 && (
-              <>
-                <AnyMarker position={waypoints[etape].coords}>
+              <div key={`stage-last-${etape}`}>
+                <AnyMarker key={`marker-laststop-${etape}`} position={waypoints[etape].coords}>
                   <Popup>
                     <div style={{ textAlign: 'center' }}>
                       <div><strong>{waypoints[etape].label}</strong></div>
@@ -426,6 +446,7 @@ export default function ChauffeurTours() {
                   </Popup>
                 </AnyMarker>
                 <AnyMarker
+                  key={`marker-finaldepot-${etape}`}
                   position={waypoints[waypoints.length - 1].coords}
                   icon={redIcon}
                 >
@@ -456,16 +477,21 @@ export default function ChauffeurTours() {
                 </AnyMarker>
                 {routeCoords.length > 0 && (
                   <Polyline
+                    key={`route-${etape}`}
                     positions={routeCoords}
                     pathOptions={{ color: '#1f2937', weight: 4 }}
                   />
                 )}
-              </>
+              </div>
             )}
 
             {/* ─── Position « live » du chauffeur (icône camion de livraison) ────── */}
             {driverPosition && (
-              <AnyMarker position={driverPosition} icon={truckIcon}>
+              <AnyMarker
+                key="driver-location"
+                position={driverPosition}
+                icon={truckIcon}
+              >
                 <Popup>Vous êtes ici</Popup>
               </AnyMarker>
             )}
@@ -473,7 +499,7 @@ export default function ChauffeurTours() {
         </div>
 
         {/* ────────────────────────────────────────── */}
-        {/* → CARTE « VUE GLOBALE » (tournée entière, en vol d’oiseau) */}
+        {/* → CARTE « VUE GLOBALE » (tournée entière, en vol d'oiseau) */}
         <div style={{ height: 500, width: '100%', marginTop: '2rem' }}>
           <AnyMapContainer
             center={[depot.latitude, depot.longitude]}
@@ -490,51 +516,42 @@ export default function ChauffeurTours() {
           >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-            {/* Tous les marqueurs : Dépôt (rouge) + Arrêts (bleus) */}
-            {waypoints.map((wp, idx) => {
-              const [lat, lon] = wp.coords;
-              const isDepot = wp.label === 'Dépôt';
-              return (
-                <AnyMarker
-                  key={idx}
-                  position={[lat, lon]}
-                  icon={isDepot ? redIcon : undefined}
-                >
-                  <Popup>
-                    <div style={{ textAlign: 'center' }}>
-                      <div>
-                        <strong>{wp.label}</strong>
-                      </div>
-                      <button
-                        onClick={() =>
-                          window.open(
-                            `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`,
-                            '_blank'
-                          )
-                        }
-                        style={{
-                          marginTop: '0.5rem',
-                          padding: '0.25rem 0.5rem',
-                          backgroundColor: '#EF4444',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        📍 Ouvrir dans Google Maps
-                      </button>
-                    </div>
-                  </Popup>
-                </AnyMarker>
-              );
-            })}
+            {/* Marqueurs pour tous les arrêts et dépôt */}
+            {waypoints.map((wp, index) => (
+              <AnyMarker key={`waypoint-${index}`} position={wp.coords}>
+                <Popup>
+                  <div style={{ textAlign: 'center' }}>
+                    <div><strong>{wp.label}</strong></div>
+                    <button
+                      onClick={() =>
+                        window.open(
+                          `https://www.google.com/maps/dir/?api=1&destination=${wp.coords[0]},${wp.coords[1]}`,
+                          '_blank'
+                        )
+                      }
+                      style={{
+                        marginTop: '0.5rem',
+                        padding: '0.25rem 0.5rem',
+                        backgroundColor: '#EF4444',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      📍 Ouvrir dans Google Maps
+                    </button>
+                  </div>
+                </Popup>
+              </AnyMarker>
+            ))}
 
-            {/* Polyline « vol d’oiseau » reliant tous les points */}
-            {waypoints.length > 1 && (
+            {/* Polyline pour toute la tournée */}
+            {routeCoords.length > 0 && (
               <Polyline
-                positions={waypoints.map((wp) => wp.coords)}
-                pathOptions={{ color: '#e11d48', weight: 3, dashArray: '6 4' }}
+                key="full-route"
+                positions={waypoints.map(wp => wp.coords)}
+                pathOptions={{ color: '#1f2937', weight: 4 }}
               />
             )}
           </AnyMapContainer>
