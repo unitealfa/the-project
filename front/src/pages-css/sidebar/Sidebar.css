@@ -14,9 +14,9 @@
 
 /* 2) Conteneur principal du sidebar (équivalent à .brutalist-card) */
 #sidebar {
-  position: absolute;
+  position: fixed;                /* à la place de absolute */
   top: 0;
-  left: -240px;                  /* caché hors écran par défaut */
+  left: -240px;                  /* toujours caché hors écran par défaut */
   width: 240px;                  /* largeur fixe du sidebar */
   height: 100%;
   background-color: #fff;        /* fond blanc brut */
@@ -71,9 +71,6 @@
   height: 100%;
 
   transition: all 0.6s;
-}
-.toggle-btn:hover::before {
-  left: 100%;
 }
 
 /* 4.1) Image du logo à l’intérieur du toggle */

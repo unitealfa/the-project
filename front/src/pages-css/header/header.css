@@ -21,8 +21,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.25rem 1.25rem;
-  position: relative;
-  z-index: 100; /* Au-dessus du reste */
+  position: sticky; /* ← à la place de relative */
+  top: 0;           /* ← colle le header en haut */
+  z-index: 100;     /* garde-le au-dessus du reste */
 }
 
 /* 3) Conteneur interne pour le bloc gauche / droit */
