@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import axios from '../utils/axios';
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import Header from '../components/Header';
 
 export default function ProductEdit() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +24,8 @@ export default function ProductEdit() {
   });
 
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     axios.get(`/products/${id}`).then((res) => {
@@ -75,7 +78,7 @@ export default function ProductEdit() {
       }));
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Erreur lors de l\'upload de l\'image');
+      setError('Erreur lors de l\'upload de l\'image');
     } finally {
       setUploading(false);
     }
@@ -83,160 +86,402 @@ export default function ProductEdit() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
 
-    await axios.put(`/products/${id}`, {
-      nom_product: formData.nom_product,
-      prix_gros: parseFloat(formData.prix_gros),
-      prix_detail: parseFloat(formData.prix_detail),
-      description: formData.description,
-      categorie: formData.categorie,
-      type: formData.type,
-      images: formData.images,
-      specifications: {
-        poids: formData.poids,
-        volume: formData.volume,
-      },
-    });
+    try {
+      await axios.put(`/products/${id}`, {
+        nom_product: formData.nom_product,
+        prix_gros: parseFloat(formData.prix_gros),
+        prix_detail: parseFloat(formData.prix_detail),
+        description: formData.description,
+        categorie: formData.categorie,
+        type: formData.type,
+        images: formData.images,
+        specifications: {
+          poids: formData.poids,
+          volume: formData.volume,
+        },
+      });
 
-    if (fromDepot) {
-      navigate(`/gestion-depot/${fromDepot}`);
-    } else {
-      navigate("/dashboard-stock");
+      setSuccess('Produit modifié avec succès');
+      setTimeout(() => {
+        if (fromDepot) {
+          navigate(`/gestion-depot/${fromDepot}`);
+        } else {
+          navigate("/dashboard-stock");
+        }
+      }, 2000);
+    } catch (err) {
+      setError('Erreur lors de la modification du produit');
     }
   };
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "600px", margin: "auto" }}>
-      <h2 style={{ marginBottom: "1.5rem" }}>Modifier le produit</h2>
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-        <div>
-          <label>
-            Nom du produit
-            <input type="text" name="nom_product" value={formData.nom_product} onChange={handleChange} required />
-          </label>
+    <>
+      <Header />
+      <div style={{
+        backgroundColor: '#f4f7f6',
+        padding: '2rem 1rem',
+        minHeight: 'calc(100vh - 60px)',
+        fontFamily: 'Arial, sans-serif',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          marginBottom: '2rem',
+          maxWidth: 800,
+          margin: '0 auto',
+        }}>
+          <h1 style={{
+            fontSize: '2rem',
+            fontWeight: 'bold',
+            color: '#1a1a1a',
+            margin: 0,
+            flexGrow: 1,
+            textAlign: 'center',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+          }}>Modifier le produit</h1>
         </div>
 
-        <div>
-          <label>
-            Prix de gros
-            <input type="number" name="prix_gros" value={formData.prix_gros} onChange={handleChange} required />
-          </label>
-        </div>
+        {error && <p style={{ color: 'red', textAlign: 'center', marginBottom: '1rem' }}>{error}</p>}
+        {success && <p style={{ color: 'green', textAlign: 'center', marginBottom: '1rem' }}>{success}</p>}
 
-        <div>
-          <label>
-            Prix de détail
-            <input type="number" name="prix_detail" value={formData.prix_detail} onChange={handleChange} required />
-          </label>
-        </div>
+        <form onSubmit={handleSubmit} style={{
+          maxWidth: 800,
+          margin: '0 auto',
+          backgroundColor: '#ffffff',
+          padding: '2rem',
+          borderRadius: '8px',
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.5rem',
+        }}>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            style={{
+              alignSelf: 'flex-start',
+              marginBottom: '1.5rem',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#1a1a1a',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '20px',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            ← Retour
+          </button>
 
-        <div>
-          <label>
-            Description
-            <textarea name="description" value={formData.description} onChange={handleChange} required />
-          </label>
-        </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label htmlFor="nom_product" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Nom du produit:</label>
+            <input
+              id="nom_product"
+              type="text"
+              name="nom_product"
+              value={formData.nom_product}
+              onChange={handleChange}
+              required
+              style={{
+                padding: '0.75rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
 
-        <div>
-          <label>
-            Catégorie
-            <input type="text" name="categorie" value={formData.categorie} onChange={handleChange} required />
-          </label>
-        </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label htmlFor="prix_gros" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Prix de gros:</label>
+              <input
+                id="prix_gros"
+                type="number"
+                name="prix_gros"
+                value={formData.prix_gros}
+                onChange={handleChange}
+                required
+                style={{
+                  padding: '0.75rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
 
-        <div>
-          <label>
-            Type de produit
-            <div>
-              <label>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label htmlFor="prix_detail" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Prix de détail:</label>
+              <input
+                id="prix_detail"
+                type="number"
+                name="prix_detail"
+                value={formData.prix_detail}
+                onChange={handleChange}
+                required
+                style={{
+                  padding: '0.75rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label htmlFor="description" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Description:</label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              required
+              style={{
+                padding: '0.75rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxSizing: 'border-box',
+                minHeight: '100px',
+                resize: 'vertical',
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label htmlFor="categorie" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Catégorie:</label>
+            <input
+              id="categorie"
+              type="text"
+              name="categorie"
+              value={formData.categorie}
+              onChange={handleChange}
+              required
+              style={{
+                padding: '0.75rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
+          <fieldset style={{
+            marginTop: '1rem',
+            padding: '1.5rem',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            backgroundColor: '#fafafa',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+          }}>
+            <legend style={{
+              fontWeight: 'bold',
+              color: '#1a1a1a',
+              padding: '0 0.5rem',
+              fontSize: '1.1rem',
+            }}>Type de produit</legend>
+
+            <div style={{ display: 'flex', gap: '2rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                 <input
                   type="radio"
                   name="type"
                   value="normal"
                   checked={formData.type.includes("normal")}
                   onChange={handleTypeChange}
+                  style={{ cursor: 'pointer' }}
                 />
-                Normal
+                <span>Normal</span>
               </label>
-              <label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                 <input
                   type="radio"
                   name="type"
                   value="frigorifique"
                   checked={formData.type.includes("frigorifique")}
                   onChange={handleTypeChange}
+                  style={{ cursor: 'pointer' }}
                 />
-                Frigorifique
+                <span>Frigorifique</span>
               </label>
             </div>
-          </label>
-        </div>
+          </fieldset>
 
-        <div>
-          <label>
-            Poids
-            <input type="text" name="poids" value={formData.poids} onChange={handleChange} />
-          </label>
-        </div>
+          <fieldset style={{
+            marginTop: '1rem',
+            padding: '1.5rem',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            backgroundColor: '#fafafa',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+          }}>
+            <legend style={{
+              fontWeight: 'bold',
+              color: '#1a1a1a',
+              padding: '0 0.5rem',
+              fontSize: '1.1rem',
+            }}>Spécifications</legend>
 
-        <div>
-          <label>
-            Volume
-            <input type="text" name="volume" value={formData.volume} onChange={handleChange} />
-          </label>
-        </div>
-
-        <div>
-          <label>
-            Images
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              disabled={uploading}
-            />
-          </label>
-          {uploading && <p>Upload en cours...</p>}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "1rem" }}>
-            {formData.images.map((image, index) => (
-              <div key={index} style={{ position: "relative" }}>
-                <img
-                  src={image}
-                  alt={`Product ${index + 1}`}
-                  style={{ width: "100px", height: "100px", objectFit: "cover" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData(prev => ({
-                      ...prev,
-                      images: prev.images.filter((_, i) => i !== index)
-                    }));
-                  }}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label htmlFor="poids" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Poids:</label>
+                <input
+                  id="poids"
+                  type="text"
+                  name="poids"
+                  value={formData.poids}
+                  onChange={handleChange}
                   style={{
-                    position: "absolute",
-                    top: "-10px",
-                    right: "-10px",
-                    background: "red",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "50%",
-                    width: "20px",
-                    height: "20px",
-                    cursor: "pointer"
+                    padding: '0.75rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    boxSizing: 'border-box',
                   }}
-                >
-                  ×
-                </button>
+                />
               </div>
-            ))}
-          </div>
-        </div>
 
-        <button type="submit" disabled={uploading}>
-          Enregistrer les modifications
-        </button>
-      </form>
-    </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label htmlFor="volume" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Volume:</label>
+                <input
+                  id="volume"
+                  type="text"
+                  name="volume"
+                  value={formData.volume}
+                  onChange={handleChange}
+                  style={{
+                    padding: '0.75rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset style={{
+            marginTop: '1rem',
+            padding: '1.5rem',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            backgroundColor: '#fafafa',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+          }}>
+            <legend style={{
+              fontWeight: 'bold',
+              color: '#1a1a1a',
+              padding: '0 0.5rem',
+              fontSize: '1.1rem',
+            }}>Images</legend>
+
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label htmlFor="image" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Ajouter une image:</label>
+              <input
+                id="image"
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                disabled={uploading}
+                style={{
+                  padding: '0.75rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  boxSizing: 'border-box',
+                  backgroundColor: uploading ? '#f3f4f6' : '#fff',
+                  cursor: uploading ? 'not-allowed' : 'pointer',
+                }}
+              />
+              {uploading && <p style={{ marginTop: '0.5rem', color: '#666' }}>Upload en cours...</p>}
+            </div>
+
+            {formData.images.length > 0 && (
+              <div style={{ marginTop: '1rem' }}>
+                <p style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Images actuelles:</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                  {formData.images.map((image, index) => (
+                    <div key={index} style={{ position: 'relative' }}>
+                      <img
+                        src={image}
+                        alt={`Product ${index + 1}`}
+                        style={{
+                          width: '100px',
+                          height: '100px',
+                          objectFit: 'cover',
+                          borderRadius: '4px',
+                          border: '1px solid #ccc',
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            images: prev.images.filter((_, i) => i !== index)
+                          }));
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: '-8px',
+                          right: '-8px',
+                          background: '#dc2626',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '24px',
+                          height: '24px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '16px',
+                          fontWeight: 'bold',
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </fieldset>
+
+          <button
+            type="submit"
+            disabled={uploading}
+            style={{
+              marginTop: '1.5rem',
+              padding: '1rem 2rem',
+              backgroundColor: '#1a1a1a',
+              color: 'white',
+              border: 'none',
+              borderRadius: '20px',
+              cursor: uploading ? 'not-allowed' : 'pointer',
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              alignSelf: 'center',
+              transition: 'background-color 0.3s ease',
+              opacity: uploading ? 0.7 : 1,
+            }}
+          >
+            Enregistrer les modifications
+          </button>
+        </form>
+      </div>
+    </>
   );
 }

@@ -77,14 +77,17 @@ export default function ProductDetail() {
             <button
               onClick={() => navigate(-1)}
               style={{
-                backgroundColor: '#4a5568',
-                color: 'white',
+                alignSelf: 'flex-start',
+                marginBottom: '1.5rem',
+                padding: '0.5rem 1rem',
+                backgroundColor: '#1a1a1a',
+                color: '#ffffff',
                 border: 'none',
-                borderRadius: '4px',
-                padding: '0.75rem 1.5rem',
+                borderRadius: '20px',
                 cursor: 'pointer',
-                fontSize: '1rem',
-                transition: 'background-color 0.2s ease'
+                fontSize: '0.9rem',
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
               ← Retour
@@ -117,14 +120,17 @@ export default function ProductDetail() {
              <button
               onClick={() => navigate(-1)}
               style={{
-                backgroundColor: '#4a5568',
-                color: 'white',
+                alignSelf: 'flex-start',
+                marginBottom: '1.5rem',
+                padding: '0.5rem 1rem',
+                backgroundColor: '#1a1a1a',
+                color: '#ffffff',
                 border: 'none',
-                borderRadius: '4px',
-                padding: '0.75rem 1.5rem',
+                borderRadius: '20px',
                 cursor: 'pointer',
-                fontSize: '1rem',
-                transition: 'background-color 0.2s ease'
+                fontSize: '0.9rem',
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
               ← Retour
@@ -155,15 +161,17 @@ export default function ProductDetail() {
           <button
             onClick={() => navigate(-1)}
             style={{
-              backgroundColor: '#4a5568', // Darker gray for secondary action
-              color: 'white',
+              alignSelf: 'flex-start',
+              marginBottom: '1.5rem',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#1a1a1a',
+              color: '#ffffff',
               border: 'none',
-              borderRadius: '4px',
-              padding: '0.75rem 1.5rem',
+              borderRadius: '20px',
               cursor: 'pointer',
-              marginBottom: '2rem',
-              fontSize: '1rem',
-              transition: 'background-color 0.2s ease'
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
             }}
           >
             ← Retour

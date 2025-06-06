@@ -57,6 +57,7 @@ export default function EditClient() {
   });
   const [pfpFile, setPfpFile] = useState<File | null>(null);
   const [removePfp, setRemovePfp] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
 
   const apiBase = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem('token') || '';
@@ -184,242 +185,511 @@ export default function EditClient() {
     }
   };
 
-  if (!formData) return <p style={{ padding: '2rem' }}>Chargement…</p>;
+  if (!formData) {
+    return (
+      <>
+        <Header />
+        {/* Conteneur principal avec fond doux et padding */}
+        <div style={{
+          backgroundColor: '#f4f7f6',
+          padding: '2rem 1rem',
+          minHeight: 'calc(100vh - 60px)',
+          fontFamily: 'Arial, sans-serif',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+          <p>Chargement…</p>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <Header />
-      <main style={{ padding: '2rem' }}>
-        <h1>✏️ Modifier le client</h1>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        {success && <p style={{ color: 'green' }}>{success}</p>}
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem', maxWidth: 500 }}>
-          <div style={formGroup}>
-            <label htmlFor="nom_client" style={labelStyle}>Nom du client:</label>
+      {/* Conteneur principal avec fond doux et padding */}
+      <div style={{
+        backgroundColor: '#f4f7f6', // Fond doux
+        padding: '2rem 1rem', // Padding haut/bas et latéral
+        minHeight: 'calc(100vh - 60px)', // Occupe la majorité de l'écran (soustrait la hauteur du header)
+        fontFamily: 'Arial, sans-serif',
+      }}>
+        {/* En-tête moderne */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          marginBottom: '2rem',
+          maxWidth: 800, // Aligner avec le formulaire
+          margin: '0 auto',
+        }}>
+           <h1 style={{
+            fontSize: '2rem', // Augmenter légèrement la taille
+            fontWeight: 'bold',
+            color: '#1a1a1a', // Noir plus prononcé
+            margin: 0,
+            flexGrow: 1, // Permet au titre de prendre l'espace restant
+            textAlign: 'center', // Centrer le titre
+            textTransform: 'uppercase', // Mettre en majuscules
+            letterSpacing: '0.05em', // Espacement entre les lettres
+          }}>Modifier le client</h1>
+        </div>
+
+        {error && <p style={{ color: 'red', textAlign: 'center', marginBottom: '1rem' }}>{error}</p>}
+        {success && <p style={{ color: 'green', textAlign: 'center', marginBottom: '1rem' }}>{success}</p>}
+
+        {/* Formulaire centré et stylisé */}
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            maxWidth: 800, // Largeur max pour centrer
+            margin: '0 auto', // Centrer le formulaire
+            backgroundColor: '#ffffff', // Fond blanc pour la carte principale
+            padding: '2rem',
+            borderRadius: '8px', // Coins arrondis
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)', // Ombre subtile
+            display: 'flex', // Utiliser flexbox pour l'organisation interne
+            flexDirection: 'column',
+            gap: '1.5rem', // Espacement entre les champs
+          }}
+        >
+          {/* Bouton Retour */}
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            style={{
+              alignSelf: 'flex-start', // Aligner à gauche dans le flex container
+              marginBottom: '1.5rem', // Espacement sous le bouton
+              padding: '0.5rem 1rem',
+              backgroundColor: '#1a1a1a', // Bouton noir
+              color: '#ffffff', // Texte blanc
+              border: 'none',
+              borderRadius: '20px', // Coins arrondis
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            ← Retour
+          </button>
+
+          {/* Champs du formulaire */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label htmlFor="nom_client" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Nom du client:</label>
             <input
               id="nom_client"
               name="nom_client"
               value={formData.nom_client}
               onChange={handleChange}
-              style={inputStyle}
               required
+              style={{
+                padding: '0.75rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxSizing: 'border-box',
+              }}
             />
           </div>
 
-          <div style={formGroup}>
-            <label htmlFor="email" style={labelStyle}>Email:</label>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label htmlFor="email" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Email:</label>
             <input
               type="email"
               id="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              style={inputStyle}
               required
+              style={{
+                padding: '0.75rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxSizing: 'border-box',
+              }}
             />
           </div>
 
-          <div style={formGroup}>
-            <label htmlFor="password" style={labelStyle}>Nouveau mot de passe (optionnel):</label>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label htmlFor="password" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Nouveau mot de passe (optionnel):</label>
             <input
               type="password"
               id="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
-              style={inputStyle}
               placeholder="Laissez vide pour ne pas modifier"
+              style={{
+                padding: '0.75rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxSizing: 'border-box',
+              }}
             />
           </div>
 
-          <div style={formGroup}>
-            <label htmlFor="nom_gerant" style={labelStyle}>Nom du gérant:</label>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label htmlFor="nom_gerant" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Nom du gérant:</label>
             <input
               id="nom_gerant"
               name="contact.nom_gerant"
               value={formData.contact.nom_gerant}
               onChange={handleChange}
-              style={inputStyle}
               required
+              style={{
+                padding: '0.75rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxSizing: 'border-box',
+              }}
             />
           </div>
 
-          <div style={formGroup}>
-            <label htmlFor="telephone" style={labelStyle}>Téléphone:</label>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label htmlFor="telephone" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Téléphone:</label>
             <input
               id="telephone"
               name="contact.telephone"
               value={formData.contact.telephone}
               onChange={handleChange}
-              style={inputStyle}
               required
+              style={{
+                padding: '0.75rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxSizing: 'border-box',
+              }}
             />
           </div>
 
-          <div style={formGroup}>
-            <label htmlFor="adresse" style={labelStyle}>Adresse:</label>
-            <input
-              id="adresse"
-              name="localisation.adresse"
-              value={formData.localisation?.adresse || ''}
-              onChange={handleChange}
-              style={inputStyle}
-              required
-            />
-          </div>
-
-          <div style={formGroup}>
-            <label htmlFor="ville" style={labelStyle}>Ville:</label>
-            <input
-              id="ville"
-              name="localisation.ville"
-              value={formData.localisation?.ville || ''}
-              onChange={handleChange}
-              style={inputStyle}
-              required
-            />
-          </div>
-
-          <div style={formGroup}>
-            <label htmlFor="code_postal" style={labelStyle}>Code postal:</label>
-            <input
-              id="code_postal"
-              name="localisation.code_postal"
-              value={formData.localisation?.code_postal || ''}
-              onChange={handleChange}
-              style={inputStyle}
-              required
-            />
-          </div>
-
-          <div style={formGroup}>
-            <label htmlFor="region" style={labelStyle}>Région:</label>
-            <input
-              id="region"
-              name="localisation.region"
-              value={formData.localisation?.region || ''}
-              onChange={handleChange}
-              style={inputStyle}
-              required
-            />
-          </div>
-
-          <div style={formGroup}>
-            <label htmlFor="latitude" style={labelStyle}>Latitude:</label>
-            <input
-              type="number"
-              step="any"
-              id="latitude"
-              name="coordonnees.latitude"
-              value={formData.localisation?.coordonnees?.latitude || 0}
-              onChange={handleChange}
-              style={inputStyle}
-              required
-            />
-          </div>
-
-          <div style={formGroup}>
-            <label htmlFor="longitude" style={labelStyle}>Longitude:</label>
-            <input
-              type="number"
-              step="any"
-              id="longitude"
-              name="coordonnees.longitude"
-              value={formData.localisation?.coordonnees?.longitude || 0}
-              onChange={handleChange}
-              style={inputStyle}
-              required
-            />
-          </div>
-
-          {formData.pfp && (
-            <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <img
-                src={`${apiBase}/public/${formData.pfp}`}
-                alt="Photo de profil"
-                style={{
-                  width: 100,
-                  height: 100,
-                  objectFit: 'cover',
+          {/* PFP Section */}
+          <div style={{
+            marginBottom: '1.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1rem',
+          }}>
+            <label style={{ fontWeight: 'bold', color: '#555' }}>Photo de profil:</label>
+            <div 
+              style={{
+                position: 'relative',
+                width: 120,
+                height: 120,
+              }}
+              onMouseEnter={() => setIsHovering(true)}
+              onMouseLeave={() => setIsHovering(false)}
+            >
+              <div style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                border: formData.pfp || pfpFile ? '3px solid #1a1a1a' : '2px dashed #ccc',
+              }}>
+                {(formData.pfp || pfpFile) ? (
+                  <img
+                    src={pfpFile ? URL.createObjectURL(pfpFile) : `${apiBase}/${formData.pfp}`}
+                    alt="Aperçu Photo de profil"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      backgroundColor: '#eee',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#666',
+                      fontSize: '0.8rem',
+                    }}
+                  >
+                    Pas d'image
+                  </div>
+                )}
+              </div>
+              {(formData.pfp || pfpFile) && (
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
                   borderRadius: '50%',
-                  border: '2px solid #ccc',
-                }}
-                onError={e => (e.currentTarget.src = `${apiBase}/public/images/default-pfp-client.jpg`)}
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setRemovePfp(true);
-                  setPfpFile(null);
-                  setFormData(prev => ({ ...prev, pfp: undefined }));
-                }}
-                style={{
-                  padding: '0.5rem',
-                  backgroundColor: '#ef4444',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '0.375rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '1rem',
+                  opacity: isHovering ? 1 : 0,
+                  transition: 'opacity 0.3s ease',
                   cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  maxWidth: '200px'
+                }}>
+                  <label
+                    htmlFor="pfp-upload"
+                    style={{
+                      cursor: 'pointer',
+                      color: 'white',
+                      fontSize: '1.2rem',
+                      padding: '0.5rem',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'background-color 0.3s ease',
+                    }}
+                  >
+                    <svg 
+                      width="20" 
+                      height="20" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    >
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setRemovePfp(!removePfp)}
+                    style={{
+                      cursor: 'pointer',
+                      color: 'white',
+                      fontSize: '1.2rem',
+                      padding: '0.5rem',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'background-color 0.3s ease',
+                    }}
+                  >
+                    <svg 
+                      width="20" 
+                      height="20" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    >
+                      <path d="M3 6h18"></path>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      <line x1="10" y1="11" x2="10" y2="17"></line>
+                      <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                  </button>
+                </div>
+              )}
+              <input
+                id="pfp-upload"
+                type="file"
+                accept="image/*"
+                onChange={e => {
+                  if (e.target.files && e.target.files[0]) {
+                    setPfpFile(e.target.files[0]);
+                    setRemovePfp(false);
+                  } else {
+                    setPfpFile(null);
+                  }
                 }}
-              >
-                🗑️ Supprimer la photo
-              </button>
+                style={{ display: 'none' }}
+              />
             </div>
-          )}
-          <label style={{ fontSize: '0.9rem' }}>
-            {formData.pfp ? 'Changer la photo de profil :' : 'Ajouter une photo de profil :'}
-          </label>
-          <input
-            name="pfp"
-            type="file"
-            accept="image/*"
-            onChange={e => {
-              if (e.target.files && e.target.files[0]) {
-                setPfpFile(e.target.files[0]);
-                setRemovePfp(false);
-              }
-            }}
-          />
+            {removePfp && (
+              <p style={{ color: '#dc2626', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                L'image sera supprimée lors de l'enregistrement.
+              </p>
+            )}
+          </div>
 
-          <button type="submit" style={submitButton}>
+          <fieldset
+            style={{
+              marginTop: '1rem',
+              padding: '1.5rem',
+              border: '1px solid #ddd', // Bordure douce pour le fieldset
+              borderRadius: '8px', // Coins arrondis
+              backgroundColor: '#fafafa', // Fond très léger pour le fieldset
+              display: 'flex', // Utiliser flexbox pour l'organisation interne
+              flexDirection: 'column',
+              gap: '1rem', // Espacement entre les champs du fieldset
+            }}
+          >
+            <legend
+              style={{
+                fontWeight: 'bold',
+                color: '#1a1a1a', // Titre de légende sombre
+                padding: '0 0.5rem',
+                fontSize: '1.1rem', // Taille légèrement augmentée
+              }}
+            >Localisation</legend>
+
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label htmlFor="adresse" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Adresse:</label>
+              <input
+                id="adresse"
+                name="localisation.adresse"
+                value={formData.localisation.adresse}
+                onChange={handleChange}
+                required
+                style={{
+                  padding: '0.75rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label htmlFor="ville" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Ville:</label>
+              <input
+                id="ville"
+                name="localisation.ville"
+                value={formData.localisation.ville}
+                onChange={handleChange}
+                required
+                style={{
+                  padding: '0.75rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label htmlFor="code_postal" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Code postal:</label>
+              <input
+                id="code_postal"
+                name="localisation.code_postal"
+                value={formData.localisation.code_postal}
+                onChange={handleChange}
+                required
+                style={{
+                  padding: '0.75rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label htmlFor="region" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Région:</label>
+              <input
+                id="region"
+                name="localisation.region"
+                value={formData.localisation.region}
+                onChange={handleChange}
+                required
+                style={{
+                  padding: '0.75rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            <fieldset
+              style={{
+                marginTop: '1rem',
+                padding: '1.5rem',
+                border: '1px solid #ddd', // Bordure douce pour le fieldset imbriqué
+                borderRadius: '8px', // Coins arrondis
+                backgroundColor: '#fff', // Fond blanc pour le fieldset imbriqué
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+              }}
+            >
+              <legend
+                style={{
+                  fontWeight: 'bold',
+                  color: '#1a1a1a',
+                  padding: '0 0.5rem',
+                  fontSize: '1rem', // Taille normale pour la légende imbriquée
+                }}
+              >Coordonnées</legend>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label htmlFor="latitude" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Latitude:</label>
+                <input
+                  type="number"
+                  step="any"
+                  id="latitude"
+                  name="coordonnees.latitude"
+                  value={formData.localisation.coordonnees.latitude}
+                  onChange={handleChange}
+                  required
+                  style={{
+                    padding: '0.75rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label htmlFor="longitude" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Longitude:</label>
+                <input
+                  type="number"
+                  step="any"
+                  id="longitude"
+                  name="coordonnees.longitude"
+                  value={formData.localisation.coordonnees.longitude}
+                  onChange={handleChange}
+                  required
+                  style={{
+                    padding: '0.75rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            </fieldset>
+          </fieldset>
+
+          {/* Bouton de soumission */}
+          <button
+            type="submit"
+            style={{
+              marginTop: '1.5rem',
+              padding: '1rem 2rem',
+              backgroundColor: '#1a1a1a',
+              color: 'white',
+              border: 'none',
+              borderRadius: '20px',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              alignSelf: 'center',
+              transition: 'background-color 0.3s ease',
+            }}
+          >
             Enregistrer les modifications
           </button>
         </form>
-      </main>
+      </div>
     </>
   );
 }
-
-const formGroup = {
-  display: 'flex',
-  flexDirection: 'column' as const,
-  gap: '0.5rem',
-};
-
-const labelStyle = {
-  fontWeight: 'bold',
-  color: '#374151',
-};
-
-const inputStyle = {
-  padding: '0.5rem',
-  border: '1px solid #d1d5db',
-  borderRadius: '0.375rem',
-  fontSize: '1rem',
-};
-
-const submitButton = {
-  padding: '0.75rem 1rem',
-  backgroundColor: '#3b82f6',
-  color: 'white',
-  border: 'none',
-  borderRadius: '0.375rem',
-  cursor: 'pointer',
-  fontSize: '1rem',
-  fontWeight: 'bold',
-  ':hover': {
-    backgroundColor: '#2563eb',
-  },
-};

@@ -191,38 +191,124 @@ export default function AddClient() {
   return (
     <>
       <Header />
-      <main style={{ padding: '2rem' }}>
-        <h1>➕ Ajouter un client</h1>
+      {/* Conteneur principal avec fond doux et padding */}
+      <div style={{
+        backgroundColor: '#f4f7f6', // Fond doux
+        padding: '2rem 1rem', // Padding haut/bas et latéral
+        minHeight: 'calc(100vh - 60px)', // Occupe la majorité de l'écran (soustrait la hauteur du header)
+        fontFamily: 'Arial, sans-serif',
+      }}>
+        {/* En-tête moderne */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          marginBottom: '2rem',
+          maxWidth: 800, // Aligner avec le formulaire
+          margin: '0 auto',
+        }}>
+           <h1 style={{
+            fontSize: '2rem', // Augmenter légèrement la taille
+            fontWeight: 'bold',
+            color: '#1a1a1a', // Noir plus prononcé
+            margin: 0,
+            flexGrow: 1, // Permet au titre de prendre l'espace restant
+            textAlign: 'center', // Centrer le titre
+            textTransform: 'uppercase', // Mettre en majuscules
+            letterSpacing: '0.05em', // Espacement entre les lettres
+          }}>Ajouter un client</h1>
+        </div>
+
+        {/* Formulaire centré et stylisé */}
         <form
           onSubmit={handleSubmit}
-          style={{ display: 'grid', gap: '1rem', maxWidth: 500 }}
+          style={{
+            maxWidth: 800, // Largeur max pour centrer
+            margin: '0 auto', // Centrer le formulaire
+            backgroundColor: '#ffffff', // Fond blanc pour la carte principale
+            padding: '2rem',
+            borderRadius: '8px', // Coins arrondis
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)', // Ombre subtile
+            display: 'flex', // Utiliser flexbox pour l'organisation interne
+            flexDirection: 'column',
+            gap: '1.5rem', // Espacement entre les champs
+          }}
         >
-          <input
-            name="nom_client"
-            placeholder="Nom client (magasin)"
-            required
-            onChange={handleChange}
-            value={form.nom_client}
-          />
-          <input
-            name="email"
-            type="email"
-            placeholder="Email"
-            required
-            onChange={handleChange}
-            value={form.email}
-          />
+          {/* Bouton Retour */}
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            style={{
+              alignSelf: 'flex-start', // Aligner à gauche dans le flex container
+              marginBottom: '1.5rem', // Espacement sous le bouton
+              padding: '0.5rem 1rem',
+              backgroundColor: '#1a1a1a', // Bouton noir
+              color: '#ffffff', // Texte blanc
+              border: 'none',
+              borderRadius: '20px', // Coins arrondis
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            ← Retour
+          </button>
+
+          {/* Champs du formulaire */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Nom du client (magasin) :</label>
+            <input
+              name="nom_client"
+              placeholder="Nom client (magasin)"
+              required
+              onChange={handleChange}
+              value={form.nom_client}
+              style={{ 
+                padding: '0.75rem', 
+                border: '1px solid #ccc', 
+                borderRadius: '4px',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Email :</label>
+            <input
+              name="email"
+              type="email"
+              placeholder="Email"
+              required
+              onChange={handleChange}
+              value={form.email}
+              style={{ 
+                padding: '0.75rem', 
+                border: '1px solid #ccc', 
+                borderRadius: '4px',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
 
           {!showFullForm && (
             <button
               type="button"
               onClick={checkExistingClient}
               style={{
-                padding: '0.5rem',
-                backgroundColor: '#3b82f6',
+                padding: '0.75rem 1.5rem',
+                backgroundColor: '#1a1a1a',
                 color: 'white',
                 border: 'none',
+                borderRadius: '20px',
                 cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                textTransform: 'uppercase',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                transition: 'background-color 0.3s ease',
               }}
             >
               🔍 Vérifier
@@ -231,108 +317,195 @@ export default function AddClient() {
 
           {verifDone && showFullForm && (
             <>
-              <input
-                name="password"
-                type="password"
-                placeholder="Mot de passe"
-                required
-                onChange={handleChange}
-              />
-              <input
-                name="contact.nom_gerant"
-                placeholder="Nom gérant"
-                required
-                onChange={handleChange}
-              />
-              <input
-                name="contact.telephone"
-                placeholder="Téléphone"
-                required
-                onChange={handleChange}
-              />
-              <input
-                name="localisation.adresse"
-                placeholder="Adresse"
-                required
-                onChange={handleChange}
-              />
-              <input
-                name="localisation.ville"
-                placeholder="Ville"
-                required
-                onChange={handleChange}
-              />
-              <input
-                name="localisation.code_postal"
-                placeholder="Code postal"
-                required
-                onChange={handleChange}
-              />
-              <input
-                name="localisation.region"
-                placeholder="Région"
-                required
-                onChange={handleChange}
-              />
-              <input
-                name="coordonnees.latitude"
-                type="number"
-                step="any"
-                placeholder="Latitude"
-                required
-                onChange={handleChange}
-              />
-              <input
-                name="coordonnees.longitude"
-                type="number"
-                step="any"
-                placeholder="Longitude"
-                required
-                onChange={handleChange}
-              />
-              {/* Champ ajouté pour choisir l’image de profil */}
-              <label style={{ fontSize: '0.9rem' }}>
-                Photo de profil (optionnel) :
-              </label>
-              <input
-                name="pfp"
-                type="file"
-                accept="image/*"
-                onChange={handleChange}
-              />
-              <button
-                type="submit"
-                style={{
-                  padding: '0.5rem',
-                  backgroundColor: '#10b981',
-                  color: 'white',
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                Enregistrer
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Mot de passe :</label>
+                <input
+                  name="password"
+                  type="password"
+                  placeholder="Mot de passe"
+                  required
+                  onChange={handleChange}
+                  style={{ 
+                    padding: '0.75rem', 
+                    border: '1px solid #ccc', 
+                    borderRadius: '4px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Nom du gérant :</label>
+                <input
+                  name="contact.nom_gerant"
+                  placeholder="Nom gérant"
+                  required
+                  onChange={handleChange}
+                  style={{ 
+                    padding: '0.75rem', 
+                    border: '1px solid #ccc', 
+                    borderRadius: '4px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Téléphone :</label>
+                <input
+                  name="contact.telephone"
+                  placeholder="Téléphone"
+                  required
+                  onChange={handleChange}
+                  style={{ 
+                    padding: '0.75rem', 
+                    border: '1px solid #ccc', 
+                    borderRadius: '4px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Adresse :</label>
+                <input
+                  name="localisation.adresse"
+                  placeholder="Adresse"
+                  required
+                  onChange={handleChange}
+                  style={{ 
+                    padding: '0.75rem', 
+                    border: '1px solid #ccc', 
+                    borderRadius: '4px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Ville :</label>
+                <input
+                  name="localisation.ville"
+                  placeholder="Ville"
+                  required
+                  onChange={handleChange}
+                  style={{ 
+                    padding: '0.75rem', 
+                    border: '1px solid #ccc', 
+                    borderRadius: '4px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Code postal :</label>
+                <input
+                  name="localisation.code_postal"
+                  placeholder="Code postal"
+                  required
+                  onChange={handleChange}
+                  style={{ 
+                    padding: '0.75rem', 
+                    border: '1px solid #ccc', 
+                    borderRadius: '4px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Région :</label>
+                <input
+                  name="localisation.region"
+                  placeholder="Région"
+                  required
+                  onChange={handleChange}
+                  style={{ 
+                    padding: '0.75rem', 
+                    border: '1px solid #ccc', 
+                    borderRadius: '4px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Latitude :</label>
+                <input
+                  name="coordonnees.latitude"
+                  type="number"
+                  step="any"
+                  placeholder="Latitude"
+                  required
+                  onChange={handleChange}
+                  style={{ 
+                    padding: '0.75rem', 
+                    border: '1px solid #ccc', 
+                    borderRadius: '4px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Longitude :</label>
+                <input
+                  name="coordonnees.longitude"
+                  type="number"
+                  step="any"
+                  placeholder="Longitude"
+                  required
+                  onChange={handleChange}
+                  style={{ 
+                    padding: '0.75rem', 
+                    border: '1px solid #ccc', 
+                    borderRadius: '4px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Photo de profil :</label>
+                <input
+                  name="pfp"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleChange}
+                  style={{ 
+                    padding: '0.75rem', 
+                    border: '1px solid #ccc', 
+                    borderRadius: '4px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
             </>
           )}
-        </form>
 
-        {/* Exemple d'affichage de l'image de profil du client, si disponible */}
-        {suggestedClient && suggestedClient.pfp && (
-          <div style={{ marginTop: '2rem' }}>
-            <h2>📸 Photo de profil du client :</h2>
-            <img
-              src={`${apiBase}/public/${suggestedClient.pfp}`}
-              alt="pdp client"
-              style={{
-                maxWidth: '100%',
-                height: 'auto',
-                borderRadius: '0.5rem',
-                border: '1px solid #ddd',
-              }}
-            />
-          </div>
-        )}
-      </main>
+          {/* Bouton de soumission */}
+          <button
+            type="submit"
+            style={{
+              marginTop: '1.5rem',
+              padding: '1rem 2rem',
+              backgroundColor: '#1a1a1a',
+              color: 'white',
+              border: 'none',
+              borderRadius: '20px',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              alignSelf: 'center',
+              transition: 'background-color 0.3s ease',
+            }}
+          >
+            Ajouter le client
+          </button>
+        </form>
+      </div>
     </>
   );
 }

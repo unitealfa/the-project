@@ -83,50 +83,196 @@ export default function EditPreventeMember() {
     }
   };
 
-  if (error) return <><Header /><p style={{ color: 'red', padding: '1rem' }}>{error}</p></>;
-  if (!f) return <><Header /><p style={{ padding: '1rem' }}>Chargement…</p></>;
+  if (error) return <><Header />{/* Conteneur principal avec fond doux et padding */}<div style={{ backgroundColor: '#f4f7f6', padding: '2rem 1rem', minHeight: 'calc(100vh - 60px)', fontFamily: 'Arial, sans-serif', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><p style={{ color: 'red' }}>{error}</p></div></>;
+  if (!f) return <><Header />{/* Conteneur principal avec fond doux et padding */}<div style={{ backgroundColor: '#f4f7f6', padding: '2rem 1rem', minHeight: 'calc(100vh - 60px)', fontFamily: 'Arial, sans-serif', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><p style={{ padding: '1rem' }}>Chargement…</p></div></>;
 
   return (
     <>
       <Header />
-      <form onSubmit={submit} style={{
-        maxWidth: 480, margin: '2rem auto',
-        display: 'flex', flexDirection: 'column', gap: '.8rem',
-        fontFamily: 'Arial, sans-serif'
+      {/* Conteneur principal avec fond doux et padding */}
+      <div style={{
+        backgroundColor: '#f4f7f6', // Fond doux
+        padding: '2rem 1rem', // Padding haut/bas et latéral
+        minHeight: 'calc(100vh - 60px)', // Occupe la majorité de l'écran (soustrait la hauteur du header)
+        fontFamily: 'Arial, sans-serif',
       }}>
-        <h1>Éditer membre Pré-vente</h1>
-        <input placeholder="Nom" value={f.nom} onChange={e => setF({ ...f, nom: e.target.value })} required />
-        <input placeholder="Prénom" value={f.prenom} onChange={e => setF({ ...f, prenom: e.target.value })} required />
-        <input type="email" placeholder="Email" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} required />
-        <input placeholder="Téléphone" value={f.num} onChange={e => setF({ ...f, num: e.target.value })} required />
-        <select value={f.role} onChange={e => setF({ ...f, role: e.target.value })} required>
-          {PREVENTE_ROLES.map(jt => (
-            <option key={jt} value={jt}>{jt}</option>
-          ))}
-        </select>
-        {pfpPreview && (
-          <img
-            src={pfpPreview}
-            alt="Photo de profil"
+        {/* En-tête moderne */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          marginBottom: '2rem',
+          maxWidth: 800, // Aligner avec le formulaire
+          margin: '0 auto',
+        }}>
+           <h1 style={{
+            fontSize: '2rem', // Augmenter légèrement la taille
+            fontWeight: 'bold',
+            color: '#1a1a1a', // Noir plus prononcé
+            margin: 0,
+            flexGrow: 1, // Permet au titre de prendre l'espace restant
+            textAlign: 'center', // Centrer le titre
+            textTransform: 'uppercase', // Mettre en majuscules
+            letterSpacing: '0.05em', // Espacement entre les lettres
+          }}>Modifier membre Pré-vente</h1>
+        </div>
+
+        {/* Formulaire centré et stylisé */}
+        <form
+          onSubmit={submit}
+          style={{
+            maxWidth: 800, // Largeur max pour centrer
+            margin: '0 auto', // Centrer le formulaire
+            backgroundColor: '#ffffff', // Fond blanc pour la carte principale
+            padding: '2rem',
+            borderRadius: '8px', // Coins arrondis
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)', // Ombre subtile
+            display: 'flex', // Utiliser flexbox pour l'organisation interne
+            flexDirection: 'column',
+            gap: '1.5rem', // Espacement entre les champs
+          }}
+        >
+          {/* Bouton Retour */}
+          <button
+            type="button"
+            onClick={() => nav(-1)}
             style={{
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              objectFit: 'cover',
-              border: '1px solid #ccc',
+              alignSelf: 'flex-start', // Aligner à gauche dans le flex container
+              marginBottom: '1.5rem', // Espacement sous le bouton
+              padding: '0.5rem 1rem',
+              backgroundColor: '#1a1a1a', // Bouton noir
+              color: '#ffffff', // Texte blanc
+              border: 'none',
+              borderRadius: '20px', // Coins arrondis
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
             }}
-          />
-        )}
-        <input
-          type="file"
-          accept="image/*"
-          onChange={e => setPfpFile(e.target.files?.[0] || null)}
-        />
-        <button type="submit" disabled={saving} style={{ padding: '.6rem 1.4rem', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 8 }}>
-          {saving ? 'Enregistrement…' : 'Enregistrer'}
-        </button>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-      </form>
+          >
+            ← Retour
+          </button>
+
+          {/* PFP Section */}
+          <div style={{
+            marginBottom: '1.5rem', // Espacement sous l'aperçu
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center', // Centrer l'image et le champ
+            gap: '1rem',
+          }}>
+            <label style={{ fontWeight: 'bold', color: '#555' }}>Photo de profil:</label>
+            <div style={{
+              width: 120,
+              height: 120,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '50%',
+              overflow: 'hidden',
+              border: f?.pfp || pfpFile ? '3px solid #1a1a1a' : '2px dashed #ccc', // Bordure dynamique
+            }}>
+              {(f?.pfp || pfpFile) ? (
+                <img
+                  src={pfpFile ? URL.createObjectURL(pfpFile) : `${import.meta.env.VITE_API_URL}/${f?.pfp}`}
+                  alt="Photo de profil"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: '#eee',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#666',
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  Pas d'image
+                </div>
+              )}
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => setPfpFile(e.target.files?.[0] || null)}
+              style={{
+                padding: '0.75rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxSizing: 'border-box',
+                width: '100%', // Largeur ajustée
+              }}
+            />
+          </div>
+
+          {/* Champs du formulaire */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Nom :</label>
+            <input placeholder="Nom" value={f.nom} onChange={e => setF({ ...f, nom: e.target.value })} required style={{
+              padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box'
+            }} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Prénom :</label>
+            <input placeholder="Prénom" value={f.prenom} onChange={e => setF({ ...f, prenom: e.target.value })} required style={{
+              padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box'
+            }} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Email :</label>
+            <input type="email" placeholder="Email" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} required style={{
+              padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box'
+            }} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Téléphone :</label>
+            <input placeholder="Téléphone" value={f.num} onChange={e => setF({ ...f, num: e.target.value })} required style={{
+              padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box'
+            }} />
+          </div>
+
+          {/* Rôle Section */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Rôle :</label>
+            <select value={f.role} onChange={e => setF({ ...f, role: e.target.value })} required style={{
+              padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box'
+            }}>
+              {PREVENTE_ROLES.map(jt => (
+                <option key={jt} value={jt}>{jt}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Bouton de soumission */}
+          <button
+            type="submit"
+            disabled={saving}
+            style={{
+              marginTop: '1.5rem',
+              padding: '1rem 2rem',
+              backgroundColor: saving ? '#ccc' : '#1a1a1a', // Gris si sauvegarde en cours
+              color: 'white',
+              border: 'none',
+              borderRadius: '20px',
+              cursor: saving ? 'not-allowed' : 'pointer',
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              alignSelf: 'center',
+              transition: 'background-color 0.3s ease',
+            }}
+          >
+            {saving ? 'Enregistrement…' : 'Enregistrer'}
+          </button>
+        </form>
+      </div>
     </>
   );
 }

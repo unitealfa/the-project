@@ -25,6 +25,7 @@ export default function DepotEdit() {
   const navigate = useNavigate();
   const [data, setData] = useState<DepotDto | null>(null);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const token = localStorage.getItem('token') || '';
   const apiBase = import.meta.env.VITE_API_URL;
 
@@ -73,87 +74,360 @@ export default function DepotEdit() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!data) return;
-    const body = {
-      ...data,
-      responsable: {
-        nom: data.responsable_id?.nom,
-        prenom: data.responsable_id?.prenom,
-        email: data.responsable_id?.email,
-        num: data.responsable_id?.num,
-        password: data.responsable_id?.password,
-      },
-    };
-    const res = await fetch(`${apiBase}/api/depots/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      setError(err.message || `Erreur ${res.status}`);
-    } else {
-      navigate('/depots');
+    setError('');
+    setSuccess('');
+
+    try {
+      const body = {
+        ...data,
+        responsable: {
+          nom: data.responsable_id?.nom,
+          prenom: data.responsable_id?.prenom,
+          email: data.responsable_id?.email,
+          num: data.responsable_id?.num,
+          password: data.responsable_id?.password,
+        },
+      };
+      const res = await fetch(`${apiBase}/api/depots/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || `Erreur ${res.status}`);
+      }
+      setSuccess('Dépôt modifié avec succès');
+      setTimeout(() => navigate(-1), 2000);
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
-  if (error) return <><Header /><p style={{ padding: '1rem', color:'red' }}>{error}</p></>;
-  if (!data) return <><Header /><p style={{ padding: '1rem' }}>Chargement…</p></>;
+  if (error) {
+    return (
+      <>
+        <Header />
+        <div style={{
+          backgroundColor: '#f4f7f6',
+          padding: '2rem 1rem',
+          minHeight: 'calc(100vh - 60px)',
+          fontFamily: 'Arial, sans-serif',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          flexDirection: 'column',
+          gap: '1rem',
+        }}>
+          <div style={{ color: 'red', textAlign: 'center', fontSize: '1.1rem' }}>{error}</div>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            style={{
+              marginTop: '0.5rem',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#1a1a1a',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '20px',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            ← Retour
+          </button>
+        </div>
+      </>
+    );
+  }
+
+  if (!data) {
+    return (
+      <>
+        <Header />
+        <div style={{
+          backgroundColor: '#f4f7f6',
+          padding: '2rem 1rem',
+          minHeight: 'calc(100vh - 60px)',
+          fontFamily: 'Arial, sans-serif',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+          <p>Chargement…</p>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <Header />
-      <form onSubmit={handleSubmit} style={{ maxWidth: 600, margin: '2rem auto' }}>
-        <h2>Modifier le dépôt</h2>
+      <div style={{
+        backgroundColor: '#f4f7f6',
+        padding: '2rem 1rem',
+        minHeight: 'calc(100vh - 60px)',
+        fontFamily: 'Arial, sans-serif',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          marginBottom: '2rem',
+          maxWidth: 800,
+          margin: '0 auto',
+        }}>
+          <h1 style={{
+            fontSize: '2rem',
+            fontWeight: 'bold',
+            color: '#1a1a1a',
+            margin: 0,
+            flexGrow: 1,
+            textAlign: 'center',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+          }}>Modifier le dépôt</h1>
+        </div>
 
-        <label>Nom</label>
-        <input name="nom_depot" value={data.nom_depot} onChange={handleChange} required />
+        {error && <p style={{ color: 'red', textAlign: 'center', marginBottom: '1rem' }}>{error}</p>}
+        {success && <p style={{ color: 'green', textAlign: 'center', marginBottom: '1rem' }}>{success}</p>}
 
-        <label>Type</label>
-        <input name="type_depot" value={data.type_depot} onChange={handleChange} required />
+        <form onSubmit={handleSubmit} style={{
+          maxWidth: 800,
+          margin: '0 auto',
+          backgroundColor: '#ffffff',
+          padding: '2rem',
+          borderRadius: '8px',
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.5rem',
+        }}>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            style={{
+              alignSelf: 'flex-start',
+              marginBottom: '1.5rem',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#1a1a1a',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '20px',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            ← Retour
+          </button>
 
-        <label>Capacité</label>
-        <input name="capacite" type="number" value={data.capacite} onChange={handleChange} required />
-
-        <fieldset>
-          <legend>Adresse</legend>
-          {(['rue','ville','code_postal','pays'] as const).map(k => (
-            <div key={k}>
-              <label>{k}</label>
-              <input name={`adresse.${k}`} value={(data.adresse as any)[k]} onChange={handleChange} required />
-            </div>
-          ))}
-        </fieldset>
-
-        <fieldset>
-          <legend>Coordonnées</legend>
-          <div>
-            <label>Latitude</label>
-            <input name="coordonnees.latitude" type="number" value={data.coordonnees?.latitude||0} onChange={handleChange} />
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label htmlFor="nom_depot" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Nom du dépôt:</label>
+            <input
+              id="nom_depot"
+              name="nom_depot"
+              value={data.nom_depot}
+              onChange={handleChange}
+              required
+              style={{
+                padding: '0.75rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxSizing: 'border-box',
+              }}
+            />
           </div>
-          <div>
-            <label>Longitude</label>
-            <input name="coordonnees.longitude" type="number" value={data.coordonnees?.longitude||0} onChange={handleChange} />
-          </div>
-        </fieldset>
 
-        <fieldset>
-          <legend>Responsable</legend>
-          {(['nom','prenom','email','num','password'] as (keyof UserRef)[]).map(k => (
-            <div key={k}>
-              <label>{k}</label>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label htmlFor="type_depot" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Type de dépôt:</label>
+            <input
+              id="type_depot"
+              name="type_depot"
+              value={data.type_depot}
+              onChange={handleChange}
+              required
+              style={{
+                padding: '0.75rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label htmlFor="capacite" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Capacité:</label>
+            <input
+              id="capacite"
+              name="capacite"
+              type="number"
+              value={data.capacite}
+              onChange={handleChange}
+              required
+              style={{
+                padding: '0.75rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
+          <fieldset style={{
+            marginTop: '1rem',
+            padding: '1.5rem',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            backgroundColor: '#fafafa',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+          }}>
+            <legend style={{
+              fontWeight: 'bold',
+              color: '#1a1a1a',
+              padding: '0 0.5rem',
+              fontSize: '1.1rem',
+            }}>Adresse</legend>
+
+            {(['rue', 'ville', 'code_postal', 'pays'] as const).map(k => (
+              <div key={k} style={{ display: 'flex', flexDirection: 'column' }}>
+                <label htmlFor={`adresse.${k}`} style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>
+                  {k.charAt(0).toUpperCase() + k.slice(1)}:
+                </label>
+                <input
+                  id={`adresse.${k}`}
+                  name={`adresse.${k}`}
+                  value={(data.adresse as any)[k]}
+                  onChange={handleChange}
+                  required
+                  style={{
+                    padding: '0.75rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            ))}
+          </fieldset>
+
+          <fieldset style={{
+            marginTop: '1rem',
+            padding: '1.5rem',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            backgroundColor: '#fafafa',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+          }}>
+            <legend style={{
+              fontWeight: 'bold',
+              color: '#1a1a1a',
+              padding: '0 0.5rem',
+              fontSize: '1.1rem',
+            }}>Coordonnées</legend>
+
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label htmlFor="coordonnees.latitude" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Latitude:</label>
               <input
-                name={`responsable_id.${k}`}
-                type={k==='email'?'email': k==='password'?'password':'text'}
-                value={(data.responsable_id as any)?.[k]||''}
+                id="coordonnees.latitude"
+                name="coordonnees.latitude"
+                type="number"
+                value={data.coordonnees?.latitude || 0}
                 onChange={handleChange}
-                required={k!=='password'}
+                style={{
+                  padding: '0.75rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  boxSizing: 'border-box',
+                }}
               />
             </div>
-          ))}
-        </fieldset>
 
-        <button type="submit" style={{ marginTop:'1rem' }}>Enregistrer</button>
-      </form>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label htmlFor="coordonnees.longitude" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Longitude:</label>
+              <input
+                id="coordonnees.longitude"
+                name="coordonnees.longitude"
+                type="number"
+                value={data.coordonnees?.longitude || 0}
+                onChange={handleChange}
+                style={{
+                  padding: '0.75rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+          </fieldset>
+
+          <fieldset style={{
+            marginTop: '1rem',
+            padding: '1.5rem',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            backgroundColor: '#fafafa',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+          }}>
+            <legend style={{
+              fontWeight: 'bold',
+              color: '#1a1a1a',
+              padding: '0 0.5rem',
+              fontSize: '1.1rem',
+            }}>Responsable</legend>
+
+            {(['nom', 'prenom', 'email', 'num', 'password'] as (keyof UserRef)[]).map(k => (
+              <div key={k} style={{ display: 'flex', flexDirection: 'column' }}>
+                <label htmlFor={`responsable_id.${k}`} style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>
+                  {k.charAt(0).toUpperCase() + k.slice(1)}:
+                </label>
+                <input
+                  id={`responsable_id.${k}`}
+                  name={`responsable_id.${k}`}
+                  type={k === 'email' ? 'email' : k === 'password' ? 'password' : 'text'}
+                  value={(data.responsable_id as any)?.[k] || ''}
+                  onChange={handleChange}
+                  required={k !== 'password'}
+                  style={{
+                    padding: '0.75rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            ))}
+          </fieldset>
+
+          <button
+            type="submit"
+            style={{
+              marginTop: '1.5rem',
+              padding: '1rem 2rem',
+              backgroundColor: '#1a1a1a',
+              color: 'white',
+              border: 'none',
+              borderRadius: '20px',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              alignSelf: 'center',
+              transition: 'background-color 0.3s ease',
+            }}
+          >
+            Enregistrer les modifications
+          </button>
+        </form>
+      </div>
     </>
   );
 }

@@ -3,6 +3,10 @@ import axios from "../utils/axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import { read, utils } from "xlsx";
 import JSZip from "jszip";
+import Header from '../components/Header';
+
+// Importez Link si vous voulez un bouton retour qui est un lien (utilisé navigate(-1) ici)
+// import { Link } from 'react-router-dom';
 
 // Type des données Excel
 type ExcelRow = Record<string, any>;
@@ -223,245 +227,382 @@ export default function AddProduct() {
   };
 
   return (
-    <div style={{ padding: 16, maxWidth: 800, margin: "auto" }}>
-      {/* Formulaire manuel */}
-      <form onSubmit={handleSubmit} style={{ marginBottom: 32 }}>
-        <h2>Ajouter un produit {depotId && `(pour le dépôt ${depotId})`}</h2>
-        <div style={{ marginBottom: "1rem" }}>
-          <label>
-            Nom du produit
-            <input
-              type="text"
-              name="nom_product"
-              value={formData.nom_product}
-              onChange={handleChange}
-              required
-            />
-          </label>
+    <>
+      <Header />
+      <div style={{
+        backgroundColor: '#f4f7f6', // Fond doux
+        padding: '2rem 1rem', // Padding haut/bas et latéral
+        minHeight: 'calc(100vh - 60px)', // Occupe la majorité de l'écran (soustrait la hauteur du header)
+        fontFamily: 'Arial, sans-serif',
+      }}>
+        {/* En-tête moderne - Conservation du titre, suppression du bouton */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          marginBottom: '2rem',
+          maxWidth: 800, // Aligner avec le contenu
+          margin: '0 auto',
+        }}>
+          <h1 style={{
+            fontSize: '2rem',
+            fontWeight: 'bold',
+            color: '#1a1a1a',
+            margin: 0,
+            flexGrow: 1,
+            textAlign: 'center',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+          }}>Ajouter un produit {depotId && `(pour le dépôt ${depotId})`}</h1>
         </div>
 
-        <div style={{ marginBottom: "1rem" }}>
-          <label>
-            Prix de gros
-            <input
-              type="number"
-              name="prix_gros"
-              value={formData.prix_gros}
-              onChange={handleChange}
-              required
-            />
-          </label>
-        </div>
+        {/* Conteneur pour les deux sections (formulaire unitaire et import) */}
+        <div style={{
+            maxWidth: 800, // Largeur max pour centrer
+            margin: '0 auto', // Centrer les sections
+            display: 'flex', // Utiliser flexbox pour organiser les sections
+            flexDirection: 'column',
+            gap: '2rem', // Espacement entre les sections
+            backgroundColor: '#ffffff', // Fond blanc pour la carte principale qui contient tout
+            padding: '2rem', // Padding à l'intérieur de la carte
+            borderRadius: '8px', // Coins arrondis
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)', // Ombre subtile
+        }}>
 
-        <div style={{ marginBottom: "1rem" }}>
-          <label>
-            Prix de détail
-            <input
-              type="number"
-              name="prix_detail"
-              value={formData.prix_detail}
-              onChange={handleChange}
-              required
-            />
-          </label>
-        </div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <label>
-            Description
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              required
-            />
-          </label>
-        </div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <label>
-            Catégorie
-            <input
-              type="text"
-              name="categorie"
-              value={formData.categorie}
-              onChange={handleChange}
-              required
-            />
-          </label>
-        </div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <label>
-            Poids
-            <input
-              type="text"
-              name="poids"
-              value={formData.poids}
-              onChange={handleChange}
-            />
-          </label>
-        </div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <label>
-            Volume
-            <input
-              type="text"
-              name="volume"
-              value={formData.volume}
-              onChange={handleChange}
-            />
-          </label>
-        </div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <label>
-            Type de produit
-            <div>
-              <label>
-                <input
-                  type="radio"
-                  name="type"
-                  value="normal"
-                  checked={formData.type.includes("normal")}
-                  onChange={handleTypeChange}
-                />
-                Normal
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="type"
-                  value="frigorifique"
-                  checked={formData.type.includes("frigorifique")}
-                  onChange={handleTypeChange}
-                />
-                Frigorifique
-              </label>
-            </div>
-          </label>
-        </div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <label>
-            Images
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              disabled={uploading}
-            />
-          </label>
-          {uploading && <p>Upload en cours...</p>}
-          <div
+          {/* Bouton Retour - AJOUTÉ ICI à l'intérieur du conteneur principal */}
+          <button
+            onClick={() => navigate(-1)} // Revenir à la page précédente
             style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "1rem",
-              marginTop: "1rem",
+              alignSelf: 'flex-start', // Aligner à gauche
+              marginBottom: '1.5rem', // Espacement sous le bouton
+              padding: '0.5rem 1rem',
+              backgroundColor: '#1a1a1a', // Bouton noir
+              color: '#ffffff', // Texte blanc
+              border: 'none',
+              borderRadius: '20px', // Coins arrondis
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
             }}
           >
-            {formData.images.map((image, index) => (
-              <div key={index} style={{ position: "relative" }}>
-                <img
-                  src={image}
-                  alt={`Product ${index + 1}`}
-                  style={{
-                    width: "100px",
-                    height: "100px",
-                    objectFit: "cover",
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      images: prev.images.filter((_, i) => i !== index),
-                    }));
-                  }}
-                  style={{
-                    position: "absolute",
-                    top: "-10px",
-                    right: "-10px",
-                    background: "red",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "50%",
-                    width: "20px",
-                    height: "20px",
-                    cursor: "pointer",
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <button type="submit" disabled={uploading}>
-          Ajouter le produit
-        </button>
-      </form>
-
-      {/* Import massif Excel */}
-      <hr />
-      <h3>Import en masse depuis Excel</h3>
-      <input type="file" accept=".xls,.xlsx" onChange={handleFile} />
-
-      {excelHeaders.length > 0 && (
-        <>
-          <h4>1. Faites correspondre les colonnes</h4>
-          {Object.keys(mapping).map((field) => (
-            <div key={field} style={{ marginBottom: 8 }}>
-              <label style={{ width: 150, display: "inline-block" }}>{field}:</label>
-              <select value={mapping[field as FieldKey]} onChange={handleMapChange(field as FieldKey)}>
-                <option value="">— non mappé —</option>
-                {excelHeaders.map((h) => (
-                  <option key={h} value={h}>
-                    {h}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ))}
-
-          <h4>2. Aperçu (5 premières lignes)</h4>
-          <table border={1} cellPadding={4} style={{ marginBottom: 16 }}>
-            <thead>
-              <tr>
-                {excelHeaders.map((h) => <th key={h}>{h}</th>)}
-                <th>Images extraites</th>
-              </tr>
-            </thead>
-            <tbody>
-              {excelRows.slice(0, 5).map((row, i) => (
-                <tr key={i}>
-                  {excelHeaders.map((h) => <td key={h}>{row[h]}</td>)}
-                  <td>
-                    {extractedImages[i] && (
-                      <img src={extractedImages[i]} alt={`Produit ${i + 1}`} style={{ width: 50, height: 50 }} />
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <button onClick={handleBulkImport} disabled={bulkLoading}>
-            {bulkLoading ? "Import en cours…" : "Importer"}
+            ← Retour
           </button>
 
-          {bulkErrors.length > 0 && (
-            <div style={{ color: "red", marginTop: 16 }}>
-              <h4>Erreurs :</h4>
-              <ul>{bulkErrors.map((e, i) => <li key={i}>{e}</li>)}</ul>
+          {/* Section Formulaire unitaire */}
+          <div style={{
+            display: 'flex', // Utiliser flexbox
+            flexDirection: 'column',
+            gap: '1.5rem', // Espacement entre les éléments du formulaire
+             border: '1px solid #e5e7eb', // Bordure légère
+             borderRadius: '6px',
+             padding: '1.5rem',
+             backgroundColor: '#fafafa', // Léger fond pour la section
+          }}>
+             <h2 style={{
+               marginTop: 0,
+               marginBottom: '1.2rem',
+               fontSize: '1.4rem',
+               fontWeight: 'bold',
+               color: '#1a1a1a',
+             }}>Ajouter un produit manuellement</h2>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+              {/* Champs du formulaire unitaire */}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Nom du produit :</label>
+                <input
+                  type="text"
+                  name="nom_product"
+                  value={formData.nom_product}
+                  onChange={handleChange}
+                  required
+                   style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Prix de gros :</label>
+                  <input
+                    type="number"
+                    name="prix_gros"
+                    value={formData.prix_gros}
+                    onChange={handleChange}
+                    required
+                     style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Prix de détail :</label>
+                  <input
+                    type="number"
+                    name="prix_detail"
+                    value={formData.prix_detail}
+                    onChange={handleChange}
+                    required
+                     style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Description :</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                   style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', minHeight: '100px' }}
+                />
+              </div>
+
+               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Catégorie :</label>
+                  <input
+                    type="text"
+                    name="categorie"
+                    value={formData.categorie}
+                    onChange={handleChange}
+                     style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  />
+                </div>
+                 <div style={{ display: 'flex', flexDirection: 'column' }}>
+                   <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Type :</label>
+                   {/* Assurez-vous que formData.type est un tableau pour .includes */}
+                     <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                       <label>
+                         <input
+                           type="radio"
+                           name="type"
+                           value="normal"
+                           checked={formData.type.includes("normal")}
+                           onChange={handleTypeChange}
+                         /> Normal
+                       </label>
+                       <label>
+                         <input
+                           type="radio"
+                           name="type"
+                           value="frigorifique"
+                           checked={formData.type.includes("frigorifique")}
+                           onChange={handleTypeChange}
+                         /> Frigorifique
+                       </label>
+                     </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                 <div style={{ display: 'flex', flexDirection: 'column' }}>
+                   <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Poids :</label>
+                   <input
+                     type="text"
+                     name="poids"
+                     value={formData.poids}
+                     onChange={handleChange}
+                      style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                   />
+                 </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Volume :</label>
+                  <input
+                    type="text"
+                    name="volume"
+                    value={formData.volume}
+                    onChange={handleChange}
+                     style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Images :</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={uploading} // Désactiver pendant l'upload
+                   style={{
+                       padding: '0.75rem',
+                       border: '1px solid #ccc',
+                       borderRadius: '4px',
+                       backgroundColor: uploading ? '#e5e7eb' : '#fff',
+                       cursor: uploading ? 'not-allowed' : 'pointer',
+                   }}
+                />
+                {uploading && <p style={{ fontSize: '0.9rem', color: '#555' }}>Chargement de l'image...</p>}
+                 {formData.images.length > 0 && (
+                  <div style={{ marginTop: '1rem' }}>
+                     <p style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Images ajoutées :</p>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      {formData.images.map((imgUrl, index) => (
+                        <img
+                          key={index}
+                          src={imgUrl}
+                          alt={`Produit ${index}`}
+                          style={{
+                            width: 60,
+                            height: 60,
+                            objectFit: 'cover',
+                            borderRadius: '4px',
+                            border: '1px solid #ccc'
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                 )}
+              </div>
+
+              <button type="submit" style={{
+                marginTop: '1.5rem', // Espacement au-dessus
+                padding: '1rem 2rem',
+                backgroundColor: '#1a1a1a', // Fond noir
+                color: '#ffffff', // Texte blanc
+                border: 'none',
+                borderRadius: '20px', // Coins arrondis
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                textTransform: 'uppercase',
+                alignSelf: 'center', // Centrer le bouton
+                transition: 'background-color 0.3s ease', // Transition douce
+              }}>
+                Ajouter le produit
+              </button>
+
+            </form>
+          </div> {/* Fin Section Formulaire unitaire */}
+
+          {/* Section Import Excel */}
+          <div style={{
+            display: 'flex', // Utiliser flexbox
+            flexDirection: 'column',
+            gap: '1.5rem', // Espacement entre les éléments
+          }}>
+             <h2 style={{
+               marginTop: 0,
+               marginBottom: '1.2rem',
+               fontSize: '1.4rem',
+               fontWeight: 'bold',
+               color: '#1a1a1a',
+             }}>Importer des produits depuis Excel</h2>
+            <p style={{ color: '#555' }}>Téléchargez un fichier Excel (.xlsx) contenant les informations de vos produits. Assurez-vous que la première ligne contient les en-têtes.</p>
+
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Sélectionner fichier Excel :</label>
+                 <input
+                   type="file"
+                   accept=".xlsx"
+                   onChange={handleFile}
+                    style={{
+                        padding: '0.75rem',
+                        border: '1px solid #ccc',
+                        borderRadius: '4px',
+                        backgroundColor: '#fff',
+                        cursor: 'pointer',
+                    }}
+                 />
             </div>
-          )}
-        </>
-      )}
-    </div>
+
+            {excelHeaders.length > 0 && (
+              <div style={{ marginTop: '1.5rem' }}>
+                <h3 style={{
+                  marginBottom: '1.2rem',
+                  fontSize: '1.2rem',
+                  fontWeight: 'bold',
+                  color: '#1a1a1a',
+                }}>Mapper les colonnes Excel aux champs du produit</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  {Object.keys(mapping).map(field => (
+                    <div key={field} style={{ display: 'flex', flexDirection: 'column' }}>
+                      <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>
+                        {field.replace('_', ' ').replace('product', '').trim().charAt(0).toUpperCase() + field.replace('_', ' ').replace('product', '').trim().slice(1)} :
+                      </label>
+                      <select
+                        value={mapping[field as FieldKey]}
+                        onChange={handleMapChange(field as FieldKey)}
+                         style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                      >
+                        <option value="">-- Sélectionner une colonne --</option>
+                        {excelHeaders.map(header => (
+                          <option key={header} value={header}>{header}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+
+                 {extractedImages.length > 0 && (
+                    <div style={{ gridColumn: '1 / -1', marginTop: '1.5rem' }}>
+                       <h4 style={{
+                         marginBottom: '1rem',
+                         fontSize: '1rem',
+                         fontWeight: 'bold',
+                         color: '#333',
+                       }}>Images extraites (aperçu) :</h4>
+                       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                           {extractedImages.map((imgUrl, index) => (
+                               <img
+                                  key={index}
+                                  src={imgUrl}
+                                  alt={`Extracted ${index}`}
+                                  style={{
+                                      width: 60,
+                                      height: 60,
+                                      objectFit: 'cover',
+                                      borderRadius: '4px',
+                                      border: '1px solid #ccc'
+                                  }}
+                               />
+                           ))}
+                       </div>
+                    </div>
+                 )}
+
+                 <button
+                    onClick={handleBulkImport}
+                    disabled={bulkLoading || Object.values(mapping).some(val => val === '')}
+                    style={{
+                      marginTop: '2rem',
+                      padding: '1rem 2rem',
+                      backgroundColor: bulkLoading || Object.values(mapping).some(val => val === '') ? '#6b7280' : '#1a1a1a', // Gris si désactivé, noir sinon
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '20px',
+                      cursor: bulkLoading || Object.values(mapping).some(val => val === '') ? 'not-allowed' : 'pointer',
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      textTransform: 'uppercase',
+                      alignSelf: 'center',
+                      transition: 'background-color 0.3s ease',
+                    }}
+                  >
+                    {bulkLoading ? 'Importation en cours...' : 'Importer les produits'}
+                 </button>
+
+                {bulkErrors.length > 0 && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <p style={{ color: '#dc2626', fontWeight: 'bold' }}>Erreurs d'importation :</p>
+                    <ul style={{ color: '#dc2626', marginLeft: '1.5rem' }}>
+                      {bulkErrors.map((err, index) => (
+                        <li key={index}>{err}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+              </div>
+            )}
+
+          </div> {/* Fin Section Import Excel */}
+
+        </div> {/* Fin Conteneur pour les deux sections */}
+
+        {/* L'affichage de l'erreur globale reste en dehors des cartes si besoin */}
+         {/* error && <p style={{ color: '#dc2626', marginTop: '1rem', textAlign: 'center' }}>{error}</p> */}
+
+      </div> {/* Fin Conteneur principal */}
+    </>
   );
 }

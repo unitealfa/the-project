@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import Header from '../components/Header';
 import axios from 'axios';
+import Header from '../components/Header';
 import { API_URL } from '../constants';
 
 // Type pour les utilisateurs et le véhicule
@@ -23,13 +23,15 @@ interface Vehicule {
   model: string;
   year: string;
   license_plate: string;
-  chauffeur_id: {
+  capacity: number;
+  type: string[];
+  chauffeur_id?: {
     _id: string;
     nom: string;
     prenom: string;
     email: string;
   };
-  livreur_id: {
+  livreur_id?: {
     _id: string;
     nom: string;
     prenom: string;
@@ -38,7 +40,7 @@ interface Vehicule {
   depot_id: {
     _id: string;
     nom_depot: string;
-  };
+  } | string;
 }
 
 const EditVehicle: React.FC = () => {
@@ -66,17 +68,19 @@ const EditVehicle: React.FC = () => {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const token = localStorage.getItem('token');
+  const userJson = localStorage.getItem('user');
+  const currentUser: User | null = userJson ? JSON.parse(userJson) : null;
   
   // Vérifier l'utilisateur et son rôle au chargement
   useEffect(() => {
     const checkUser = () => {
-      const userJson = localStorage.getItem('user');
-      if (!userJson) {
+      if (!currentUser) {
         navigate('/', { replace: true });
         return null;
       }
       
-      const currentUser: User = JSON.parse(userJson);
       // Vérifier si l'utilisateur a un rôle autorisé
       if (currentUser.role !== 'Administrateur des ventes' && currentUser.role !== 'Admin' && currentUser.role !== 'Super Admin') {
         setError("Vous n'avez pas les autorisations nécessaires pour accéder à cette page.");
@@ -95,20 +99,19 @@ const EditVehicle: React.FC = () => {
     };
     
     const fetchData = async () => {
-      const currentUser = checkUser();
-      if (!currentUser) return;
+      const user = checkUser();
+      if (!user) return;
+      
+      if (!token) {
+        setError("Session expirée. Veuillez vous reconnecter.");
+        setLoading(false);
+        return;
+      }
+      
+      console.log(`Fetching vehicle data for ID: ${id}`);
+      console.log(`User role: ${user.role}, User depot: ${user.depot}`);
       
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setError("Session expirée. Veuillez vous reconnecter.");
-          setLoading(false);
-          return;
-        }
-        
-        console.log(`Fetching vehicle data for ID: ${id}`);
-        console.log(`User role: ${currentUser.role}, User depot: ${currentUser.depot}`);
-        
         // Vérifions d'abord si ce véhicule est dans la liste des véhicules accessibles
         // à l'utilisateur connecté
         try {
@@ -156,7 +159,7 @@ const EditVehicle: React.FC = () => {
         setLivreurId(vehicule.livreur_id?._id || '');
         
         // Stocker l'ID du dépôt du véhicule
-        const vehicleDepotId = vehicule.depot_id._id || vehicule.depot_id;
+        const vehicleDepotId = typeof vehicule.depot_id === 'object' ? vehicule.depot_id._id : vehicule.depot_id;
         setDepotId(vehicleDepotId);
 
         // Récupérer la liste des véhicules pour obtenir les utilisateurs déjà affectés
@@ -188,11 +191,11 @@ const EditVehicle: React.FC = () => {
         
         // Pour Admin et Super Admin, montrer tous les chauffeurs et livreurs
         // Pour Administrateur des ventes, ne montrer que les chauffeurs et livreurs de son dépôt
-        if (currentUser.role === 'Admin' || currentUser.role === 'Super Admin') {
+        if (user.role === 'Admin' || user.role === 'Super Admin') {
           // Filtrer les chauffeurs non affectés ou le chauffeur actuel
           const filteredChauffeurs = allUsers.filter((user: User) => 
             user.role === 'Chauffeur' && 
-            (!assignedChauffeurs.includes(user._id) || user._id === vehicule.chauffeur_id?._id)
+            (!assignedChauffeurs.includes(user._id || user.id) || (user._id || user.id) === vehicule.chauffeur_id?._id)
           );
           console.log('Filtered chauffeurs:', filteredChauffeurs.length);
           setChauffeurs(filteredChauffeurs);
@@ -200,7 +203,7 @@ const EditVehicle: React.FC = () => {
           // Filtrer les livreurs non affectés ou le livreur actuel
           const filteredLivreurs = allUsers.filter((user: User) => 
             user.role === 'Livreur' && 
-            (!assignedLivreurs.includes(user._id) || user._id === vehicule.livreur_id?._id)
+            (!assignedLivreurs.includes(user._id || user.id) || (user._id || user.id) === vehicule.livreur_id?._id)
           );
           console.log('Filtered livreurs:', filteredLivreurs.length);
           setLivreurs(filteredLivreurs);
@@ -209,8 +212,8 @@ const EditVehicle: React.FC = () => {
           // Filtrer les chauffeurs du même dépôt non affectés ou le chauffeur actuel
           const filteredChauffeurs = allUsers.filter(
             (user: User) => user.role === 'Chauffeur' && 
-            (user.depot === vehicleDepotId || user.depot === currentUser.depot) &&
-            (!assignedChauffeurs.includes(user._id) || user._id === vehicule.chauffeur_id?._id)
+            (user.depot === vehicleDepotId || user.depot === currentUser?.depot) &&
+            (!assignedChauffeurs.includes(user._id || user.id) || (user._id || user.id) === vehicule.chauffeur_id?._id)
           );
           console.log('Filtered chauffeurs by depot:', filteredChauffeurs.length);
           setChauffeurs(filteredChauffeurs);
@@ -218,8 +221,8 @@ const EditVehicle: React.FC = () => {
           // Filtrer les livreurs du même dépôt non affectés ou le livreur actuel
           const filteredLivreurs = allUsers.filter(
             (user: User) => user.role === 'Livreur' && 
-            (user.depot === vehicleDepotId || user.depot === currentUser.depot) &&
-            (!assignedLivreurs.includes(user._id) || user._id === vehicule.livreur_id?._id)
+            (user.depot === vehicleDepotId || user.depot === currentUser?.depot) &&
+            (!assignedLivreurs.includes(user._id || user.id) || (user._id || user.id) === vehicule.livreur_id?._id)
           );
           console.log('Filtered livreurs by depot:', filteredLivreurs.length);
           setLivreurs(filteredLivreurs);
@@ -234,7 +237,7 @@ const EditVehicle: React.FC = () => {
         if (err.response) {
           if (err.response.status === 403) {
             // Si l'utilisateur est Administrateur des ventes, montrer un message spécifique
-            if (currentUser.role === 'Administrateur des ventes') {
+            if (currentUser?.role === 'Administrateur des ventes') {
               setError("Ce véhicule n'appartient pas à votre dépôt. Vous ne pouvez modifier que les véhicules assignés à votre dépôt.");
             } else {
               setError("Vous n'avez pas les autorisations nécessaires pour accéder à la liste des utilisateurs.");
@@ -248,358 +251,353 @@ const EditVehicle: React.FC = () => {
             setError(err.response.data?.message || 'Impossible de charger les données. Veuillez réessayer plus tard.');
           }
         } else {
-          setError('Erreur de connexion au serveur. Veuillez vérifier votre connexion internet.');
+          setError('Une erreur est survenue lors du chargement des données.');
         }
-        
         setLoading(false);
       }
     };
-    
+
     fetchData();
-  }, [id, navigate]);
-  
-  // Gestion de la soumission du formulaire
+  }, [id, navigate, token, currentUser?.role, currentUser?.depot]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validation des champs obligatoires (sauf chauffeur et livreur)
-    if (!make || !model || !year || !licensePlate) {
-      setError('Les champs marque, modèle, année et plaque d\'immatriculation sont obligatoires');
-      return;
-    }
-    
     setSubmitting(true);
     setError(null);
-    
+    setSuccessMessage(null);
+
+    if (!token) {
+      setError("Session expirée. Veuillez vous reconnecter.");
+      setSubmitting(false);
+      return;
+    }
+
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError("Session expirée. Veuillez vous reconnecter.");
-        setSubmitting(false);
-        return;
-      }
-      
-      const vehicleData = {
+      const response = await axios.patch(`${API_URL}/vehicles/${id}`, {
         make,
         model,
         year,
         license_plate: licensePlate,
-        capacity,
+        capacity: Number(capacity),
         type,
         chauffeur_id: chauffeurId || null,
-        livreur_id: livreurId || null,
-      };
-      
-      await axios.patch(`${API_URL}/vehicles/${id}`, vehicleData, {
+        livreur_id: livreurId || null
+      }, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
-      
-      setSuccessMessage('Véhicule modifié avec succès!');
-      
-      // Redirection après 2 secondes
-      setTimeout(() => {
-        navigate(`/admin-ventes/vehicules/${id}`);
-      }, 2000);
-      
-    } catch (err: any) {
-      console.error('Erreur lors de la modification du véhicule:', err);
-      
-      // Afficher un message d'erreur spécifique si disponible
-      if (err.response && err.response.status === 403) {
-        setError("Vous n'avez pas les autorisations nécessaires pour modifier ce véhicule.");
-      } else if (err.response && err.response.data && err.response.data.message) {
-        setError(err.response.data.message);
+
+      if (response.status === 200) {
+        setSuccessMessage('Véhicule mis à jour avec succès !');
+        setTimeout(() => navigate(-1), 2000);
       } else {
-        setError('Une erreur est survenue lors de la modification du véhicule. Veuillez réessayer.');
+        setError(response.data.message || 'Erreur lors de la mise à jour du véhicule.');
       }
-      
+    } catch (err: any) {
+      console.error('Erreur lors de la soumission:', err);
+      if (err.response) {
+        setError(err.response.data?.message || 'Erreur lors de la mise à jour du véhicule.');
+      } else {
+        setError('Une erreur réseau est survenue.');
+      }
+    } finally {
       setSubmitting(false);
     }
   };
-  
-  // Annuler et revenir aux détails du véhicule
+
   const handleCancel = () => {
-    navigate(`/admin-ventes/vehicules/${id}`);
+    navigate(-1);
   };
-  
+
+  // Gestion de l'affichage en fonction des états de chargement/erreur
   if (loading) {
     return (
       <>
         <Header />
-        <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-          <h1>Modifier le véhicule</h1>
-          <p>Chargement en cours...</p>
-        </main>
+        {/* Conteneur principal avec fond doux et padding */}
+        <div style={{
+          backgroundColor: '#f4f7f6',
+          padding: '2rem 1rem',
+          minHeight: 'calc(100vh - 60px)',
+          fontFamily: 'Arial, sans-serif',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+          <p style={{ fontSize: '1.2rem', color: '#555' }}>Chargement des données du véhicule...</p>
+        </div>
       </>
     );
   }
-  
+
+  if (error) {
+    return (
+      <>
+        <Header />
+        {/* Conteneur principal avec fond doux et padding */}
+        <div style={{
+          backgroundColor: '#f4f7f6',
+          padding: '2rem 1rem',
+          minHeight: 'calc(100vh - 60px)',
+          fontFamily: 'Arial, sans-serif',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          flexDirection: 'column',
+          gap: '1rem',
+        }}>
+          <div style={{ color: 'red', textAlign: 'center', fontSize: '1.1rem' }}>{error}</div>
+          {/* Bouton Retour */}
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            style={{
+              marginTop: '0.5rem',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#1a1a1a',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '20px',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            ← Retour
+          </button>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Header />
-      <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h1>Modifier le véhicule</h1>
-          <Link to={`/admin-ventes/vehicules/${id}`}>
-            <button style={{ 
-              padding: '8px 15px', 
-              backgroundColor: '#2196F3', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '4px', 
-              cursor: 'pointer' 
-            }}>
-              Retour aux détails
-            </button>
-          </Link>
+      {/* Conteneur principal avec fond doux et padding */}
+      <div style={{
+        backgroundColor: '#f4f7f6', // Fond doux
+        padding: '2rem 1rem', // Padding haut/bas et latéral
+        minHeight: 'calc(100vh - 60px)', // Occupe la majorité de l'écran (soustrait la hauteur du header)
+        fontFamily: 'Arial, sans-serif',
+      }}>
+        {/* En-tête moderne */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          marginBottom: '2rem',
+          maxWidth: 800, // Aligner avec le formulaire
+          margin: '0 auto',
+        }}>
+           <h1 style={{
+            fontSize: '2rem', // Augmenter légèrement la taille
+            fontWeight: 'bold',
+            color: '#1a1a1a', // Noir plus prononcé
+            margin: 0,
+            flexGrow: 1, // Permet au titre de prendre l'espace restant
+            textAlign: 'center', // Centrer le titre
+            textTransform: 'uppercase', // Mettre en majuscules
+            letterSpacing: '0.05em', // Espacement entre les lettres
+          }}>Modifier le véhicule</h1>
         </div>
-        
-        {error && (
-          <div style={{ 
-            padding: '10px 15px', 
-            backgroundColor: '#ffebee', 
-            color: '#c62828', 
-            borderRadius: '4px', 
-            marginBottom: '1rem' 
-          }}>
-            {error}
-          </div>
-        )}
-        
-        {successMessage && (
-          <div style={{ 
-            padding: '10px 15px', 
-            backgroundColor: '#e8f5e9', 
-            color: '#2e7d32', 
-            borderRadius: '4px', 
-            marginBottom: '1rem' 
-          }}>
-            {successMessage}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit} style={{ maxWidth: '700px' }}>
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="make" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Marque:
-            </label>
-            <input
-              type="text"
-              id="make"
-              value={make}
-              onChange={(e) => setMake(e.target.value)}
-              style={{ 
-                width: '100%', 
-                padding: '8px 12px', 
-                borderRadius: '4px', 
-                border: '1px solid #ccc' 
-              }}
-              required
-            />
-          </div>
-          
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="model" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Modèle:
-            </label>
-            <input
-              type="text"
-              id="model"
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              style={{ 
-                width: '100%', 
-                padding: '8px 12px', 
-                borderRadius: '4px', 
-                border: '1px solid #ccc' 
-              }}
-              required
-            />
-          </div>
-          
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="year" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Année:
-            </label>
-            <input
-              type="text"
-              id="year"
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-              style={{ 
-                width: '100%', 
-                padding: '8px 12px', 
-                borderRadius: '4px', 
-                border: '1px solid #ccc' 
-              }}
-              required
-            />
-          </div>
-          
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="licensePlate" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Plaque d'immatriculation:
-            </label>
-            <input
-              type="text"
-              id="licensePlate"
-              value={licensePlate}
-              onChange={(e) => setLicensePlate(e.target.value)}
-              style={{ 
-                width: '100%', 
-                padding: '8px 12px', 
-                borderRadius: '4px', 
-                border: '1px solid #ccc' 
-              }}
-              required
-            />
-          </div>
-          
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="capacity" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Capacité:
-            </label>
-            <input
-              type="number"
-              id="capacity"
-              value={capacity}
-              onChange={(e) => setCapacity(Number(e.target.value))}
-              style={{ 
-                width: '100%', 
-                padding: '8px 12px', 
-                borderRadius: '4px', 
-                border: '1px solid #ccc' 
-              }}
-              required
-              min="0"
-            />
+
+         {successMessage && <p style={{ color: 'green', textAlign: 'center', marginBottom: '1rem' }}>{successMessage}</p>}
+
+        {/* Formulaire centré et stylisé */}
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            maxWidth: 800, // Largeur max pour centrer
+            margin: '0 auto', // Centrer le formulaire
+            backgroundColor: '#ffffff', // Fond blanc pour la carte principale
+            padding: '2rem',
+            borderRadius: '8px', // Coins arrondis
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)', // Ombre subtile
+            display: 'flex', // Utiliser flexbox pour l'organisation interne
+            flexDirection: 'column',
+            gap: '1.5rem', // Espacement entre les champs
+          }}
+        >
+          {/* Bouton Retour */}
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            style={{
+              alignSelf: 'flex-start', // Aligner à gauche dans le flex container
+              marginBottom: '1.5rem', // Espacement sous le bouton
+              padding: '0.5rem 1rem',
+              backgroundColor: '#1a1a1a', // Bouton noir
+              color: '#ffffff', // Texte blanc
+              border: 'none',
+              borderRadius: '20px', // Coins arrondis
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            ← Retour
+          </button>
+
+          {/* Champs du formulaire */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Marque:</label>
+            <input type="text" value={make} onChange={e => setMake(e.target.value)} required style={{
+              padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box'
+            }} />
           </div>
 
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Type de véhicule:
-            </label>
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <input
-                  type="radio"
-                  name="type"
-                  value="normal"
-                  checked={type.includes('normal')}
-                  onChange={(e) => setType([e.target.value])}
-                />
-                Normal
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <input
-                  type="radio"
-                  name="type"
-                  value="frigorifique"
-                  checked={type.includes('frigorifique')}
-                  onChange={(e) => setType([e.target.value])}
-                />
-                Frigorifique
-              </label>
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Modèle:</label>
+            <input type="text" value={model} onChange={e => setModel(e.target.value)} required style={{
+              padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box'
+            }} />
           </div>
-          
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="chauffeurId" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Chauffeur:
-            </label>
-            <select
-              id="chauffeurId"
-              value={chauffeurId}
-              onChange={(e) => setChauffeurId(e.target.value)}
-              style={{ 
-                width: '100%', 
-                padding: '8px 12px', 
-                borderRadius: '4px', 
-                border: '1px solid #ccc' 
-              }}
-            >
-              <option value="">-- Aucun chauffeur --</option>
-              {chauffeurs.map((chauffeur) => (
-                <option key={chauffeur._id} value={chauffeur._id}>
-                  {chauffeur.prenom} {chauffeur.nom} ({chauffeur.email})
+
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Année:</label>
+            <input type="text" value={year} onChange={e => setYear(e.target.value)} required style={{
+              padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box'
+            }} />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Plaque d'immatriculation:</label>
+            <input type="text" value={licensePlate} onChange={e => setLicensePlate(e.target.value)} required style={{
+              padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box'
+            }} />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Capacité:</label>
+            <input type="number" value={capacity} onChange={e => setCapacity(Number(e.target.value))} required style={{
+              padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box'
+            }} />
+          </div>
+
+          {/* Type de véhicule */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+             <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Type:</label>
+             {/* Assurez-vous que votre backend supporte la modification du type, sinon cette section est juste illustrative */}
+             <select
+                value={type[0] || ''}
+                onChange={(e) => setType([e.target.value])}
+                required
+                style={{
+                  padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box'
+                }}
+             >
+                <option value="normal">Normal</option>
+                <option value="refrigere">Réfrigéré</option>
+                <option value="dangereux">Dangereux</option>
+             </select>
+          </div>
+
+          {/* Chauffeur Assignment */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Chauffeur:</label>
+            <select value={chauffeurId} onChange={e => setChauffeurId(e.target.value)} style={{
+              padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box'
+            }}>
+              <option value="">-- Sélectionner un chauffeur --</option>
+              {chauffeurs.map(chauffeur => (
+                <option key={chauffeur._id || chauffeur.id} value={chauffeur._id || chauffeur.id}>
+                  {chauffeur.nom} {chauffeur.prenom}
                 </option>
               ))}
             </select>
-            {chauffeurs.length === 0 && (
-              <p style={{ color: '#f57c00', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                Aucun chauffeur disponible dans ce dépôt.
+             {chauffeurs.length === 0 && (
+              <p style={{
+                marginTop: '0.5rem',
+                padding: '0.75rem',
+                backgroundColor: '#fff3e0', // Light orange background
+                border: '1px solid #ffe0b2', // Darker orange border
+                borderRadius: '4px',
+                fontSize: '0.9rem',
+                color: '#e65100', // Dark orange text
+              }}>
+                Aucun chauffeur disponible à ce dépôt.
               </p>
             )}
           </div>
-          
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label htmlFor="livreurId" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Livreur:
-            </label>
-            <select
-              id="livreurId"
-              value={livreurId}
-              onChange={(e) => setLivreurId(e.target.value)}
-              style={{ 
-                width: '100%', 
-                padding: '8px 12px', 
-                borderRadius: '4px', 
-                border: '1px solid #ccc' 
-              }}
-            >
-              <option value="">-- Aucun livreur --</option>
-              {livreurs.map((livreur) => (
-                <option key={livreur._id} value={livreur._id}>
-                  {livreur.prenom} {livreur.nom} ({livreur.email})
+
+          {/* Livreur Assignment */}
+           <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Livreur:</label>
+            <select value={livreurId} onChange={e => setLivreurId(e.target.value)} style={{
+              padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box'
+            }}>
+              <option value="">-- Sélectionner un livreur --</option>
+              {livreurs.map(livreur => (
+                <option key={livreur._id || livreur.id} value={livreur._id || livreur.id}>
+                  {livreur.nom} {livreur.prenom}
                 </option>
               ))}
             </select>
-            {livreurs.length === 0 && (
-              <p style={{ color: '#f57c00', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                Aucun livreur disponible dans ce dépôt.
+             {livreurs.length === 0 && (
+              <p style={{
+                marginTop: '0.5rem',
+                padding: '0.75rem',
+                backgroundColor: '#fff3e0', // Light orange background
+                border: '1px solid #ffe0b2', // Darker orange border
+                borderRadius: '4px',
+                fontSize: '0.9rem',
+                color: '#e65100', // Dark orange text
+              }}>
+                Aucun livreur disponible à ce dépôt.
               </p>
             )}
           </div>
-          
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-            <button
-              type="submit"
-              disabled={submitting}
-              style={{ 
-                padding: '10px 20px', 
-                backgroundColor: '#4CAF50', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '4px', 
-                cursor: submitting ? 'not-allowed' : 'pointer',
-                opacity: submitting ? 0.7 : 1
-              }}
-            >
-              {submitting ? 'Modification en cours...' : 'Enregistrer les modifications'}
-            </button>
-            
-            <button
-              type="button"
-              onClick={handleCancel}
-              style={{ 
-                padding: '10px 20px', 
-                backgroundColor: '#f5f5f5', 
-                color: '#333', 
-                border: '1px solid #ccc', 
-                borderRadius: '4px', 
-                cursor: 'pointer' 
-              }}
-            >
-              Annuler
-            </button>
-          </div>
+
+          {/* Bouton de soumission */}
+          <button
+            type="submit"
+            disabled={submitting}
+            style={{
+              marginTop: '1.5rem',
+              padding: '1rem 2rem',
+              backgroundColor: submitting ? '#ccc' : '#1a1a1a', // Gris si soumission en cours
+              color: 'white',
+              border: 'none',
+              borderRadius: '20px',
+              cursor: submitting ? 'not-allowed' : 'pointer',
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              alignSelf: 'center',
+              transition: 'background-color 0.3s ease',
+            }}
+          >
+            {submitting ? 'Enregistrement…' : 'Enregistrer les modifications'}
+          </button>
+           {/* Bouton Annuler */}
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={submitting}
+            style={{
+              marginTop: '1rem',
+              padding: '1rem 2rem',
+              backgroundColor: submitting ? '#ccc' : '#dc2626', // Rouge
+              color: 'white',
+              border: 'none',
+              borderRadius: '20px',
+              cursor: submitting ? 'not-allowed' : 'pointer',
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              alignSelf: 'center',
+              transition: 'background-color 0.3s ease',
+            }}
+          >
+            Annuler
+          </button>
         </form>
-      </main>
+      </div>
     </>
   );
 };
 
-export default EditVehicle; 
+export default EditVehicle;

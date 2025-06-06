@@ -330,19 +330,6 @@ const VehicleDetail: React.FC = () => {
                   Retour à la liste
                 </button>
               </Link>
-              <Link to={`/admin-ventes/vehicules/${id}/modifier`}>
-                <button style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#1a1a1a',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}>
-                  Modifier
-                </button>
-              </Link>
             </div>
           </div>
 
@@ -450,68 +437,6 @@ const VehicleDetail: React.FC = () => {
                 </span>
               </p>
             </fieldset>
-          </div>
-
-          <div style={{ marginTop: '2rem', textAlign: 'right' }}>
-            {!deleteConfirm ? (
-              <button 
-                onClick={() => setDeleteConfirm(true)}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#dc2626',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}
-              >
-                Supprimer ce véhicule
-              </button>
-            ) : (
-              <div style={{
-                padding: '1rem',
-                backgroundColor: '#fee2e2',
-                borderRadius: '8px',
-                border: '1px solid #fecaca'
-              }}>
-                <p style={{ marginBottom: '1rem', fontWeight: 'bold', color: '#991b1b' }}>
-                  Êtes-vous sûr de vouloir supprimer ce véhicule ? Cette action est irréversible.
-                </p>
-                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                  <button
-                    onClick={() => setDeleteConfirm(false)}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      backgroundColor: '#6b7280',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '1rem'
-                    }}
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleteLoading}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      backgroundColor: '#dc2626',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '1rem',
-                      opacity: deleteLoading ? 0.7 : 1
-                    }}
-                  >
-                    {deleteLoading ? 'Suppression...' : 'Confirmer la suppression'}
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

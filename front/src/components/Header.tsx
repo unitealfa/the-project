@@ -10,7 +10,7 @@ const ACCENT = "#4f46e5";
 export default function Header() {
   const navigate = useNavigate();
 
-  // Récupération de l’utilisateur en localStorage
+  // Récupération de l'utilisateur en localStorage
   const [user, setUser] = useState<{
     id: string;
     nom?: string;
@@ -50,12 +50,12 @@ export default function Header() {
     setCroppedAreaPixels(croppedPixels);
   }, []);
 
-  // Ouvre l’explorateur de fichiers
+  // Ouvre l'explorateur de fichiers
   const handleEditClick = () => {
     fileInputRef.current?.click();
   };
 
-  // Lorsqu’un fichier est sélectionné
+  // Lorsqu'un fichier est sélectionné
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (file) {
@@ -139,7 +139,7 @@ export default function Header() {
         ></a>
 
         <div className="brutalist-header__content">
-          {/* Si l’utilisateur a une photo de profil */}
+          {/* Si l'utilisateur a une photo de profil */}
           {pfpSrc && (
             <div
               className="brutalist-popup__avatar"
@@ -158,21 +158,21 @@ export default function Header() {
             </div>
           )}
 
-          {/* Affiche simplement le nom (sans “Bonjour”) */}
+          {/* Affiche simplement le nom (sans "Bonjour") */}
           {displayName && (
             <span className="brutalist-header__username">{displayName}</span>
           )}
         </div>
       </header>
 
-      {/* ---------- POPUP “PROFIL” ---------- */}
+      {/* ---------- POPUP "PROFIL" ---------- */}
       {showProfile && (
         <div
           className="brutalist-popup-overlay"
           onClick={() => setShowProfile(false)}
         >
           <div className="brutalist-popup" onClick={(e) => e.stopPropagation()}>
-            {/* Bouton de fermeture “×” */}
+            {/* Bouton de fermeture "×" */}
             <button
               className="brutalist-popup__close"
               onClick={() => setShowProfile(false)}
@@ -187,7 +187,7 @@ export default function Header() {
                     <img src={pfpSrc} alt="Profil" />
                   </div>
 
-                  {/* Bouton flottant en dehors de l’avatar */}
+                  {/* Bouton flottant en dehors de l'avatar */}
                   <button
                     onClick={handleEditClick}
                     style={{
@@ -224,7 +224,7 @@ export default function Header() {
               {phone && <p className="brutalist-popup__phone">{phone}</p>}
             </div>
 
-            {/* Bouton “Déconnexion” */}
+            {/* Bouton "Déconnexion" */}
             <button
               className="brutalist-button"
               onClick={() => {
@@ -238,7 +238,7 @@ export default function Header() {
         </div>
       )}
 
-      {/* ---------- POPUP “CROPPER” ---------- */}
+      {/* ---------- POPUP "CROPPER" ---------- */}
       {selectedFile && (
         <div className="cropper-overlay">
           <div className="cropper-container">
@@ -268,7 +268,7 @@ export default function Header() {
 }
 
 /**
- * Fonction utilitaire pour uploader le pfp côté “équipe” (si besoin)
+ * Fonction utilitaire pour uploader le pfp côté "équipe" (si besoin)
  */
 export async function uploadMemberPfp(memberId: string, file: File) {
   const form = new FormData();

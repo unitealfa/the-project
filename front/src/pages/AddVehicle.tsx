@@ -199,36 +199,90 @@ const AddVehicle: React.FC = () => {
   return (
     <>
       <Header />
-      <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-        <h1>Ajouter un nouveau véhicule</h1>
-        
-        {error && (
-          <div style={{ 
-            padding: '10px 15px', 
-            backgroundColor: '#ffebee', 
-            color: '#c62828', 
-            borderRadius: '4px', 
-            marginBottom: '1rem' 
-          }}>
-            {error}
-          </div>
-        )}
-        
-        {successMessage && (
-          <div style={{ 
-            padding: '10px 15px', 
-            backgroundColor: '#e8f5e9', 
-            color: '#2e7d32', 
-            borderRadius: '4px', 
-            marginBottom: '1rem' 
-          }}>
-            {successMessage}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit} style={{ maxWidth: '700px' }}>
+      <div style={{
+        backgroundColor: '#f4f7f6',
+        padding: '2rem 1rem',
+        minHeight: 'calc(100vh - 60px)',
+        fontFamily: 'Arial, sans-serif',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          marginBottom: '2rem',
+          maxWidth: 800,
+          margin: '0 auto',
+        }}>
+           <h1 style={{
+            fontSize: '2rem',
+            fontWeight: 'bold',
+            color: '#1a1a1a',
+            margin: 0,
+            flexGrow: 1,
+            textAlign: 'center',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+          }}>Ajouter un nouveau véhicule</h1>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{
+          maxWidth: 800,
+          margin: '0 auto',
+          backgroundColor: '#ffffff',
+          padding: '2rem',
+          borderRadius: '8px',
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.5rem',
+        }}>
+          <button
+            type="button"
+            onClick={handleCancel}
+            style={{
+              alignSelf: 'flex-start',
+              marginBottom: '1.5rem',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#1a1a1a',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '20px',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            ← Retour à la liste
+          </button>
+
+          {error && (
+            <div style={{ 
+              padding: '10px 15px', 
+              backgroundColor: '#ffebee', 
+              color: '#c62828', 
+              borderRadius: '4px', 
+              marginBottom: '1rem', 
+              border: '1px solid #ef9a9a'
+            }}>
+              {error}
+            </div>
+          )}
+
+          {successMessage && (
+            <div style={{ 
+              padding: '10px 15px', 
+              backgroundColor: '#e8f5e9', 
+              color: '#2e7d32', 
+              borderRadius: '4px', 
+              marginBottom: '1rem', 
+              border: '1px solid #a5d6a7'
+            }}>
+              {successMessage}
+            </div>
+          )}
+
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="make" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+            <label htmlFor="make" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>
               Marque:
             </label>
             <input
@@ -238,16 +292,17 @@ const AddVehicle: React.FC = () => {
               onChange={(e) => setMake(e.target.value)}
               style={{ 
                 width: '100%', 
-                padding: '8px 12px', 
+                padding: '0.75rem',
                 borderRadius: '4px', 
-                border: '1px solid #ccc' 
+                border: '1px solid #ccc', 
+                boxSizing: 'border-box'
               }}
               required
             />
           </div>
           
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="model" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+            <label htmlFor="model" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>
               Modèle:
             </label>
             <input
@@ -257,35 +312,37 @@ const AddVehicle: React.FC = () => {
               onChange={(e) => setModel(e.target.value)}
               style={{ 
                 width: '100%', 
-                padding: '8px 12px', 
+                padding: '0.75rem', 
                 borderRadius: '4px', 
-                border: '1px solid #ccc' 
+                border: '1px solid #ccc', 
+                boxSizing: 'border-box'
               }}
               required
             />
           </div>
           
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="year" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+            <label htmlFor="year" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>
               Année:
             </label>
             <input
-              type="text"
+              type="number"
               id="year"
               value={year}
               onChange={(e) => setYear(e.target.value)}
               style={{ 
                 width: '100%', 
-                padding: '8px 12px', 
+                padding: '0.75rem', 
                 borderRadius: '4px', 
-                border: '1px solid #ccc' 
+                border: '1px solid #ccc', 
+                boxSizing: 'border-box'
               }}
               required
             />
           </div>
           
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="licensePlate" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+            <label htmlFor="licensePlate" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>
               Plaque d'immatriculation:
             </label>
             <input
@@ -295,154 +352,148 @@ const AddVehicle: React.FC = () => {
               onChange={(e) => setLicensePlate(e.target.value)}
               style={{ 
                 width: '100%', 
-                padding: '8px 12px', 
+                padding: '0.75rem', 
                 borderRadius: '4px', 
-                border: '1px solid #ccc' 
+                border: '1px solid #ccc', 
+                boxSizing: 'border-box'
               }}
               required
             />
           </div>
           
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="capacity" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Capacité:
+            <label htmlFor="capacity" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>
+              Capacité (Kg ou L):
             </label>
             <input
               type="number"
               id="capacity"
               value={capacity}
-              onChange={(e) => setCapacity(Number(e.target.value))}
+              onChange={(e) => setCapacity(parseFloat(e.target.value))}
               style={{ 
                 width: '100%', 
-                padding: '8px 12px', 
+                padding: '0.75rem', 
                 borderRadius: '4px', 
-                border: '1px solid #ccc' 
+                border: '1px solid #ccc', 
+                boxSizing: 'border-box'
               }}
-              required
-              min="0"
             />
           </div>
 
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+            <label htmlFor="type" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>
               Type de véhicule:
             </label>
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <input
-                  type="radio"
-                  name="type"
-                  value="normal"
-                  checked={type.includes('normal')}
-                  onChange={(e) => setType([e.target.value])}
-                />
-                Normal
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <input
-                  type="radio"
-                  name="type"
-                  value="frigorifique"
-                  checked={type.includes('frigorifique')}
-                  onChange={(e) => setType([e.target.value])}
-                />
-                Frigorifique
-              </label>
-            </div>
+            <select
+              id="type"
+              value={type[0]}
+              onChange={(e) => setType([e.target.value])}
+              style={{
+                 width: '100%', 
+                 padding: '0.75rem', 
+                 borderRadius: '4px', 
+                 border: '1px solid #ccc', 
+                 boxSizing: 'border-box'
+              }}
+            >
+              <option value="normal">Normal</option>
+            </select>
           </div>
           
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="chauffeurId" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Chauffeur:
+            <label htmlFor="chauffeur" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>
+              Chauffeur (Optionnel):
             </label>
             <select
-              id="chauffeurId"
+              id="chauffeur"
               value={chauffeurId}
               onChange={(e) => setChauffeurId(e.target.value)}
-              style={{ 
-                width: '100%', 
-                padding: '8px 12px', 
-                borderRadius: '4px', 
-                border: '1px solid #ccc' 
+              style={{
+                 width: '100%', 
+                 padding: '0.75rem', 
+                 borderRadius: '4px', 
+                 border: '1px solid #ccc', 
+                 boxSizing: 'border-box'
               }}
             >
-              <option value="">-- Aucun chauffeur --</option>
-              {chauffeurs.map((chauffeur) => (
-                <option key={chauffeur._id} value={chauffeur._id}>
-                  {chauffeur.prenom} {chauffeur.nom} ({chauffeur.email})
-                </option>
+              <option value="">-- Sélectionner un chauffeur --</option>
+              {chauffeurs.map(chauffeur => (
+                <option key={chauffeur._id} value={chauffeur._id}> {chauffeur.nom} {chauffeur.prenom} </option>
               ))}
             </select>
             {chauffeurs.length === 0 && (
-              <p style={{ color: '#f57c00', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+              <p style={{ 
+                color: '#f57c00', 
+                fontSize: '0.85rem', 
+                marginTop: '0.5rem',
+                padding: '0.5rem',
+                backgroundColor: '#fff3e0',
+                borderRadius: '4px',
+                border: '1px solid #ffe0b2'
+              }}>
                 Aucun chauffeur disponible dans ce dépôt.
               </p>
             )}
           </div>
           
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label htmlFor="livreurId" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Livreur:
+          <div style={{ marginBottom: '1rem' }}>
+            <label htmlFor="livreur" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>
+              Livreur (Optionnel):
             </label>
             <select
-              id="livreurId"
+              id="livreur"
               value={livreurId}
               onChange={(e) => setLivreurId(e.target.value)}
-              style={{ 
-                width: '100%', 
-                padding: '8px 12px', 
-                borderRadius: '4px', 
-                border: '1px solid #ccc' 
+              style={{
+                 width: '100%', 
+                 padding: '0.75rem', 
+                 borderRadius: '4px', 
+                 border: '1px solid #ccc', 
+                 boxSizing: 'border-box'
               }}
             >
-              <option value="">-- Aucun livreur --</option>
-              {livreurs.map((livreur) => (
-                <option key={livreur._id} value={livreur._id}>
-                  {livreur.prenom} {livreur.nom} ({livreur.email})
-                </option>
+              <option value="">-- Sélectionner un livreur --</option>
+              {livreurs.map(livreur => (
+                <option key={livreur._id} value={livreur._id}> {livreur.nom} {livreur.prenom} </option>
               ))}
             </select>
             {livreurs.length === 0 && (
-              <p style={{ color: '#f57c00', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+              <p style={{ 
+                color: '#f57c00', 
+                fontSize: '0.85rem', 
+                marginTop: '0.5rem',
+                padding: '0.5rem',
+                backgroundColor: '#fff3e0',
+                borderRadius: '4px',
+                border: '1px solid #ffe0b2'
+              }}>
                 Aucun livreur disponible dans ce dépôt.
               </p>
             )}
           </div>
           
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-            <button
-              type="submit"
-              disabled={loading}
-              style={{ 
-                padding: '10px 20px', 
-                backgroundColor: '#4CAF50', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '4px', 
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.7 : 1
-              }}
-            >
-              {loading ? 'Ajout en cours...' : 'Ajouter le véhicule'}
-            </button>
-            
-            <button
-              type="button"
-              onClick={handleCancel}
-              style={{ 
-                padding: '10px 20px', 
-                backgroundColor: '#f5f5f5', 
-                color: '#333', 
-                border: '1px solid #ccc', 
-                borderRadius: '4px', 
-                cursor: 'pointer' 
-              }}
-            >
-              Annuler
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              marginTop: '1.5rem',
+              padding: '1rem 2rem',
+              backgroundColor: loading ? '#6b7280' : '#1a1a1a',
+              color: 'white',
+              border: 'none',
+              borderRadius: '20px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              alignSelf: 'center',
+              transition: 'background-color 0.3s ease',
+            }}
+          >
+            {loading ? 'Ajout en cours…' : 'Ajouter le véhicule'}
+          </button>
         </form>
-      </main>
+      </div>
     </>
   );
 };
