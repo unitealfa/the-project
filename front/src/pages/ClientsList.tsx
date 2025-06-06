@@ -733,58 +733,7 @@ export default function ClientsList() {
           </div>
         )}
 
-        {/* Liste des clients */}
-        <div style={{ marginTop: "2rem" }}>
-          <h2>Liste des clients</h2>
-          <div style={{ 
-            display: "grid", 
-            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", 
-            gap: "1rem",
-            marginTop: "1rem" 
-          }}>
-            {currentClients.map((client) => (
-              <div
-                key={client._id}
-                style={{
-                  padding: "1rem",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "8px",
-                  backgroundColor: "white",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
-                }}
-              >
-                <h3 style={{ margin: "0 0 0.5rem 0", color: "#1f2937" }}>
-                  {client.nom_client}
-                </h3>
-                <p style={{ margin: "0.25rem 0", color: "#4b5563" }}>
-                  Contact: {client.contact.nom_gerant}
-                </p>
-                <p style={{ margin: "0.25rem 0", color: "#4b5563" }}>
-                  Tél: {client.contact.telephone}
-                </p>
-                <p style={{ margin: "0.25rem 0", color: "#4b5563" }}>
-                  Email: {client.email}
-                </p>
-                <div style={{ marginTop: "1rem" }}>
-                  <button
-                    onClick={() => navigate(`/productlist?clientId=${client._id}`)}
-                    style={{
-                      padding: "0.5rem 1rem",
-                      backgroundColor: "#10b981",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                      width: "100%"
-                    }}
-                  >
-                    🛒 Passer commande
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+
 
         {/* Pagination */}
         {clients.length > clientsPerPage && (
