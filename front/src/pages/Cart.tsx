@@ -5,7 +5,7 @@ import { cartService } from "@/services/cartService";
 import { orderService } from "@/services/orderService";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash2, ShoppingCart } from "lucide-react";
 
 interface Product {
   _id: string;
@@ -353,7 +353,7 @@ export default function Cart() {
                         onMouseOut={e => {e.currentTarget.style.background = '#f3f4f6';e.currentTarget.style.color='#dc2626';e.currentTarget.style.transform='none';}}
                         title="Supprimer"
                       >
-                        ×
+                        <Trash2 size={20} />
                       </button>
                     </td>
                   </tr>
@@ -405,19 +405,20 @@ export default function Cart() {
               background: '#1a1a1a',
               color: 'white',
               border: 'none',
-              borderRadius: 8,
+              borderRadius: 24,
               fontWeight: 700,
               fontSize: '1.15rem',
               letterSpacing: '1px',
               cursor: 'pointer',
               marginBottom: '1.5rem',
               transition: 'background 0.2s, transform 0.15s',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.07)'
+              boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.7rem',
             }}
             onMouseOver={e => {e.currentTarget.style.background = '#333';e.currentTarget.style.transform='scale(1.03)';}}
             onMouseOut={e => {e.currentTarget.style.background = '#1a1a1a';e.currentTarget.style.transform='none';}}
           >
-            Valider la commande
+            <ShoppingCart size={22} style={{marginBottom: -2}} /> Valider la commande
           </button>
           <button
             onClick={handleClearCart}
@@ -427,18 +428,19 @@ export default function Cart() {
               background: '#fff0f0',
               color: '#dc2626',
               border: '1.5px solid #fecaca',
-              borderRadius: 8,
+              borderRadius: 24,
               fontWeight: 700,
               fontSize: '1.08rem',
               letterSpacing: '1px',
               cursor: 'pointer',
               transition: 'background 0.2s, color 0.2s, border 0.2s, transform 0.15s',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.7rem',
             }}
-            onMouseOver={e => {e.currentTarget.style.background = '#fee2e2';e.currentTarget.style.color='#b91c1c';e.currentTarget.style.borderColor='#fca5a5';e.currentTarget.style.transform='scale(1.03)';}}
+            onMouseOver={e => {e.currentTarget.style.background = '#fee2e2';e.currentTarget.style.color='#dc2626';e.currentTarget.style.borderColor='#fca5a5';e.currentTarget.style.transform='scale(1.03)';}}
             onMouseOut={e => {e.currentTarget.style.background = '#fff0f0';e.currentTarget.style.color = '#dc2626';e.currentTarget.style.borderColor = '#fecaca';e.currentTarget.style.transform='none';}}
           >
-            Vider le panier
+            <Trash2 size={20} style={{marginBottom: -2}} /> Vider le panier
           </button>
           <button
             onClick={() => navigate('/productclient')}
@@ -448,14 +450,15 @@ export default function Cart() {
               background: '#fff',
               color: '#4f46e5',
               border: '2px solid #4f46e5',
-              borderRadius: 8,
+              borderRadius: 24,
               fontWeight: 700,
               fontSize: '1.08rem',
               letterSpacing: '1px',
               cursor: 'pointer',
               marginTop: '1.2rem',
               transition: 'background 0.2s, color 0.2s, border 0.2s, transform 0.15s',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.7rem',
             }}
             onMouseOver={e => {e.currentTarget.style.background = '#f3f4f6';e.currentTarget.style.color='#4338ca';e.currentTarget.style.borderColor='#4338ca';e.currentTarget.style.transform='scale(1.03)';}}
             onMouseOut={e => {e.currentTarget.style.background = '#fff';e.currentTarget.style.color = '#4f46e5';e.currentTarget.style.borderColor = '#4f46e5';e.currentTarget.style.transform='none';}}
