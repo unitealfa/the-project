@@ -101,8 +101,8 @@ export default function Sidebar() {
       items = [];
   }
 
-  // Toujours ajouter "Home" à la fin
-  items.push({ label: 'Home', path: '/dashboard' });
+  // Toujours ajouter "Home" au début
+  items.unshift({ label: 'Home', path: '/dashboard' });
 
   return (
     <>
