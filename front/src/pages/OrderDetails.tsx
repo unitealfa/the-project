@@ -30,6 +30,14 @@ interface Order {
   etat_livraison: 'en_attente' | 'en_cours' | 'livree';
 }
 
+interface User {
+  id: string;
+  nom?: string;
+  prenom?: string;
+  nom_client?: string;
+  role: string;
+}
+
 export default function OrderDetails() {
   const { orderId } = useParams();
   const navigate = useNavigate();
@@ -40,8 +48,20 @@ export default function OrderDetails() {
   const [newReclamation, setNewReclamation] = useState("");
   const [newReclamationTitre, setNewReclamationTitre] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
+    const raw = localStorage.getItem('user');
+    if (raw) {
+      try {
+        const parsedUser = JSON.parse(raw);
+        setUser(parsedUser);
+        console.log("Logged in user role:", parsedUser.role);
+      } catch (e) {
+        console.error("Failed to parse user from localStorage", e);
+      }
+    }
+
     const fetchData = async () => {
       if (!orderId) {
         setError("ID de commande manquant");
@@ -259,13 +279,13 @@ export default function OrderDetails() {
             gridTemplateColumns: '1fr 1fr',
             gap: '2rem',
             marginBottom: '2rem'
-          }}>
+        }}>
             <fieldset style={{
               border: '1px solid #e0e0e0',
               borderRadius: '8px',
               padding: '1.5rem',
               backgroundColor: '#fafafa'
-            }}>
+          }}>
               <legend style={{
                 padding: '0 1rem',
                 color: '#1a1a1a',
@@ -325,80 +345,83 @@ export default function OrderDetails() {
             }}>Articles commandés</legend>
             <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
               {order.items.map((item, i) => (
-                <li key={i} style={{ marginBottom: 4, color: '#1a1a1a' }}>{item.productName} × {item.quantity} — {item.prix_detail.toFixed(2)} €</li>
+                <li key={i} style={{ marginBottom: '1rem', color: '#1a1a1a' }}>{item.productName} × {item.quantity} — {item.prix_detail.toFixed(2)} €</li>
               ))}
             </ul>
           </fieldset>
 
           {/* Réclamations */}
-          <fieldset style={{
-            border: '1px solid #e0e0e0',
-            borderRadius: '8px',
-            padding: '1.5rem',
-            backgroundColor: '#fafafa',
-            marginBottom: '2rem'
-          }}>
-            <legend style={{
-              padding: '0 1rem',
-              color: '#1a1a1a',
-              fontWeight: 'bold',
-              fontSize: '1.1rem'
-            }}>Réclamations</legend>
-            <form onSubmit={handleSubmitReclamation} style={{ marginBottom: '1.5rem' }}>
-              <input
-                type="text"
-                placeholder="Titre"
-                value={newReclamationTitre}
-                onChange={e => setNewReclamationTitre(e.target.value)}
+          {user?.role !== 'Administrateur des ventes' && (
+            <fieldset style={{
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              backgroundColor: '#fafafa',
+              marginBottom: '2rem'
+            }}>
+              <legend style={{
+                padding: '0 1rem',
+                color: '#1a1a1a',
+                fontWeight: 'bold',
+                fontSize: '1.1rem'
+              }}>Réclamations</legend>
+              <form onSubmit={handleSubmitReclamation} style={{ marginBottom: '1.5rem' }}>
+                <input
+                  type="text"
+                  placeholder="Titre"
+                  value={newReclamationTitre}
+                  onChange={e => setNewReclamationTitre(e.target.value)}
+                  style={{
+                    padding: '0.5rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '4px',
+                    marginRight: '1rem',
+                    marginBottom: '0.5rem',
+                    width: '200px'
+                  }}
+                  required
+                />
+                <textarea
+                  placeholder="Votre réclamation"
+                  value={newReclamation}
+                  onChange={e => setNewReclamation(e.target.value)}
+                  style={{
+                    padding: '0.5rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '4px',
+                    marginRight: '1rem',
+                    marginBottom: '0.5rem',
+                    width: '100%',
+                    minHeight: '100px',
+                    resize: 'vertical'
+                  }}
+                  required
+                ></textarea>
+              <button
+                type="submit"
+                disabled={submitting}
                 style={{
-                  padding: '0.5rem',
-                  border: '1px solid #e0e0e0',
-                  borderRadius: '4px',
-                  marginRight: '1rem',
-                  marginBottom: '0.5rem',
-                  width: '200px'
-                }}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Votre réclamation"
-                value={newReclamation}
-                onChange={e => setNewReclamation(e.target.value)}
-                style={{
-                  padding: '0.5rem',
-                  border: '1px solid #e0e0e0',
-                  borderRadius: '4px',
-                  marginRight: '1rem',
-                  marginBottom: '0.5rem',
-                  width: '300px'
-                }}
-                required
-              />
-            <button
-              type="submit"
-              disabled={submitting}
-              style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#1a1a1a',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#1a1a1a',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '1rem'
                 }}
               >
-                Envoyer
-            </button>
-          </form>
-            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-              {reclamations.map((rec, i) => (
-                <li key={i} style={{ marginBottom: '1rem', color: '#1a1a1a' }}>
-                  <strong>{rec.titre}</strong> — {rec.message}
-                </li>
-              ))}
-            </ul>
-          </fieldset>
+                  Envoyer
+              </button>
+            </form>
+              <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                {reclamations.map((rec, i) => (
+                  <li key={i} style={{ marginBottom: '1rem', color: '#1a1a1a' }}>
+                    <strong>{rec.titre}</strong> — {rec.message}
+                  </li>
+                ))}
+              </ul>
+            </fieldset>
+          )}
         </div>
       </div>
     </>

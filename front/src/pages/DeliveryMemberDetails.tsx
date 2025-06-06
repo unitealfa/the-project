@@ -149,23 +149,7 @@ export default function MemberDetails() {
                 paddingTop: '2rem',
                 borderTop: '1px solid #e0e0e0'
               }}>
-                <button
-                  onClick={() => nav(`/teams/members/${memberId}/edit`)}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: '#1a1a1a',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    fontSize: '1rem'
-                  }}
-                >
-                  ✏️ Modifier ce membre
-                </button>
+                
               </div>
             </>
           ) : null}

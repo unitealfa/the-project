@@ -123,31 +123,53 @@ export default function ProductList() {
   return (
     <>
       <Header />
-      <main style={{ padding: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <h1>📦 Catalogue des produits</h1>
+      <main style={{ 
+        padding: '2rem',
+        maxWidth: '1400px',
+        margin: '0 auto',
+        background: '#ffffff',
+        minHeight: '100vh'
+      }}>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          marginBottom: '2.5rem',
+          padding: '0 1rem'
+        }}>
+          <h1 style={{
+            color: '#1a1a1a',
+            fontSize: '2.3rem',
+            fontWeight: 800,
+            letterSpacing: '-1px',
+            margin: 0
+          }}>Catalogue des produits</h1>
           {client && (
             <div style={{ 
-              padding: '1rem', 
-              backgroundColor: '#f3f4f6', 
-              borderRadius: '8px',
+              padding: '1rem 1.5rem', 
+              backgroundColor: '#fafafa', 
+              borderRadius: '14px',
               display: 'flex',
               alignItems: 'center',
-              gap: '1rem'
+              gap: '1rem',
+              boxShadow: '0 1px 4px 0 rgba(0,0,0,0.03)',
+              border: '1px solid #e0e0e0'
             }}>
-              <span>Client sélectionné :</span>
-              <strong>{client.nom_client}</strong>
+              <span style={{ color: '#666' }}>Client sélectionné :</span>
+              <strong style={{ color: '#1a1a1a' }}>{client.nom_client}</strong>
             </div>
           )}
         </div>
 
         {error && (
           <div style={{
-            padding: '1rem',
-            backgroundColor: '#fee2e2',
+            padding: '1rem 1.5rem',
+            backgroundColor: '#fef2f2',
             color: '#dc2626',
-            borderRadius: '8px',
-            marginBottom: '1rem'
+            borderRadius: '14px',
+            marginBottom: '1.5rem',
+            border: '1px solid #fecaca',
+            boxShadow: '0 1px 4px 0 rgba(220,38,38,0.03)'
           }}>
             {error}
           </div>
@@ -155,16 +177,19 @@ export default function ProductList() {
 
         {successMessage && (
           <div style={{
-            padding: '1rem',
-            backgroundColor: '#dcfce7',
+            padding: '1rem 1.5rem',
+            backgroundColor: '#f0fdf4',
             color: '#16a34a',
-            borderRadius: '8px',
-            marginBottom: '1rem'
+            borderRadius: '14px',
+            marginBottom: '1.5rem',
+            border: '1px solid #bbf7d0',
+            boxShadow: '0 1px 4px 0 rgba(22,163,74,0.03)'
           }}>
             {successMessage}
           </div>
         )}
 
+        <div style={{ marginBottom: '2rem' }}>
         <PaginationSearch
           totalItems={filteredProducts.length}
           itemsPerPage={itemsPerPage}
@@ -174,11 +199,13 @@ export default function ProductList() {
           onSearchChange={setSearchTerm}
           placeholder="Rechercher un produit..."
         />
+        </div>
 
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
-          gap: '2rem' 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
+          gap: '2rem',
+          padding: '0 1rem'
         }}>
           {currentItems.map(product => {
             const depotStock = product.disponibilite.find(d => d.depot_id === user?.depot);
@@ -187,45 +214,105 @@ export default function ProductList() {
 
             return (
               <div key={product._id} style={{
-                border: '1px solid #ddd',
-                borderRadius: '12px',
+                border: '1px solid #e0e0e0',
+                borderRadius: '18px',
                 padding: '1.5rem',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '1rem'
+                gap: '1.2rem',
+                background: '#fff',
+                boxShadow: '0 1px 4px 0 rgba(0,0,0,0.03)',
+                transition: 'transform 0.2s, box-shadow 0.2s'
               }}>
                 {product.images && product.images.length > 0 && (
+                  <div style={{
+                    position: 'relative',
+                    width: '100%',
+                    height: '200px',
+                    borderRadius: '12px',
+                    overflow: 'hidden'
+                  }}>
                   <img
                     src={product.images[0]}
                     alt={product.nom_product}
                     style={{
                       width: '100%',
-                      height: '200px',
-                      objectFit: 'cover',
-                      borderRadius: '8px'
-                    }}
-                  />
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  </div>
                 )}
-                <h3 style={{ margin: 0 }}>{product.nom_product}</h3>
-                <p style={{ margin: 0 }}>{product.description}</p>
-                <p style={{ margin: 0, fontWeight: 'bold' }}>
-                  Prix : {product.prix_detail} €
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  <h3 style={{ 
+                    margin: 0,
+                    fontSize: '1.2rem',
+                    fontWeight: 600,
+                    color: '#1a1a1a'
+                  }}>{product.nom_product}</h3>
+                  <p style={{ 
+                    margin: 0,
+                    color: '#666',
+                    fontSize: '0.95rem',
+                    lineHeight: '1.5'
+                  }}>{product.description}</p>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginTop: 'auto'
+                  }}>
+                    <p style={{ 
+                      margin: 0,
+                      fontWeight: 700,
+                      fontSize: '1.1rem',
+                      color: '#1a1a1a'
+                    }}>
+                      {product.prix_detail.toFixed(2)} €
                 </p>
-                <p style={{ margin: 0, color: stock > 0 ? '#10b981' : '#ef4444' }}>
+                    <span style={{
+                      padding: '0.4rem 0.8rem',
+                      borderRadius: '999px',
+                      fontSize: '0.9rem',
+                      fontWeight: 500,
+                      backgroundColor: stock > 0 ? '#f0fdf4' : '#fef2f2',
+                      color: stock > 0 ? '#16a34a' : '#dc2626',
+                      border: `1px solid ${stock > 0 ? '#bbf7d0' : '#fecaca'}`
+                    }}>
                   Stock : {stock}
-                </p>
+                    </span>
+                  </div>
+                </div>
                 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ 
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                  marginTop: '0.5rem'
+                }}>
+                  <div style={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.8rem',
+                    padding: '0.5rem',
+                    backgroundColor: '#fafafa',
+                    borderRadius: '12px',
+                    border: '1px solid #e0e0e0'
+                  }}>
                     <button
                       onClick={() => handleQuantityChange(product._id, quantity - 1)}
                       disabled={quantity <= 1}
                       style={{
-                        padding: '0.25rem 0.5rem',
-                        backgroundColor: '#f3f4f6',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '4px',
-                        cursor: quantity <= 1 ? 'not-allowed' : 'pointer'
+                        padding: '0.4rem 0.8rem',
+                        backgroundColor: '#fff',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '8px',
+                        cursor: quantity <= 1 ? 'not-allowed' : 'pointer',
+                        color: quantity <= 1 ? '#9ca3af' : '#1a1a1a',
+                        fontWeight: 600,
+                        fontSize: '1.1rem',
+                        transition: 'all 0.2s'
                       }}
                     >
                       -
@@ -238,21 +325,28 @@ export default function ProductList() {
                       onChange={(e) => handleQuantityChange(product._id, parseInt(e.target.value) || 1)}
                       style={{
                         width: '60px',
-                        padding: '0.25rem',
+                        padding: '0.4rem',
                         textAlign: 'center',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '4px'
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '8px',
+                        backgroundColor: '#fff',
+                        fontSize: '1rem',
+                        fontWeight: 500
                       }}
                     />
                     <button
                       onClick={() => handleQuantityChange(product._id, quantity + 1)}
                       disabled={quantity >= stock}
                       style={{
-                        padding: '0.25rem 0.5rem',
-                        backgroundColor: '#f3f4f6',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '4px',
-                        cursor: quantity >= stock ? 'not-allowed' : 'pointer'
+                        padding: '0.4rem 0.8rem',
+                        backgroundColor: '#fff',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '8px',
+                        cursor: quantity >= stock ? 'not-allowed' : 'pointer',
+                        color: quantity >= stock ? '#9ca3af' : '#1a1a1a',
+                        fontWeight: 600,
+                        fontSize: '1.1rem',
+                        transition: 'all 0.2s'
                       }}
                     >
                       +
@@ -262,16 +356,24 @@ export default function ProductList() {
                     onClick={() => handleAddToCart(product._id)}
                     disabled={stock === 0}
                     style={{
-                      padding: '0.75rem 1.5rem',
-                      backgroundColor: stock > 0 ? '#10b981' : '#9ca3af',
-                      color: 'white',
+                      padding: '0.8rem 1.5rem',
+                      backgroundColor: stock > 0 ? '#1a1a1a' : '#f3f4f6',
+                      color: stock > 0 ? '#fff' : '#9ca3af',
                       border: 'none',
-                      borderRadius: '8px',
+                      borderRadius: '12px',
                       cursor: stock > 0 ? 'pointer' : 'not-allowed',
                       fontSize: '1rem',
-                      transition: 'background-color 0.2s'
+                      fontWeight: 600,
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem'
                     }}
                   >
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
                     {stock > 0 ? 'Ajouter au panier' : 'Rupture de stock'}
                   </button>
                 </div>

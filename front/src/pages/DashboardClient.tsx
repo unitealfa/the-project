@@ -21,6 +21,10 @@ export default function DashboardClient() {
     navigate('/productclient');
   };
 
+  const consulterHistorique = () => {
+    navigate('/historiqueorders');
+  };
+
   return (
     <>
       <Header />
@@ -51,6 +55,23 @@ export default function DashboardClient() {
           }}
         >
           Consulter les produits
+        </button>
+
+        <button
+          onClick={consulterHistorique}
+          style={{
+            marginTop: '1rem',
+            padding: '0.75rem 1.5rem',
+            backgroundColor: '#007bff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            marginLeft: '1rem'
+          }}
+        >
+          Historique des commandes
         </button>
       </main>
     </>

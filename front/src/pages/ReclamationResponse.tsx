@@ -15,6 +15,26 @@ export default function ReclamationResponse() {
   const [sending, setSending] = useState(false);
   const [rejecting, setRejecting] = useState(false);
 
+  // Helper function to get status color
+  const getStatusColor = (status: string | undefined) => {
+    switch (status) {
+      case 'en_attente': return '#f59e0b'; // Yellow-orange
+      case 'en_cours': return '#3b82f6'; // Blue
+      case 'livree': return '#10b981'; // Green
+      default: return '#6b7280'; // Gray
+    }
+  };
+
+  // Helper function to get status text
+  const getStatusText = (status: string | undefined) => {
+    switch (status) {
+      case 'en_attente': return 'En attente';
+      case 'en_cours': return 'En cours';
+      case 'livree': return 'Livrée';
+      default: return status || '';
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -34,7 +54,7 @@ export default function ReclamationResponse() {
         }
       } catch (err) {
         console.error("Erreur lors du chargement des données:", err);
-        setError("Erreur lors du chargement des données");
+        alert("Erreur lors du chargement des données");
       } finally {
         setLoading(false);
       }
@@ -55,7 +75,7 @@ export default function ReclamationResponse() {
       navigate('/reclamations');
     } catch (err) {
       console.error("Erreur lors de l'envoi de la réponse:", err);
-      setError("Erreur lors de l'envoi de la réponse");
+      alert("Erreur lors de l'envoi de la réponse");
     } finally {
       setSending(false);
     }
@@ -73,7 +93,7 @@ export default function ReclamationResponse() {
       navigate('/reclamations');
     } catch (err) {
       console.error("Erreur lors du rejet de la réclamation:", err);
-      setError("Erreur lors du rejet de la réclamation");
+      alert("Erreur lors du rejet de la réclamation");
     } finally {
       setRejecting(false);
     }
@@ -83,8 +103,22 @@ export default function ReclamationResponse() {
     return (
       <>
         <Header />
-        <main style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
-          <div>Chargement...</div>
+        <main style={{
+          padding: "2rem",
+          maxWidth: "1000px", // Increased max width slightly
+          margin: "0 auto",
+          backgroundColor: '#f4f7f6', // Soft background color
+          minHeight: 'calc(100vh - 64px)',
+          fontFamily: 'Arial, sans-serif'
+         }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            padding: '2rem',
+            borderRadius: '8px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)', // Softer shadow
+          }}>
+            <div>Chargement...</div>
+          </div>
         </main>
       </>
     );
@@ -94,21 +128,38 @@ export default function ReclamationResponse() {
     return (
       <>
         <Header />
-        <main style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
-          <div style={{ color: "red", marginBottom: "1rem" }}>{error}</div>
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              background: "#4f46e5",
-              color: "white",
-              border: "none",
-              borderRadius: "0.375rem",
-              padding: "0.5rem 1rem",
-              cursor: "pointer"
-            }}
-          >
-            ← Retour
-          </button>
+        <main style={{
+          padding: "2rem",
+          maxWidth: "1000px",
+          margin: "0 auto",
+          backgroundColor: '#f4f7f6',
+          minHeight: 'calc(100vh - 64px)',
+          fontFamily: 'Arial, sans-serif'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            padding: '2rem',
+            borderRadius: '8px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+          }}>
+            <div style={{ color: '#e53e3e', marginBottom: '1rem' }}>{error}</div> {/* Red color for error */}
+            <button
+              onClick={() => navigate(-1)}
+              style={{
+                backgroundColor: '#4a5568', // Darker gray for secondary action
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '0.75rem 1.5rem',
+                cursor: 'pointer',
+                marginBottom: '1rem',
+                fontSize: '1rem',
+                transition: 'background-color 0.2s ease'
+              }}
+            >
+              ← Retour
+            </button>
+          </div>
         </main>
       </>
     );
@@ -117,85 +168,108 @@ export default function ReclamationResponse() {
   return (
     <>
       <Header />
-      <main style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
-        <div style={{ marginBottom: "2rem" }}>
+      <main style={{
+        padding: "2rem",
+        maxWidth: "1000px", // Increased max width slightly
+        margin: "0 auto",
+        backgroundColor: '#f4f7f6', // Soft background color
+        minHeight: 'calc(100vh - 64px)',
+        fontFamily: 'Arial, sans-serif'
+       }}>
+        <div style={{
+          backgroundColor: '#ffffff',
+          padding: '2rem',
+          borderRadius: '8px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)', // Softer shadow
+        }}>
           <button
             onClick={() => navigate(-1)}
             style={{
-              background: "#4f46e5",
-              color: "white",
-              border: "none",
-              borderRadius: "0.375rem",
-              padding: "0.5rem 1rem",
-              cursor: "pointer",
-              marginBottom: "1rem"
+              backgroundColor: '#4a5568', // Darker gray for secondary action
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '0.75rem 1.5rem',
+              cursor: 'pointer',
+              marginBottom: '2rem',
+              fontSize: '1rem',
+              transition: 'background-color 0.2s ease'
             }}
           >
             ← Retour
           </button>
-          <h1 style={{ marginBottom: "1rem" }}>Répondre à la réclamation</h1>
-        </div>
+          <h1 style={{ color: '#1a1a1a', fontSize: '2rem', marginBottom: '2rem', borderBottom: '2px solid #1a1a1a', paddingBottom: '0.5rem' }}>
+            Répondre à la réclamation
+          </h1>
 
-        <div style={{ 
-          display: "grid", 
-          gridTemplateColumns: "1fr 1fr",
-          gap: "2rem"
-        }}>
-          {/* Détails de la réclamation et de la commande */}
-          <div>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", // Responsive grid
+            gap: "2rem",
+            marginBottom: "2rem"
+          }}>
+            {/* Détails de la réclamation */}
             <div style={{
-              background: "white",
-              padding: "1.5rem",
-              borderRadius: "0.5rem",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-              marginBottom: "1.5rem"
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              backgroundColor: '#fff', // White background for cards
+              boxShadow: '0 1px 4px rgba(0, 0, 0, 0.04)' // Subtle shadow for cards
             }}>
-              <h2 style={{ fontSize: "1.25rem", marginBottom: "1rem" }}>Détails de la réclamation</h2>
+              <h2 style={{ color: '#1a1a1a', fontSize: '1.25rem', marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>Détails de la réclamation</h2>
               <div style={{ marginBottom: "1rem" }}>
-                <strong>Titre :</strong>
-                <p style={{ marginTop: "0.25rem" }}>{reclamation?.titre}</p>
+                <strong style={{ color: '#555' }}>Titre :</strong>
+                <p style={{ marginTop: "0.5rem", color: '#333' }}>{reclamation?.titre}</p>
               </div>
               <div style={{ marginBottom: "1rem" }}>
-                <strong>Message :</strong>
-                <p style={{ marginTop: "0.25rem" }}>{reclamation?.message}</p>
+                <strong style={{ color: '#555' }}>Message :</strong>
+                <p style={{ marginTop: "0.5rem", color: '#333' }}>{reclamation?.message}</p>
               </div>
               <div>
-                <strong>Date de création :</strong>
-                <p style={{ marginTop: "0.25rem" }}>
+                <strong style={{ color: '#555' }}>Date de création :</strong>
+                <p style={{ marginTop: "0.5rem", color: '#333' }}>
                   {reclamation?.createdAt && new Date(reclamation.createdAt).toLocaleString()}
                 </p>
               </div>
             </div>
 
+            {/* Détails de la commande */}
             {order && (
               <div style={{
-                background: "white",
-                padding: "1.5rem",
-                borderRadius: "0.5rem",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
+                border: '1px solid #e0e0e0',
+                borderRadius: '8px',
+                padding: '1.5rem',
+                backgroundColor: '#fff', // White background for cards
+                boxShadow: '0 1px 4px rgba(0, 0, 0, 0.04)'
               }}>
-                <h2 style={{ fontSize: "1.25rem", marginBottom: "1rem" }}>Détails de la commande</h2>
+                <h2 style={{ color: '#1a1a1a', fontSize: '1.25rem', marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>Détails de la commande</h2>
                 <div style={{ marginBottom: "1rem" }}>
-                  <strong>Numéro de commande :</strong>
-                  <p style={{ marginTop: "0.25rem" }}>#{order._id}</p>
+                  <strong style={{ color: '#555' }}>Numéro de commande :</strong>
+                  <p style={{ marginTop: "0.5rem", color: '#333' }}>#{order._id}</p>
                 </div>
                 <div style={{ marginBottom: "1rem" }}>
-                  <strong>Date de commande :</strong>
-                  <p style={{ marginTop: "0.25rem" }}>
+                  <strong style={{ color: '#555' }}>Date de commande :</strong>
+                  <p style={{ marginTop: "0.5rem", color: '#333' }}>
                     {new Date(order.createdAt).toLocaleString()}
                   </p>
                 </div>
                 <div style={{ marginBottom: "1rem" }}>
-                  <strong>Statut :</strong>
-                  <p style={{ marginTop: "0.25rem" }}>
-                    {order.etat_livraison === 'en_attente' ? 'En attente' :
-                     order.etat_livraison === 'en_cours' ? 'En cours de livraison' :
-                     order.etat_livraison === 'livree' ? 'Livrée' : order.etat_livraison}
-                  </p>
+                  <strong style={{ color: '#555' }}>Statut :</strong>
+                  {/* Apply styling to the status text */}
+                  <span style={{
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: '9999px', // Pill shape
+                    backgroundColor: getStatusColor(order.etat_livraison),
+                    color: 'white',
+                    fontSize: '0.875rem', // Smaller font size
+                    fontWeight: 'bold'
+                  }}>
+                    {getStatusText(order.etat_livraison)}
+                  </span>
                 </div>
                 <div>
-                  <strong>Articles :</strong>
-                  <ul style={{ marginTop: "0.25rem", paddingLeft: "1.5rem" }}>
+                  <strong style={{ color: '#555' }}>Articles :</strong>
+                  <ul style={{ marginTop: "0.5rem", paddingLeft: "1.5rem", color: '#333' }}>
                     {order.items.map((item, index) => (
                       <li key={index}>
                         {item.productName} - Quantité: {item.quantity} - Prix: {item.prix_detail} €
@@ -209,66 +283,79 @@ export default function ReclamationResponse() {
 
           {/* Formulaire de réponse */}
           <div style={{
-            background: "white",
-            padding: "1.5rem",
-            borderRadius: "0.5rem",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
+             border: '1px solid #e0e0e0',
+             borderRadius: '8px',
+             padding: '1.5rem',
+             backgroundColor: '#fff', // White background for cards
+             boxShadow: '0 1px 4px rgba(0, 0, 0, 0.04)',
+             marginTop: '2rem' // Ensure spacing if only one detail section is shown
           }}>
             <div style={{ 
               display: "flex", 
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: "1rem"
+              marginBottom: "1.5rem", // Increased spacing
+              paddingBottom: '1rem', // Added padding bottom
+              borderBottom: '1px solid #eee' // Added border bottom
             }}>
-              <h2 style={{ fontSize: "1.25rem" }}>Répondre au client</h2>
+              <h2 style={{ color: '#1a1a1a', fontSize: '1.25rem' }}>Répondre au client</h2>
               <button
                 onClick={handleReject}
                 disabled={rejecting}
                 style={{
-                  background: "#ef4444",
+                  backgroundColor: "#e53e3e", // Red color for reject
                   color: "white",
-                  border: "none",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem 1rem",
-                  cursor: "pointer",
-                  opacity: rejecting ? 0.7 : 1
+                  border: 'none',
+                  borderRadius: '20px', // Making it more rounded
+                  padding: '0.75rem 1.5rem',
+                  cursor: 'pointer',
+                  opacity: rejecting ? 0.7 : 1,
+                  fontSize: '1rem',
+                  transition: 'background-color 0.2s ease'
                 }}
               >
                 {rejecting ? "Rejet en cours..." : "Rejeter la réclamation"}
               </button>
             </div>
             <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", marginBottom: "0.5rem" }}>
-                  Réponse :
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label htmlFor="reponse" style={{ display: "block", marginBottom: "0.5rem", fontWeight: 'bold', color: '#555' }}>
+                  Votre réponse :
                 </label>
                 <textarea
+                  id="reponse"
                   value={response}
                   onChange={(e) => setResponse(e.target.value)}
                   style={{
                     width: "100%",
                     minHeight: "200px",
-                    padding: "0.5rem",
-                    borderRadius: "0.375rem",
-                    border: "1px solid #d1d5db"
+                    padding: '0.75rem',
+                    border: '1px solid #ccc', // Lighter border
+                    borderRadius: '4px',
+                    fontSize: '1rem',
+                    backgroundColor: '#fff',
+                    resize: 'vertical',
+                    outline: 'none',
+                    transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+                    // Add focus style if needed later
+                    // ':focus': { borderColor: '#007bff', boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)' }
                   }}
-                  placeholder="Écrivez votre réponse ici..."
                   required
                 />
               </div>
-
               <button
                 type="submit"
                 disabled={sending}
                 style={{
-                  background: "#4f46e5",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "0.375rem",
-                  padding: "0.75rem 1.5rem",
-                  cursor: "pointer",
-                  width: "100%",
-                  opacity: sending ? 0.7 : 1
+                  backgroundColor: '#1a1a1a', // Dark button
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '0.75rem 1.5rem',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  opacity: sending ? 0.7 : 1,
+                  transition: 'background-color 0.2s ease'
                 }}
               >
                 {sending ? "Envoi en cours..." : "Envoyer la réponse"}

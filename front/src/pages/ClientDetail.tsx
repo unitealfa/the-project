@@ -124,13 +124,13 @@ export default function ClientDetail() {
             paddingBottom: '0.5rem'
           }}>Détail du client</h1>
 
-          {client.pfp && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '2rem',
-              marginBottom: '2rem'
-            }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2rem',
+            marginBottom: '2rem'
+          }}>
+            {client.pfp ? (
               <img
                 src={`${apiBase}/public/${client.pfp}`}
                 alt="Photo de profil du client"
@@ -140,23 +140,42 @@ export default function ClientDetail() {
                   objectFit: 'cover',
                   borderRadius: '50%',
                   border: '3px solid #1a1a1a',
-                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                  background: '#fafafa',
                 }}
               />
-              <div>
-                <p style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
-                  color: '#1a1a1a',
-                  marginBottom: '0.5rem'
-                }}>{client.nom_client}</p>
-                <p style={{
-                  color: '#666',
-                  fontSize: '1.1rem'
-                }}>{client.email}</p>
+            ) : (
+              <div style={{
+                width: 150,
+                height: 150,
+                borderRadius: '50%',
+                border: '3px solid #e0e0e0',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.07)',
+                background: '#fafafa',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '3.5rem',
+                color: '#bbb',
+                fontWeight: 700,
+                userSelect: 'none',
+              }}>
+                {client.nom_client?.charAt(0)?.toUpperCase() || '?'}
               </div>
+            )}
+            <div>
+              <p style={{
+                fontSize: '1.5rem',
+                fontWeight: 'bold',
+                color: '#1a1a1a',
+                marginBottom: '0.5rem'
+              }}>{client.nom_client}</p>
+              <p style={{
+                color: '#666',
+                fontSize: '1.1rem'
+              }}>{client.email}</p>
             </div>
-          )}
+          </div>
 
           <div style={{
             display: 'grid',
@@ -249,51 +268,6 @@ export default function ClientDetail() {
               </div>
             </fieldset>
           </div>
-
-          {user?.role === 'responsable depot' && (
-            <div style={{
-              display: 'flex',
-              gap: '1rem',
-              marginTop: '2rem',
-              paddingTop: '2rem',
-              borderTop: '1px solid #e0e0e0'
-            }}>
-              <button
-                onClick={() => navigate(`/clients/${id}/edit`)}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#1a1a1a',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontSize: '1rem'
-                }}
-              >
-                ✏️ Modifier
-              </button>
-              <button
-                onClick={handleDelete}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#dc2626',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontSize: '1rem'
-                }}
-              >
-                🗑️ Supprimer
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </>

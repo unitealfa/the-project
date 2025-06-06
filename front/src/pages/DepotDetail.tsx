@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 
 interface ResponsableRef {
@@ -31,35 +31,107 @@ interface Depot {
 export default function DepotDetail() {
   const { id } = useParams<{ id: string }>();
   const [depot, setDepot] = useState<Depot | null>(null);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const token = localStorage.getItem('token') || '';
   const apiBase = import.meta.env.VITE_API_URL;
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetch(`${apiBase}/api/depots/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(res => {
-        if (!res.ok) throw new Error(`Erreur ${res.status}`);
-        return res.json();
-      })
-      .then((d: Depot) => setDepot(d))
-      .catch(err => setError(err.message));
+    const fetchDepot = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await fetch(`${apiBase}/api/depots/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(`Erreur ${res.status}: ${res.statusText}`);
+        const d: Depot = await res.json();
+        setDepot(d);
+        setLoading(false);
+      } catch (err: any) {
+        console.error("Error fetching depot:", err);
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchDepot();
+    }
   }, [apiBase, id, token]);
+
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <main style={{
+          padding: '2rem',
+          maxWidth: '800px',
+          margin: '0 auto',
+          backgroundColor: '#f4f7f6',
+          minHeight: 'calc(100vh - 64px)',
+          fontFamily: 'Arial, sans-serif'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            padding: '2rem',
+            borderRadius: '8px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+          }}>
+            <p>Chargement...</p>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   if (error) {
     return (
       <>
         <Header />
-        <div style={{ padding: '1rem', color: 'red' }}>{error}</div>
+        <main style={{
+          padding: '2rem',
+          maxWidth: '800px',
+          margin: '0 auto',
+          backgroundColor: '#f4f7f6',
+          minHeight: 'calc(100vh - 64px)',
+          fontFamily: 'Arial, sans-serif'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            padding: '2rem',
+            borderRadius: '8px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+          }}>
+            <div style={{ color: '#e53e3e', marginBottom: '1rem' }}>{error}</div>
+          </div>
+        </main>
       </>
     );
   }
+
   if (!depot) {
     return (
       <>
         <Header />
-        <div style={{ padding: '1rem' }}>Chargement…</div>
+        <main style={{
+          padding: '2rem',
+          maxWidth: '800px',
+          margin: '0 auto',
+          backgroundColor: '#f4f7f6',
+          minHeight: 'calc(100vh - 64px)',
+          fontFamily: 'Arial, sans-serif'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            padding: '2rem',
+            borderRadius: '8px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+          }}>
+            <p>Dépôt non trouvé.</p>
+          </div>
+        </main>
       </>
     );
   }
@@ -77,43 +149,93 @@ export default function DepotDetail() {
   return (
     <>
       <Header />
-      <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-        <h1>Détails du dépôt</h1>
+      <main style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto', backgroundColor: '#f4f7f6', minHeight: 'calc(100vh - 64px)', fontFamily: 'Arial, sans-serif' }}>
+        <div style={{ backgroundColor: '#ffffff', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)' }}>
+          <button
+            onClick={() => navigate('/depots')}
+            style={{
+              backgroundColor: '#1a1a1a',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '0.75rem 1.5rem',
+              cursor: 'pointer',
+              marginBottom: '2rem',
+              fontSize: '1rem',
+              transition: 'background-color 0.2s ease'
+            }}
+          >
+            ← Retour à la liste
+          </button>
 
-        <p><strong>Nom :</strong> {nom_depot}</p>
-        <p><strong>Type :</strong> {type_depot}</p>
-        <p><strong>Capacité :</strong> {capacite}</p>
+          <h1 style={{ color: '#1a1a1a', fontSize: '2rem', marginBottom: '2rem', borderBottom: '2px solid #1a1a1a', paddingBottom: '0.5rem' }}>
+            Détails du dépôt : {nom_depot}
+          </h1>
 
-        <fieldset style={{ margin: '1rem 0' }}>
-          <legend>Adresse</legend>
-          <p>{adresse.rue}, {adresse.ville}</p>
-          <p>{adresse.code_postal} – {adresse.pays}</p>
-        </fieldset>
+          <div style={{
+             border: '1px solid #e0e0e0',
+             borderRadius: '8px',
+             padding: '1.5rem',
+             backgroundColor: '#fff',
+             boxShadow: '0 1px 4px rgba(0, 0, 0, 0.04)',
+             marginBottom: '2rem'
+          }}>
+            <h2 style={{ color: '#1a1a1a', fontSize: '1.25rem', marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>Informations Générales</h2>
+            <p style={{ marginBottom: '0.5rem' }}><strong style={{ color: '#555' }}>Nom :</strong> <span style={{ color: '#333' }}>{nom_depot}</span></p>
+            <p style={{ marginBottom: '0.5rem' }}><strong style={{ color: '#555' }}>Type :</strong> <span style={{ color: '#333' }}>{type_depot}</span></p>
+            <p style={{ marginBottom: '0.5rem' }}><strong style={{ color: '#555' }}>Capacité :</strong> <span style={{ color: '#333' }}>{capacite}</span></p>
+            <p><strong style={{ color: '#555' }}>Créé le :</strong> <span style={{ color: '#333' }}>{new Date(date_creation).toLocaleDateString()}</span></p>
+          </div>
 
-        {coordonnees && (
-          <fieldset style={{ margin: '1rem 0' }}>
-            <legend>Coordonnées</legend>
-            <p><strong>Lat :</strong> {coordonnees.latitude}</p>
-            <p><strong>Lng :</strong> {coordonnees.longitude}</p>
-          </fieldset>
-        )}
+          <div style={{
+             border: '1px solid #e0e0e0',
+             borderRadius: '8px',
+             padding: '1.5rem',
+             backgroundColor: '#fff',
+             boxShadow: '0 1px 4px rgba(0, 0, 0, 0.04)',
+             marginBottom: '2rem'
+          }}>
+            <h2 style={{ color: '#1a1a1a', fontSize: '1.25rem', marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>Adresse</h2>
+            <p style={{ marginBottom: '0.5rem', color: '#333' }}>{adresse.rue}, {adresse.ville}</p>
+            <p style={{ color: '#333' }}>{adresse.code_postal} – {adresse.pays}</p>
+          </div>
 
-        <fieldset style={{ margin: '1rem 0' }}>
-          <legend>Responsable dépôt</legend>
-          {responsable_id ? (
-            <>
-              <p><strong>Nom :</strong> {responsable_id.prenom} {responsable_id.nom}</p>
-              <p><strong>Email :</strong> {responsable_id.email}</p>
-              <p><strong>Téléphone :</strong> {responsable_id.num}</p>
-            </>
-          ) : (
-            <p>— Aucun responsable assigné</p>
+          {coordonnees && (
+             <div style={{
+               border: '1px solid #e0e0e0',
+               borderRadius: '8px',
+               padding: '1.5rem',
+               backgroundColor: '#fff',
+               boxShadow: '0 1px 4px rgba(0, 0, 0, 0.04)',
+               marginBottom: '2rem'
+            }}>
+              <h2 style={{ color: '#1a1a1a', fontSize: '1.25rem', marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>Coordonnées</h2>
+              <p style={{ marginBottom: '0.5rem' }}><strong style={{ color: '#555' }}>Latitude :</strong> <span style={{ color: '#333' }}>{coordonnees.latitude}</span></p>
+              <p><strong style={{ color: '#555' }}>Longitude :</strong> <span style={{ color: '#333' }}>{coordonnees.longitude}</span></p>
+            </div>
           )}
-        </fieldset>
 
-        <p>
-          <em>Créé le {new Date(date_creation).toLocaleDateString()}</em>
-        </p>
+          <div style={{
+             border: '1px solid #e0e0e0',
+             borderRadius: '8px',
+             padding: '1.5rem',
+             backgroundColor: '#fff',
+             boxShadow: '0 1px 4px rgba(0, 0, 0, 0.04)',
+             marginBottom: '2rem'
+          }}>
+            <h2 style={{ color: '#1a1a1a', fontSize: '1.25rem', marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>Responsable dépôt</h2>
+            {responsable_id ? (
+              <>
+                <p style={{ marginBottom: '0.5rem' }}><strong style={{ color: '#555' }}>Nom :</strong> <span style={{ color: '#333' }}>{responsable_id.prenom} {responsable_id.nom}</span></p>
+                <p style={{ marginBottom: '0.5rem' }}><strong style={{ color: '#555' }}>Email :</strong> <span style={{ color: '#333' }}>{responsable_id.email}</span></p>
+                <p><strong style={{ color: '#555' }}>Téléphone :</strong> <span style={{ color: '#333' }}>{responsable_id.num}</span></p>
+              </>
+            ) : (
+              <p style={{ color: '#333' }}>— Aucun responsable assigné</p>
+            )}
+          </div>
+
+        </div>
       </main>
     </>
   );
