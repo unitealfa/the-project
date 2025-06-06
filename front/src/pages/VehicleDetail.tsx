@@ -190,10 +190,24 @@ const VehicleDetail: React.FC = () => {
     return (
       <>
         <Header />
-        <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-          <h1>Détails du Véhicule</h1>
-          <p>Chargement en cours...</p>
-        </main>
+        <div style={{
+          padding: '2rem',
+          fontFamily: 'Arial, sans-serif',
+          maxWidth: '800px',
+          margin: '0 auto',
+          backgroundColor: '#ffffff',
+          minHeight: '100vh'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            padding: '2rem',
+            borderRadius: '8px',
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+          }}>
+            <h1 style={{ color: '#1a1a1a', fontSize: '2rem', marginBottom: '2rem', borderBottom: '2px solid #1a1a1a', paddingBottom: '0.5rem' }}>Détails du Véhicule</h1>
+            <p>Chargement en cours...</p>
+          </div>
+        </div>
       </>
     );
   }
@@ -202,22 +216,38 @@ const VehicleDetail: React.FC = () => {
     return (
       <>
         <Header />
-        <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-          <h1>Détails du Véhicule</h1>
-          <p style={{ color: 'red' }}>{error}</p>
-          <Link to="/admin-ventes/vehicules">
-            <button style={{ 
-              padding: '8px 15px', 
-              backgroundColor: '#2196F3', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '4px', 
-              cursor: 'pointer' 
-            }}>
-              Retour à la liste
-            </button>
-          </Link>
-        </main>
+        <div style={{
+          padding: '2rem',
+          fontFamily: 'Arial, sans-serif',
+          maxWidth: '800px',
+          margin: '0 auto',
+          backgroundColor: '#ffffff',
+          minHeight: '100vh'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            padding: '2rem',
+            borderRadius: '8px',
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+          }}>
+            <h1 style={{ color: '#1a1a1a', fontSize: '2rem', marginBottom: '2rem', borderBottom: '2px solid #1a1a1a', paddingBottom: '0.5rem' }}>Détails du Véhicule</h1>
+            <p style={{ color: 'red' }}>{error}</p>
+            <Link to="/admin-ventes/vehicules">
+              <button style={{
+                padding: '0.75rem 1.5rem',
+                backgroundColor: '#1a1a1a',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                marginTop: '1rem'
+              }}>
+                Retour à la liste
+              </button>
+            </Link>
+          </div>
+        </div>
       </>
     );
   }
@@ -226,22 +256,38 @@ const VehicleDetail: React.FC = () => {
     return (
       <>
         <Header />
-        <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-          <h1>Détails du Véhicule</h1>
-          <p>Véhicule non trouvé.</p>
-          <Link to="/admin-ventes/vehicules">
-            <button style={{ 
-              padding: '8px 15px', 
-              backgroundColor: '#2196F3', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '4px', 
-              cursor: 'pointer' 
-            }}>
-              Retour à la liste
-            </button>
-          </Link>
-        </main>
+        <div style={{
+          padding: '2rem',
+          fontFamily: 'Arial, sans-serif',
+          maxWidth: '800px',
+          margin: '0 auto',
+          backgroundColor: '#ffffff',
+          minHeight: '100vh'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            padding: '2rem',
+            borderRadius: '8px',
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+          }}>
+            <h1 style={{ color: '#1a1a1a', fontSize: '2rem', marginBottom: '2rem', borderBottom: '2px solid #1a1a1a', paddingBottom: '0.5rem' }}>Détails du Véhicule</h1>
+            <p>Véhicule non trouvé.</p>
+            <Link to="/admin-ventes/vehicules">
+              <button style={{
+                padding: '0.75rem 1.5rem',
+                backgroundColor: '#1a1a1a',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                marginTop: '1rem'
+              }}>
+                Retour à la liste
+              </button>
+            </Link>
+          </div>
+        </div>
       </>
     );
   }
@@ -249,180 +295,226 @@ const VehicleDetail: React.FC = () => {
   return (
     <>
       <Header />
-      <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h1>Détails du Véhicule</h1>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <Link to="/admin-ventes/vehicules">
-              <button style={{ 
-                padding: '8px 15px', 
-                backgroundColor: '#2196F3', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '4px', 
-                cursor: 'pointer' 
-              }}>
-                Retour à la liste
-              </button>
-            </Link>
-            <Link to={`/admin-ventes/vehicules/${id}/modifier`}>
-              <button style={{ 
-                padding: '8px 15px', 
-                backgroundColor: '#FF9800', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '4px', 
-                cursor: 'pointer' 
-              }}>
-                Modifier
-              </button>
-            </Link>
-          </div>
-        </div>
-        
-        {error && <p style={{ color: 'red', marginBottom: '1rem' }}>{error}</p>}
-        
-        <div style={{ 
-          backgroundColor: '#f9f9f9', 
-          padding: '1.5rem', 
+      <div style={{
+        padding: '2rem',
+        fontFamily: 'Arial, sans-serif',
+        maxWidth: '800px',
+        margin: '0 auto',
+        backgroundColor: '#ffffff',
+        minHeight: '100vh'
+      }}>
+        <div style={{
+          backgroundColor: '#ffffff',
+          padding: '2rem',
           borderRadius: '8px',
-          maxWidth: '800px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
         }}>
-          <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #ddd', paddingBottom: '1rem' }}>
-            <h2 style={{ marginBottom: '1rem', color: '#333' }}>Informations sur le véhicule</h2>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <p style={{ margin: '0.5rem 0', color: '#666' }}>Marque:</p>
-                <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{vehicule.make}</p>
-              </div>
-              
-              <div>
-                <p style={{ margin: '0.5rem 0', color: '#666' }}>Modèle:</p>
-                <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{vehicule.model}</p>
-              </div>
-              
-              <div>
-                <p style={{ margin: '0.5rem 0', color: '#666' }}>Année:</p>
-                <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{vehicule.year}</p>
-              </div>
-              
-              <div>
-                <p style={{ margin: '0.5rem 0', color: '#666' }}>Plaque d'immatriculation:</p>
-                <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{vehicule.license_plate}</p>
-              </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <h1 style={{
+              color: '#1a1a1a',
+              fontSize: '2rem',
+              borderBottom: '2px solid #1a1a1a',
+              paddingBottom: '0.5rem'
+            }}>Détails du Véhicule</h1>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <Link to="/admin-ventes/vehicules">
+                <button style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#1a1a1a',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '1rem'
+                }}>
+                  Retour à la liste
+                </button>
+              </Link>
+              <Link to={`/admin-ventes/vehicules/${id}/modifier`}>
+                <button style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#1a1a1a',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '1rem'
+                }}>
+                  Modifier
+                </button>
+              </Link>
+            </div>
+          </div>
 
-              <div>
-                <p style={{ margin: '0.5rem 0', color: '#666' }}>Capacité:</p>
-                <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{vehicule.capacity}</p>
-              </div>
+          {error && <p style={{ color: 'red', marginBottom: '1rem' }}>{error}</p>}
 
-              <div>
-                <p style={{ margin: '0.5rem 0', color: '#666' }}>Type:</p>
-                <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '2rem',
+            marginTop: '2rem'
+          }}>
+            <fieldset style={{
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              backgroundColor: '#fafafa'
+            }}>
+              <legend style={{
+                padding: '0 1rem',
+                color: '#1a1a1a',
+                fontWeight: 'bold',
+                fontSize: '1.1rem'
+              }}>Informations du véhicule</legend>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#1a1a1a' }}>Marque :</strong><br/>
+                <span style={{ color: '#666' }}>{vehicule.make}</span>
+              </p>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#1a1a1a' }}>Modèle :</strong><br/>
+                <span style={{ color: '#666' }}>{vehicule.model}</span>
+              </p>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#1a1a1a' }}>Année :</strong><br/>
+                <span style={{ color: '#666' }}>{vehicule.year}</span>
+              </p>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#1a1a1a' }}>Plaque d'immatriculation :</strong><br/>
+                <span style={{ color: '#666' }}>{vehicule.license_plate}</span>
+              </p>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#1a1a1a' }}>Capacité :</strong><br/>
+                <span style={{ color: '#666' }}>{vehicule.capacity}</span>
+              </p>
+              <p>
+                <strong style={{ color: '#1a1a1a' }}>Type :</strong><br/>
+                <span style={{ color: '#666' }}>
                   {vehicule.type.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #ddd', paddingBottom: '1rem' }}>
-            <h2 style={{ marginBottom: '1rem', color: '#333' }}>Personnel assigné</h2>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <p style={{ margin: '0.5rem 0', color: '#666' }}>Chauffeur:</p>
-                <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+                </span>
+              </p>
+            </fieldset>
+
+            <fieldset style={{
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              backgroundColor: '#fafafa'
+            }}>
+              <legend style={{
+                padding: '0 1rem',
+                color: '#1a1a1a',
+                fontWeight: 'bold',
+                fontSize: '1.1rem'
+              }}>Personnel assigné</legend>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#1a1a1a' }}>Chauffeur :</strong><br/>
+                <span style={{ color: '#666' }}>
                   {vehicule.chauffeur_id ? `${vehicule.chauffeur_id.prenom} ${vehicule.chauffeur_id.nom}` : 'Non assigné'}
-                </p>
+                </span>
                 {vehicule.chauffeur_id && (
-                  <p style={{ fontSize: '0.9rem', color: '#666' }}>{vehicule.chauffeur_id.email}</p>
+                  <span style={{ display: 'block', fontSize: '0.9rem', color: '#666' }}>
+                    {vehicule.chauffeur_id.email}
+                  </span>
                 )}
-              </div>
-              
-              <div>
-                <p style={{ margin: '0.5rem 0', color: '#666' }}>Livreur:</p>
-                <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+              </p>
+              <p>
+                <strong style={{ color: '#1a1a1a' }}>Livreur :</strong><br/>
+                <span style={{ color: '#666' }}>
                   {vehicule.livreur_id ? `${vehicule.livreur_id.prenom} ${vehicule.livreur_id.nom}` : 'Non assigné'}
-                </p>
+                </span>
                 {vehicule.livreur_id && (
-                  <p style={{ fontSize: '0.9rem', color: '#666' }}>{vehicule.livreur_id.email}</p>
+                  <span style={{ display: 'block', fontSize: '0.9rem', color: '#666' }}>
+                    {vehicule.livreur_id.email}
+                  </span>
                 )}
-              </div>
-            </div>
+              </p>
+            </fieldset>
+
+            <fieldset style={{
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              backgroundColor: '#fafafa',
+              gridColumn: '1 / -1'
+            }}>
+              <legend style={{
+                padding: '0 1rem',
+                color: '#1a1a1a',
+                fontWeight: 'bold',
+                fontSize: '1.1rem'
+              }}>Informations sur le dépôt</legend>
+              <p>
+                <strong style={{ color: '#1a1a1a' }}>Dépôt assigné :</strong><br/>
+                <span style={{ color: '#666' }}>
+                  {vehicule.depot_id ? vehicule.depot_id.nom_depot : 'Non assigné'}
+                </span>
+              </p>
+            </fieldset>
           </div>
-          
-          <div>
-            <h2 style={{ marginBottom: '1rem', color: '#333' }}>Informations sur le dépôt</h2>
-            
-            <p style={{ margin: '0.5rem 0', color: '#666' }}>Dépôt assigné:</p>
-            <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
-              {vehicule.depot_id ? vehicule.depot_id.nom_depot : 'Non assigné'}
-            </p>
-          </div>
-          
-          <div style={{ marginTop: '2rem' }}>
+
+          <div style={{ marginTop: '2rem', textAlign: 'right' }}>
             {!deleteConfirm ? (
               <button 
                 onClick={() => setDeleteConfirm(true)}
-                style={{ 
-                  padding: '8px 15px', 
-                  backgroundColor: '#f44336', 
-                  color: 'white', 
-                  border: 'none', 
-                  borderRadius: '4px', 
-                  cursor: 'pointer' 
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#dc2626',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '1rem'
                 }}
               >
                 Supprimer ce véhicule
               </button>
             ) : (
-              <div style={{ 
-                padding: '1rem', 
-                backgroundColor: '#ffebee', 
-                borderRadius: '4px',
-                marginTop: '1rem'
+              <div style={{
+                padding: '1rem',
+                backgroundColor: '#fee2e2',
+                borderRadius: '8px',
+                border: '1px solid #fecaca'
               }}>
-                <p style={{ marginBottom: '1rem', fontWeight: 'bold', color: '#c62828' }}>
+                <p style={{ marginBottom: '1rem', fontWeight: 'bold', color: '#991b1b' }}>
                   Êtes-vous sûr de vouloir supprimer ce véhicule ? Cette action est irréversible.
                 </p>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button 
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => setDeleteConfirm(false)}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      backgroundColor: '#6b7280',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    Annuler
+                  </button>
+                  <button
                     onClick={handleDelete}
                     disabled={deleteLoading}
-                    style={{ 
-                      padding: '8px 15px', 
-                      backgroundColor: '#f44336', 
-                      color: 'white', 
-                      border: 'none', 
-                      borderRadius: '4px', 
-                      cursor: deleteLoading ? 'not-allowed' : 'pointer',
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      backgroundColor: '#dc2626',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '1rem',
                       opacity: deleteLoading ? 0.7 : 1
                     }}
                   >
                     {deleteLoading ? 'Suppression...' : 'Confirmer la suppression'}
-                  </button>
-                  <button 
-                    onClick={() => setDeleteConfirm(false)}
-                    disabled={deleteLoading}
-                    style={{ 
-                      padding: '8px 15px', 
-                      backgroundColor: '#f5f5f5', 
-                      color: '#333', 
-                      border: '1px solid #ccc', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer' 
-                    }}
-                  >
-                    Annuler
                   </button>
                 </div>
               </div>
             )}
           </div>
         </div>
-      </main>
+      </div>
     </>
   );
 };

@@ -83,72 +83,194 @@ export default function ClientDetail() {
   return (
     <>
       <Header />
-      <main style={{ padding: '2rem' }}>
-        <button
-          onClick={() => navigate('/clients')}
-          style={{ marginBottom: '1rem', padding: '0.5rem 1rem' }}
-        >
-          ← Retour à la liste
-        </button>
-        <h1>👤 Détail du client</h1>
+      <div style={{
+        padding: '2rem',
+        fontFamily: 'Arial, sans-serif',
+        maxWidth: '800px',
+        margin: '0 auto',
+        backgroundColor: '#ffffff',
+        minHeight: '100vh'
+      }}>
+        <div style={{
+          backgroundColor: '#ffffff',
+          padding: '2rem',
+          borderRadius: '8px',
+          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        }}>
+          <button
+            onClick={() => navigate('/clients')}
+            style={{
+              marginBottom: '2rem',
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#1a1a1a',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontSize: '1rem'
+            }}
+          >
+            ← Retour à la liste
+          </button>
 
-        {/* Affichage de la photo de profil si elle existe */}
-        {client.pfp && (
-          <div style={{ marginBottom: '2rem' }}>
-            <img
-              src={`${apiBase}/public/${client.pfp}`}
-              alt="Photo de profil du client"
-              style={{
-                width: 120,
-                height: 120,
-                objectFit: 'cover',
-                borderRadius: '50%',
-                border: '2px solid #eee',
-                background: '#fff'
-              }}
-            />
-          </div>
-        )}
+          <h1 style={{
+            color: '#1a1a1a',
+            fontSize: '2rem',
+            marginBottom: '2rem',
+            borderBottom: '2px solid #1a1a1a',
+            paddingBottom: '0.5rem'
+          }}>Détail du client</h1>
 
-        <div style={{ display: 'grid', gap: '1rem', maxWidth: '600px' }}>
-          <div style={infoGroup}>
-            <h3 style={labelStyle}>Informations générales</h3>
-            <p><strong>Nom du client :</strong> {client.nom_client}</p>
-            <p><strong>Email :</strong> {client.email}</p>
-          </div>
+          {client.pfp && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '2rem',
+              marginBottom: '2rem'
+            }}>
+              <img
+                src={`${apiBase}/public/${client.pfp}`}
+                alt="Photo de profil du client"
+                style={{
+                  width: 150,
+                  height: 150,
+                  objectFit: 'cover',
+                  borderRadius: '50%',
+                  border: '3px solid #1a1a1a',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                }}
+              />
+              <div>
+                <p style={{
+                  fontSize: '1.5rem',
+                  fontWeight: 'bold',
+                  color: '#1a1a1a',
+                  marginBottom: '0.5rem'
+                }}>{client.nom_client}</p>
+                <p style={{
+                  color: '#666',
+                  fontSize: '1.1rem'
+                }}>{client.email}</p>
+              </div>
+            </div>
+          )}
 
-          <div style={infoGroup}>
-            <h3 style={labelStyle}>Contact</h3>
-            <p><strong>Nom du gérant :</strong> {client.contact.nom_gerant}</p>
-            <p><strong>Téléphone :</strong> {client.contact.telephone}</p>
-          </div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '2rem',
+            marginTop: '2rem'
+          }}>
+            <fieldset style={{
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              backgroundColor: '#fafafa'
+            }}>
+              <legend style={{
+                padding: '0 1rem',
+                color: '#1a1a1a',
+                fontWeight: 'bold',
+                fontSize: '1.1rem'
+              }}>Contact</legend>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#1a1a1a' }}>Nom du gérant :</strong><br/>
+                <span style={{ color: '#666' }}>{client.contact.nom_gerant}</span>
+              </p>
+              <p>
+                <strong style={{ color: '#1a1a1a' }}>Téléphone :</strong><br/>
+                <span style={{ color: '#666' }}>{client.contact.telephone}</span>
+              </p>
+            </fieldset>
 
-          <div style={infoGroup}>
-            <h3 style={labelStyle}>Localisation</h3>
-            <p><strong>Adresse :</strong> {client.localisation.adresse}</p>
-            <p><strong>Ville :</strong> {client.localisation.ville}</p>
-            <p><strong>Code postal :</strong> {client.localisation.code_postal}</p>
-            <p><strong>Région :</strong> {client.localisation.region}</p>
-          </div>
+            <fieldset style={{
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              backgroundColor: '#fafafa'
+            }}>
+              <legend style={{
+                padding: '0 1rem',
+                color: '#1a1a1a',
+                fontWeight: 'bold',
+                fontSize: '1.1rem'
+              }}>Localisation</legend>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#1a1a1a' }}>Adresse :</strong><br/>
+                <span style={{ color: '#666' }}>{client.localisation.adresse}</span>
+              </p>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#1a1a1a' }}>Ville :</strong><br/>
+                <span style={{ color: '#666' }}>{client.localisation.ville}</span>
+              </p>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#1a1a1a' }}>Code postal :</strong><br/>
+                <span style={{ color: '#666' }}>{client.localisation.code_postal}</span>
+              </p>
+              <p>
+                <strong style={{ color: '#1a1a1a' }}>Région :</strong><br/>
+                <span style={{ color: '#666' }}>{client.localisation.region}</span>
+              </p>
+            </fieldset>
 
-          <div style={infoGroup}>
-            <h3 style={labelStyle}>Statistiques des commandes</h3>
-            <p><strong>Montant total des commandes :</strong> {client.stats?.totalAmount.toLocaleString() ?? 0} DA</p>
-            <p><strong>Nombre de commandes :</strong> {client.stats?.orderCount ?? 0}</p>
-            <p><strong>Dernière commande :</strong> {client.stats?.lastOrder ? new Date(client.stats.lastOrder).toLocaleDateString() : 'Aucune'}</p>
+            <fieldset style={{
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              backgroundColor: '#fafafa',
+              gridColumn: '1 / -1'
+            }}>
+              <legend style={{
+                padding: '0 1rem',
+                color: '#1a1a1a',
+                fontWeight: 'bold',
+                fontSize: '1.1rem'
+              }}>Statistiques des commandes</legend>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '1rem'
+              }}>
+                <div>
+                  <strong style={{ color: '#1a1a1a' }}>Montant total :</strong><br/>
+                  <span style={{ color: '#666' }}>{client.stats?.totalAmount.toLocaleString() ?? 0} DA</span>
+                </div>
+                <div>
+                  <strong style={{ color: '#1a1a1a' }}>Nombre de commandes :</strong><br/>
+                  <span style={{ color: '#666' }}>{client.stats?.orderCount ?? 0}</span>
+                </div>
+                <div>
+                  <strong style={{ color: '#1a1a1a' }}>Dernière commande :</strong><br/>
+                  <span style={{ color: '#666' }}>{client.stats?.lastOrder ? new Date(client.stats.lastOrder).toLocaleDateString() : 'Aucune'}</span>
+                </div>
+              </div>
+            </fieldset>
           </div>
 
           {user?.role === 'responsable depot' && (
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              marginTop: '2rem',
+              paddingTop: '2rem',
+              borderTop: '1px solid #e0e0e0'
+            }}>
               <button
                 onClick={() => navigate(`/clients/${id}/edit`)}
                 style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#1a1a1a',
+                  color: '#ffffff',
                   border: 'none',
-                  borderRadius: '0.375rem',
+                  borderRadius: '4px',
                   cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '1rem'
                 }}
               >
                 ✏️ Modifier
@@ -156,12 +278,16 @@ export default function ClientDetail() {
               <button
                 onClick={handleDelete}
                 style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#ef4444',
-                  color: 'white',
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#dc2626',
+                  color: '#ffffff',
                   border: 'none',
-                  borderRadius: '0.375rem',
+                  borderRadius: '4px',
                   cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '1rem'
                 }}
               >
                 🗑️ Supprimer
@@ -169,7 +295,7 @@ export default function ClientDetail() {
             </div>
           )}
         </div>
-      </main>
+      </div>
     </>
   );
 }

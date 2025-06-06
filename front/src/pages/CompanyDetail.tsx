@@ -60,42 +60,128 @@ export default function CompanyDetail() {
   return (
     <>
       <Header/>
-      <div style={{ padding:16, fontFamily:'Arial, sans-serif' }}>
-        <h1>Détails de l’entreprise</h1>
-        <p><strong>Nom :</strong> {company.nom_company}</p>
-        <p><strong>Gérant :</strong> {company.gerant_company}</p>
-        <div style={{ marginBottom: 16 }}>
-          <img
-            src={`${apiBase}/${company.pfp}`}
-            alt="Photo de profil de l’entreprise"
-            style={{
-              width: 120,
-              height: 120,
-              objectFit: 'cover',
-              borderRadius: '50%',
-              border: '2px solid #ccc',
-            }}
-          />
+      <div style={{
+        padding: '2rem',
+        fontFamily: 'Arial, sans-serif',
+        maxWidth: '800px',
+        margin: '0 auto',
+        backgroundColor: '#ffffff',
+        minHeight: '100vh'
+      }}>
+        <div style={{
+          backgroundColor: '#ffffff',
+          padding: '2rem',
+          borderRadius: '8px',
+          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        }}>
+          <h1 style={{
+            color: '#1a1a1a',
+            fontSize: '2rem',
+            marginBottom: '2rem',
+            borderBottom: '2px solid #1a1a1a',
+            paddingBottom: '0.5rem'
+          }}>Détails de l'entreprise</h1>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2rem',
+            marginBottom: '2rem'
+          }}>
+            <img
+              src={`${apiBase}/${company.pfp}`}
+              alt="Photo de profil de l'entreprise"
+              style={{
+                width: 150,
+                height: 150,
+                objectFit: 'cover',
+                borderRadius: '50%',
+                border: '3px solid #1a1a1a',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+              }}
+            />
+            <div>
+              <p style={{
+                fontSize: '1.5rem',
+                fontWeight: 'bold',
+                color: '#1a1a1a',
+                marginBottom: '0.5rem'
+              }}>{company.nom_company}</p>
+              <p style={{
+                color: '#666',
+                fontSize: '1.1rem'
+              }}><strong>Gérant :</strong> {company.gerant_company}</p>
+            </div>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '2rem',
+            marginTop: '2rem'
+          }}>
+            <fieldset style={{
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              backgroundColor: '#fafafa'
+            }}>
+              <legend style={{
+                padding: '0 1rem',
+                color: '#1a1a1a',
+                fontWeight: 'bold',
+                fontSize: '1.1rem'
+              }}>Contact</legend>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#1a1a1a' }}>Téléphone :</strong><br/>
+                <span style={{ color: '#666' }}>{company.contact.telephone}</span>
+              </p>
+              <p>
+                <strong style={{ color: '#1a1a1a' }}>Email :</strong><br/>
+                <span style={{ color: '#666' }}>{company.contact.email}</span>
+              </p>
+            </fieldset>
+
+            <fieldset style={{
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              backgroundColor: '#fafafa'
+            }}>
+              <legend style={{
+                padding: '0 1rem',
+                color: '#1a1a1a',
+                fontWeight: 'bold',
+                fontSize: '1.1rem'
+              }}>Adresse</legend>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#1a1a1a' }}>Rue :</strong><br/>
+                <span style={{ color: '#666' }}>{company.contact.adresse.rue}</span>
+              </p>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#1a1a1a' }}>Ville :</strong><br/>
+                <span style={{ color: '#666' }}>{company.contact.adresse.ville}</span>
+              </p>
+              <p>
+                <strong style={{ color: '#1a1a1a' }}>Code postal :</strong><br/>
+                <span style={{ color: '#666' }}>{company.contact.adresse.code_postal} – {company.contact.adresse.pays}</span>
+              </p>
+            </fieldset>
+          </div>
+
+          {company.createdAt && (
+            <p style={{
+              marginTop: '2rem',
+              color: '#666',
+              fontStyle: 'italic',
+              textAlign: 'right',
+              borderTop: '1px solid #e0e0e0',
+              paddingTop: '1rem'
+            }}>
+              Créée le {new Date(company.createdAt).toLocaleDateString()}
+            </p>
+          )}
         </div>
-        <fieldset style={{ marginTop:16 }}>
-          <legend>Contact</legend>
-          <p><strong>Téléphone :</strong> {company.contact.telephone}</p>
-          <p><strong>Email :</strong> {company.contact.email}</p>
-        </fieldset>
-        <fieldset style={{ marginTop:16 }}>
-          <legend>Adresse</legend>
-          <p>
-            {company.contact.adresse.rue}, {company.contact.adresse.ville}
-          </p>
-          <p>
-            {company.contact.adresse.code_postal} – {company.contact.adresse.pays}
-          </p>
-        </fieldset>
-        {company.createdAt && (
-          <p style={{ marginTop:16 }}>
-            <em>Créée le {new Date(company.createdAt).toLocaleDateString()}</em>
-          </p>
-        )}
       </div>
     </>
   );

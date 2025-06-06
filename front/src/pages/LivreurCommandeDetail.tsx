@@ -145,119 +145,124 @@ export default function LivreurCommandeDetail() {
   return (
     <>
       <Header />
-      <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif', maxWidth: 600, margin: '0 auto' }}>
-        <button onClick={() => navigate(-1)} style={{ marginBottom: 16, background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer' }}>← Retour</button>
-        <h2 style={{ marginBottom: 0 }}>{order.nom_client}</h2>
-        {order.numero && (
-          <div style={{ color: '#6b7280', fontWeight: 500, marginBottom: 8 }}>
-            N° commande : {order.numero}
-          </div>
-        )}
-        <span style={{ padding: '0.25rem 0.75rem', borderRadius: '9999px', backgroundColor: getStatusColor(order.etat_livraison), color: 'white', fontSize: '0.875rem', marginBottom: 16, display: 'inline-block' }}>
-          {getStatusText(order.etat_livraison)}
-        </span>
-        <h3>Produits de la commande</h3>
-        <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-          {order.items.map((item, i) => (
-            <li key={i} style={{ marginBottom: 4 }}>{item.productName} × {item.quantity}</li>
-          ))}
-        </ul>
-        <h3 style={{ marginTop: 24 }}>Preuves de livraison</h3>
-        {order.photosLivraison && order.photosLivraison.length > 0 ? (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-            {order.photosLivraison.map((p, i) => (
-              <div key={i} style={{ position: 'relative' }}>
-                <img
-                  src={`${apiBase}${p.url}`}
-                  alt={`Preuve ${i+1}`}
-                  style={{ maxWidth: 120, maxHeight: 120, objectFit: 'cover', borderRadius: 4 }}
-                />
-                <button
-                  onClick={() => deletePhoto(i)}
-                  style={{
-                    position: 'absolute',
-                    top: -6, right: -6,
-                    background: 'red',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: 20, height: 20,
-                    color: 'white',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: 16
-                  }}>
-                  ×
-                </button>
-              </div>
+      <div style={{
+        padding: '2rem',
+        fontFamily: 'Arial, sans-serif',
+        maxWidth: '800px',
+        margin: '0 auto',
+        backgroundColor: '#ffffff',
+        minHeight: '100vh'
+      }}>
+        <div style={{
+          backgroundColor: '#ffffff',
+          padding: '2rem',
+          borderRadius: '8px',
+          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        }}>
+          <button onClick={() => navigate(-1)} style={{ marginBottom: '2rem', padding: '0.75rem 1.5rem', backgroundColor: '#1a1a1a', color: '#ffffff', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>← Retour</button>
+          <h2 style={{ color: '#1a1a1a', fontSize: '2rem', marginBottom: 0, borderBottom: '2px solid #1a1a1a', paddingBottom: '0.5rem' }}>{order.nom_client}</h2>
+          {order.numero && (
+            <div style={{ color: '#666', fontWeight: 500, marginBottom: 8 }}>
+              N° commande : {order.numero}
+            </div>
+          )}
+          <span style={{ padding: '0.25rem 0.75rem', borderRadius: '9999px', backgroundColor: getStatusColor(order.etat_livraison), color: 'white', fontSize: '0.875rem', marginBottom: 16, display: 'inline-block' }}>
+            {getStatusText(order.etat_livraison)}
+          </span>
+          <h3 style={{ color: '#1a1a1a', marginTop: 24 }}>Produits de la commande</h3>
+          <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+            {order.items.map((item, i) => (
+              <li key={i} style={{ marginBottom: 4, color: '#1a1a1a' }}>{item.productName} × {item.quantity}</li>
             ))}
-          </div>
-        ) : <p style={{ color: '#6b7280' }}>Aucune preuve pour cette commande.</p>}
+          </ul>
+          <h3 style={{ color: '#1a1a1a', marginTop: 24 }}>Preuves de livraison</h3>
+          {order.photosLivraison && order.photosLivraison.length > 0 ? (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+              {order.photosLivraison.map((p, i) => (
+                <div key={i} style={{ position: 'relative' }}>
+                  <img
+                    src={`${apiBase}${p.url}`}
+                    alt={`Preuve ${i+1}`}
+                    style={{ maxWidth: 120, maxHeight: 120, objectFit: 'cover', borderRadius: 4, border: '2px solid #1a1a1a' }}
+                  />
+                  <button
+                    onClick={() => deletePhoto(i)}
+                    style={{
+                      position: 'absolute',
+                      top: -6, right: -6,
+                      background: '#dc2626',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: 20, height: 20,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      fontSize: 16
+                    }}>
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : <p style={{ color: '#666' }}>Aucune preuve pour cette commande.</p>}
 
-        {order.etat_livraison === 'en_cours' && (
-          <div style={{ marginTop: 16 }}>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              multiple
-              style={{ display: 'none' }}
-              onChange={e => handleFileChange(e.target.files)}
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              style={{ padding: '0.5rem 1rem', backgroundColor: '#6b7280', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginRight: '0.5rem' }}>
-              Prendre / Choisir photos
-            </button>
-            {previews.length > 0 && (
-              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                {previews.map((url, i) => (
-                  <div key={i} style={{ position: 'relative' }}>
-                    <img
-                      src={url}
-                      alt={`Aperçu ${i+1}`}
-                      style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 4 }}
-                    />
-                    <button
-                      onClick={() => removePhoto(i)}
-                      style={{
-                        position: 'absolute',
-                        top: -6, right: -6,
-                        background: 'red',
-                        border: 'none',
-                        borderRadius: '50%',
-                        width: 20, height: 20,
-                        color: 'white',
-                        cursor: 'pointer'
-                      }}>
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <button
-              onClick={uploadPhotos}
-              style={{ padding: '0.5rem 1rem', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '0.5rem', marginRight: '0.5rem' }}>
-              Valider les preuves
-            </button>
-            <button
-              onClick={() => updateDeliveryStatus(order._id, 'livree')}
-              style={{ padding: '0.5rem 1rem', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '0.5rem' }}>
-              Valider la livraison
-            </button>
-          </div>
-        )}
-        {order.etat_livraison === 'livree' && (
-          <div style={{ marginTop: 16 }}>
-            <button
-              onClick={() => updateDeliveryStatus(order._id, 'en_cours')}
-              style={{ padding: '0.5rem 1rem', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              Annuler la validation
-            </button>
-          </div>
-        )}
-      </main>
+          {order.etat_livraison === 'en_cours' && (
+            <div style={{ marginTop: 16 }}>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                multiple
+                style={{ display: 'none' }}
+                onChange={e => handleFileChange(e.target.files)}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                style={{ padding: '0.75rem 1.5rem', backgroundColor: '#1a1a1a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginRight: '0.5rem', fontSize: '1rem' }}>
+                Prendre / Choisir photos
+              </button>
+              {previews.length > 0 && (
+                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                  {previews.map((url, i) => (
+                    <div key={i} style={{ position: 'relative' }}>
+                      <img
+                        src={url}
+                        alt={`Aperçu ${i+1}`}
+                        style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 4, border: '2px solid #1a1a1a' }}
+                      />
+                      <button
+                        onClick={() => removePhoto(i)}
+                        style={{
+                          position: 'absolute',
+                          top: -6, right: -6,
+                          background: '#dc2626',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: 20, height: 20,
+                          color: 'white',
+                          cursor: 'pointer'
+                        }}>
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button
+                onClick={uploadPhotos}
+                style={{ padding: '0.75rem 1.5rem', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '0.5rem', marginRight: '0.5rem', fontSize: '1rem' }}>
+                Valider les preuves
+              </button>
+              <button
+                onClick={() => updateDeliveryStatus(order._id, 'livree')}
+                style={{ padding: '0.75rem 1.5rem', backgroundColor: '#1a1a1a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '0.5rem', fontSize: '1rem' }}>
+                Valider la livraison
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </>
   );
 } 

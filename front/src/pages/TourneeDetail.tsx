@@ -156,88 +156,157 @@ export default function TourneeDetail() {
   return (
     <>
       <Header />
-      <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1>Détails de la tournée</h1>
-          <button
-            onClick={() => navigate('/tournees')}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#6b7280',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.25rem',
-              cursor: 'pointer',
-            }}
-          >
-            Retour à la liste
-          </button>
-        </div>
+      <div style={{
+        padding: '2rem',
+        fontFamily: 'Arial, sans-serif',
+        maxWidth: '800px',
+        margin: '0 auto',
+        backgroundColor: '#ffffff',
+        minHeight: '100vh'
+      }}>
+        <div style={{
+          backgroundColor: '#ffffff',
+          padding: '2rem',
+          borderRadius: '8px',
+          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <h1 style={{
+              color: '#1a1a1a',
+              fontSize: '2rem',
+              borderBottom: '2px solid #1a1a1a',
+              paddingBottom: '0.5rem'
+            }}>Détails de la tournée</h1>
+            <button
+              onClick={() => navigate('/tournees')}
+              style={{
+                padding: '0.75rem 1.5rem',
+                backgroundColor: '#1a1a1a',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '1rem'
+              }}
+            >
+              Retour à la liste
+            </button>
+          </div>
 
-        <div style={{ marginTop: '2rem' }}>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <h2>Informations générales</h2>
-            <p>Date : {new Date(tournee.date).toLocaleDateString()}</p>
-            <p>Nombre d'arrêts : {tournee.stops.length}</p>
-            <p>Nombre de véhicules : {tournee.vehicles.length}</p>
-            <p>Statut de chargement : 
-              <span style={{ 
-                padding: '0.25rem 0.75rem', 
-                borderRadius: '9999px', 
-                backgroundColor: getLoadingStatusColor(tournee.statut_chargement), 
-                color: 'white', 
-                fontSize: '0.875rem',
-                marginLeft: '0.5rem'
-              }}>
-                {getLoadingStatusText(tournee.statut_chargement)}
-              </span>
-            </p>
-            
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '2rem',
+            marginTop: '2rem'
+          }}>
+            <fieldset style={{
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              backgroundColor: '#fafafa'
+            }}>
+              <legend style={{
+                padding: '0 1rem',
+                color: '#1a1a1a',
+                fontWeight: 'bold',
+                fontSize: '1.1rem'
+              }}>Informations générales</legend>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#1a1a1a' }}>Date :</strong><br/>
+                <span style={{ color: '#666' }}>{new Date(tournee.date).toLocaleDateString()}</span>
+              </p>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#1a1a1a' }}>Nombre de véhicules :</strong><br/>
+                <span style={{ color: '#666' }}>{tournee.vehicles.length}</span>
+              </p>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#1a1a1a' }}>Statut de chargement :</strong><br/>
+                <span style={{
+                  display: 'inline-block',
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '9999px',
+                  backgroundColor: getLoadingStatusColor(tournee.statut_chargement),
+                  color: 'white',
+                  fontSize: '0.875rem',
+                  marginTop: '0.5rem'
+                }}>
+                  {getLoadingStatusText(tournee.statut_chargement)}
+                </span>
+              </p>
+              {tournee.total_travel_time && (
+                <p style={{ marginBottom: '1rem' }}>
+                  <strong style={{ color: '#1a1a1a' }}>Temps de trajet total :</strong><br/>
+                  <span style={{ color: '#666' }}>{tournee.total_travel_time} minutes</span>
+                </p>
+              )}
+              {tournee.total_travel_distance && (
+                <p>
+                  <strong style={{ color: '#1a1a1a' }}>Distance totale :</strong><br/>
+                  <span style={{ color: '#666' }}>{tournee.total_travel_distance} km</span>
+                </p>
+              )}
+            </fieldset>
+
             {isControleur && (
-              <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
-                {tournee.statut_chargement === 'en_cours' && (
-                  <button
-                    onClick={() => updateLoadingStatus('charge')}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor: '#10b981',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Valider le chargement
-                  </button>
-                )}
-                {tournee.statut_chargement === 'charge' && (
-                  <button
-                    onClick={() => updateLoadingStatus('en_cours')}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor: '#ef4444',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Annuler la validation
-                  </button>
-                )}
-              </div>
-            )}
-            {tournee.total_travel_time && (
-              <p>Temps de trajet total : {tournee.total_travel_time} minutes</p>
-            )}
-            {tournee.total_travel_distance && (
-              <p>Distance totale : {tournee.total_travel_distance} km</p>
+              <fieldset style={{
+                border: '1px solid #e0e0e0',
+                borderRadius: '8px',
+                padding: '1.5rem',
+                backgroundColor: '#fafafa'
+              }}>
+                <legend style={{
+                  padding: '0 1rem',
+                  color: '#1a1a1a',
+                  fontWeight: 'bold',
+                  fontSize: '1.1rem'
+                }}>Actions</legend>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  {tournee.statut_chargement === 'en_cours' && (
+                    <button
+                      onClick={() => updateLoadingStatus('charge')}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        backgroundColor: '#1a1a1a',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '1rem'
+                      }}
+                    >
+                      Valider le chargement
+                    </button>
+                  )}
+                  {tournee.statut_chargement === 'charge' && (
+                    <button
+                      onClick={() => updateLoadingStatus('en_cours')}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        backgroundColor: '#dc2626',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '1rem'
+                      }}
+                    >
+                      Annuler la validation
+                    </button>
+                  )}
+                </div>
+              </fieldset>
             )}
           </div>
 
           {tournee.solution?.date1 && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h2>Produits à charger par véhicule</h2>
+            <div style={{ marginTop: '2rem' }}>
+              <h2 style={{
+                color: '#1a1a1a',
+                fontSize: '1.5rem',
+                marginBottom: '1.5rem',
+                borderBottom: '1px solid #e0e0e0',
+                paddingBottom: '0.5rem'
+              }}>Produits à charger par véhicule</h2>
               {Object.entries(tournee.solution.date1)
                 .filter(([_, vehicle]) => 
                   vehicle.ordered_stops.some(stop => 
@@ -251,13 +320,17 @@ export default function TourneeDetail() {
                     key={vehicleId}
                     style={{
                       marginBottom: '2rem',
-                      padding: '1rem',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '0.5rem',
-                      backgroundColor: '#fff',
+                      padding: '1.5rem',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '8px',
+                      backgroundColor: '#fafafa',
                     }}
                   >
-                    <h3>Véhicule {vehicleId}</h3>
+                    <h3 style={{
+                      color: '#1a1a1a',
+                      fontSize: '1.25rem',
+                      marginBottom: '1rem'
+                    }}>Véhicule {vehicleId}</h3>
                     <div style={{ marginTop: '1rem' }}>
                       {vehicle.ordered_stops
                         .filter(stop => 
@@ -266,40 +339,78 @@ export default function TourneeDetail() {
                           stop.products.length > 0
                         )
                         .map((stop, index) => (
-                          <div key={stop.stop_id} style={{ marginBottom: '1rem' }}>
-                            <h4>Arrêt {index + 1} - Client {stop.stop_id}</h4>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '0.5rem' }}>
+                          <div key={stop.stop_id} style={{ marginBottom: '1.5rem' }}>
+                            <h4 style={{
+                              color: '#1a1a1a',
+                              fontSize: '1.1rem',
+                              marginBottom: '1rem'
+                            }}>Arrêt {index + 1} - Client {stop.stop_id}</h4>
+                            <table style={{
+                              width: '100%',
+                              borderCollapse: 'collapse',
+                              marginTop: '0.5rem',
+                              backgroundColor: '#ffffff',
+                              borderRadius: '4px',
+                              overflow: 'hidden'
+                            }}>
                               <thead>
                                 <tr>
-                                  <th style={{ textAlign: 'left', padding: '0.5rem', borderBottom: '1px solid #e5e7eb' }}>
-                                    Produit
-                                  </th>
-                                  <th style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #e5e7eb' }}>
-                                    Quantité
-                                  </th>
-                                  <th style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #e5e7eb' }}>
-                                    Prix unitaire
-                                  </th>
-                                  <th style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #e5e7eb' }}>
-                                    Total
-                                  </th>
+                                  <th style={{
+                                    textAlign: 'left',
+                                    padding: '0.75rem',
+                                    backgroundColor: '#f3f4f6',
+                                    borderBottom: '1px solid #e0e0e0',
+                                    color: '#1a1a1a'
+                                  }}>Produit</th>
+                                  <th style={{
+                                    textAlign: 'right',
+                                    padding: '0.75rem',
+                                    backgroundColor: '#f3f4f6',
+                                    borderBottom: '1px solid #e0e0e0',
+                                    color: '#1a1a1a'
+                                  }}>Quantité</th>
+                                  <th style={{
+                                    textAlign: 'right',
+                                    padding: '0.75rem',
+                                    backgroundColor: '#f3f4f6',
+                                    borderBottom: '1px solid #e0e0e0',
+                                    color: '#1a1a1a'
+                                  }}>Prix unitaire</th>
+                                  <th style={{
+                                    textAlign: 'right',
+                                    padding: '0.75rem',
+                                    backgroundColor: '#f3f4f6',
+                                    borderBottom: '1px solid #e0e0e0',
+                                    color: '#1a1a1a'
+                                  }}>Total</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {stop.products.map((product, pIndex) => (
                                   <tr key={pIndex}>
-                                    <td style={{ padding: '0.5rem', borderBottom: '1px solid #e5e7eb' }}>
-                                      {product.productName}
-                                    </td>
-                                    <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #e5e7eb' }}>
-                                      {product.quantity}
-                                    </td>
-                                    <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #e5e7eb' }}>
-                                      {product.prix_detail.toFixed(2)} €
-                                    </td>
-                                    <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #e5e7eb' }}>
-                                      {(product.quantity * product.prix_detail).toFixed(2)} €
-                                    </td>
+                                    <td style={{
+                                      padding: '0.75rem',
+                                      borderBottom: '1px solid #e0e0e0',
+                                      color: '#666'
+                                    }}>{product.productName}</td>
+                                    <td style={{
+                                      textAlign: 'right',
+                                      padding: '0.75rem',
+                                      borderBottom: '1px solid #e0e0e0',
+                                      color: '#666'
+                                    }}>{product.quantity}</td>
+                                    <td style={{
+                                      textAlign: 'right',
+                                      padding: '0.75rem',
+                                      borderBottom: '1px solid #e0e0e0',
+                                      color: '#666'
+                                    }}>{product.prix_detail.toFixed(2)} €</td>
+                                    <td style={{
+                                      textAlign: 'right',
+                                      padding: '0.75rem',
+                                      borderBottom: '1px solid #e0e0e0',
+                                      color: '#666'
+                                    }}>{(product.quantity * product.prix_detail).toFixed(2)} €</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -313,20 +424,33 @@ export default function TourneeDetail() {
           )}
 
           {tournee.unscheduled && tournee.unscheduled.length > 0 && (
-            <div>
-              <h2>Arrêts non planifiés</h2>
-              <pre style={{ 
-                backgroundColor: '#f3f4f6', 
-                padding: '1rem', 
-                borderRadius: '0.5rem',
-                overflow: 'auto'
+            <div style={{ marginTop: '2rem' }}>
+              <h2 style={{
+                color: '#1a1a1a',
+                fontSize: '1.5rem',
+                marginBottom: '1.5rem',
+                borderBottom: '1px solid #e0e0e0',
+                paddingBottom: '0.5rem'
+              }}>Arrêts non planifiés</h2>
+              <div style={{
+                backgroundColor: '#fafafa',
+                padding: '1.5rem',
+                borderRadius: '8px',
+                border: '1px solid #e0e0e0'
               }}>
-                {JSON.stringify(tournee.unscheduled, null, 2)}
-              </pre>
+                <pre style={{
+                  margin: 0,
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                  color: '#666'
+                }}>
+                  {JSON.stringify(tournee.unscheduled, null, 2)}
+                </pre>
+              </div>
             </div>
           )}
         </div>
-      </main>
+      </div>
     </>
   );
 } 
