@@ -16,7 +16,7 @@ import { ImageUploadService } from './image-upload.service';
         },
       }),
       fileFilter: (req, file, callback) => {
-        if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|jfif)$/)) {
           return callback(new Error('Only image files are allowed!'), false);
         }
         callback(null, true);

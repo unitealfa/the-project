@@ -48,7 +48,8 @@ export const reclamationService = {
     const response = await fetch(`${apiBase}/api/reclamations/depot/${depotId}`, {
       headers: getHeaders()
     });
-    return response.json();
+        const data = await response.json();
+    return Array.isArray(data) ? data : [data];
   },
 
   updateReclamationStatus: async (id: string, status: 'en_attente' | 'resolue' | 'rejeter', reponse: string) => {

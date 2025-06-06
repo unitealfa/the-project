@@ -1,3 +1,5 @@
+// back/src/order/order.service.ts
+
 import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
@@ -18,7 +20,7 @@ export class OrderService {
     private productService: ProductService
   ) {}
 
-  async createOrder(userId: string, dto: CreateOrderDto) {
+  async createOrder(userId: string, dto: CreateOrderDto): Promise<Order[]> {
     const client = await this.clientModel.findById(userId);
     if (!client) throw new NotFoundException("Client not found");
 
@@ -27,95 +29,131 @@ export class OrderService {
     const codePostal = client.localisation?.code_postal || "";
     const region = client.localisation?.region || "";
 
-    const depotId = client.affectations?.[0]?.depot?.toString() || "";
-    let depot_name = "";
-    if (
-      client.affectations?.[0]?.depot &&
-      this.clientModel.db.modelNames().includes("Depot")
-    ) {
-      const DepotModel = this.clientModel.db.model("Depot");
-      const depotDoc = await DepotModel.findById(client.affectations[0].depot).lean();
-      if (depotDoc && !Array.isArray(depotDoc) && typeof depotDoc.nom_depot === "string") {
-        depot_name = depotDoc.nom_depot;
-      }
+    // Récupère la liste des dépôts assignés au client
+    const clientDepots = (client.affectations ?? []).map(a => a.depot.toString());
+    if (clientDepots.length === 0) {
+      throw new BadRequestException("Aucun dépôt associé au client");
     }
 
-    // Vérifier la disponibilité du stock pour chaque produit
+    // Pour chaque dépôt, on stocke le tableau d'items à passer
+    const itemsByDepot: Record<string, CreateOrderDto["items"]> = {};
+
     for (const item of dto.items) {
       const product = await this.productService.findOne(item.productId);
       if (!product) {
         throw new NotFoundException(`Produit ${item.productName} non trouvé`);
       }
 
-      const depotDispo = product.disponibilite.find(d => d.depot_id.toString() === depotId);
-      if (!depotDispo) {
-        throw new BadRequestException(`Le produit ${item.productName} n'est pas disponible dans ce dépôt`);
-      }
-
-      if (depotDispo.quantite < item.quantity) {
+      const dispo = product.disponibilite.find(
+        d =>
+          clientDepots.includes(d.depot_id.toString()) &&
+          d.quantite >= item.quantity
+      );
+      if (!dispo) {
         throw new BadRequestException(
-          `Stock insuffisant pour ${item.productName}. Quantité disponible: ${depotDispo.quantite}, Quantité demandée: ${item.quantity}`
+          `Le produit ${item.productName} n'est pas disponible dans vos dépôts`
         );
       }
+
+      const key = dispo.depot_id.toString();
+      if (!itemsByDepot[key]) {
+        itemsByDepot[key] = [];
+      }
+      itemsByDepot[key].push(item);
     }
 
-    // Mettre à jour les quantités de stock pour chaque produit
-    for (const item of dto.items) {
-      const product = await this.productService.findOne(item.productId);
-      const depotDispo = product.disponibilite.find(d => d.depot_id.toString() === depotId);
-      const newQuantite = depotDispo.quantite - item.quantity;
-      await this.productService.updateQuantiteParDepot(item.productId, depotId, newQuantite);
+    const orders: Order[] = [];
+
+    // Pour chaque dépôt concerné, on crée une commande séparée
+    for (const [depotId, items] of Object.entries(itemsByDepot)) {
+      // On utilise depotModel injecté pour que TypeScript sache que c'est un Depot
+      const depotDoc = await this.depotModel.findById(depotId).lean<Depot>();
+      const depot_name = depotDoc?.nom_depot || "";
+
+      // Vérification & mise à jour du stock pour ce dépôt
+      for (const item of items) {
+        const product = await this.productService.findOne(item.productId);
+        const depotDispo = product.disponibilite.find(
+          d => d.depot_id.toString() === depotId
+        );
+        if (!depotDispo || depotDispo.quantite < item.quantity) {
+          throw new BadRequestException(
+            `Stock insuffisant pour ${item.productName}`
+          );
+        }
+        const newQuantite = depotDispo.quantite - item.quantity;
+        await this.productService.updateQuantiteParDepot(
+          item.productId,
+          depotId,
+          newQuantite
+        );
+      }
+
+      const totalDepot = items.reduce(
+        (sum, it) => sum + it.prix_detail * it.quantity,
+        0
+      );
+      const numero = "CMD-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+
+      const order = new this.orderModel({
+        clientId: client._id,
+        nom_client: client.nom_client,
+        telephone: client.contact?.telephone || "",
+        depot: depotId,
+        depot_name,
+        adresse_client: {
+          adresse: adresseClient,
+          ville,
+          code_postal: codePostal,
+          region,
+        },
+        items,
+        total: totalDepot,
+        confirmed: false,
+        numero,
+      });
+
+      orders.push(await order.save());
     }
 
-    // Créer la commande avec le numéro directement
-    const numero = "CMD-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
-    const order = new this.orderModel({
-      clientId: client._id,
-      nom_client: client.nom_client,
-      telephone: client.contact?.telephone || "",
-      depot: depotId,
-      depot_name,
-      adresse_client: {
-        adresse: adresseClient,
-        ville,
-        code_postal: codePostal,
-        region,
-      },
-      items: dto.items,
-      total: dto.total,
-      confirmed: false,
-      numero
-    });
-
-    return order.save();
+    return orders;
   }
 
   async findById(id: string) {
-    return this.orderModel.findById(id).lean();
+    return this.orderModel.findById(id).lean<Order>();
   }
 
   async findByDepot(depotId: string) {
-    // 1. Récupère les commandes
+    // 1. On récupère toutes les commandes du dépôt, triées par date
     const orders = await this.orderModel
       .find({ depot: depotId })
-      .sort({ createdAt: -1 }) // Tri par date décroissante
-      .lean();
+      .sort({ createdAt: -1 })
+      .lean<Order[]>(); // <-- bien préciser Order[] pour que TS sache que c'est un tableau
 
-    // 2. Récupère tous les clients nécessaires en une seule fois
-    const clientIds = [...new Set(orders.map(o => o.clientId))];
-    const clients = await this.clientModel.find({ _id: { $in: clientIds } }).lean();
-    const clientMap = Object.fromEntries(clients.map(c => [c._id.toString(), c]));
+    // 2. On récupère en une seule fois tous les clients référencés
+    const clientIds = [...new Set(orders.map(o => o.clientId.toString()))];
+    const clients = await this.clientModel
+      .find({ _id: { $in: clientIds } })
+      .lean<Client[]>(); // <-- idem Client[]
+    const clientMap = Object.fromEntries(
+      clients.map(c => [c._id.toString(), c])
+    );
 
-    // 3. Ajoute les infos clients à chaque commande (latitude, longitude, nom, téléphone)
+    // 3. On enrichit chaque commande avec son nom_depot + infos client
     return orders.map(order => {
-      const client = clientMap[order.clientId?.toString()];
-      const coord = client?.localisation?.coordonnees || { latitude: 0, longitude: 0 };
+      const client = clientMap[order.clientId.toString()];
+      const coord = client?.localisation?.coordonnees || {
+        latitude: 0,
+        longitude: 0,
+      };
+
       return {
         ...order,
+        nom_depot: order.depot_name || "Unknown Depot",
         client_latitude: coord.latitude,
         client_longitude: coord.longitude,
-        client_nom: client?.nom_client || '',
-        client_telephone: client?.contact?.telephone || '',
+        client_nom: client?.nom_client || "",
+        client_telephone: client?.contact?.telephone || "",
       };
     });
   }
@@ -123,8 +161,8 @@ export class OrderService {
   async findByClient(clientId: string) {
     return this.orderModel
       .find({ clientId })
-      .sort({ createdAt: -1 }) // Tri par date décroissante
-      .lean();
+      .sort({ createdAt: -1 })
+      .lean<Order[]>(); // <-- Order[] pour indiquer un tableau à TS
   }
 
   async confirmOrder(orderId: string) {
@@ -136,7 +174,10 @@ export class OrderService {
     );
   }
 
-  async updateDeliveryStatus(orderId: string, status: 'en_attente' | 'en_cours' | 'livree') {
+  async updateDeliveryStatus(
+    orderId: string,
+    status: "en_attente" | "en_cours" | "livree"
+  ) {
     return this.orderModel.findByIdAndUpdate(
       orderId,
       { etat_livraison: status },
@@ -159,32 +200,31 @@ export class OrderService {
 
   async deleteDeliveryPhoto(orderId: string, photoIdx: number) {
     const order = await this.orderModel.findById(orderId);
-    if (!order) throw new NotFoundException('Commande non trouvée');
+    if (!order) throw new NotFoundException("Commande non trouvée");
     if (!order.photosLivraison || order.photosLivraison.length <= photoIdx) {
-      throw new NotFoundException('Photo non trouvée');
+      throw new NotFoundException("Photo non trouvée");
     }
-    // Optionnel : supprimer le fichier physique ici
     order.photosLivraison.splice(photoIdx, 1);
     await order.save();
     return order;
   }
 
-  async getOrderStats(depotId: string, period: 'day' | 'week' | 'month' | 'all') {
+  async getOrderStats(depotId: string, period: "day" | "week" | "month" | "all") {
     const now = new Date();
     let startDate: Date;
 
     switch (period) {
-      case 'day':
+      case "day":
         startDate = new Date(now.setHours(0, 0, 0, 0));
         break;
-      case 'week':
+      case "week":
         startDate = new Date(now.setDate(now.getDate() - now.getDay()));
         break;
-      case 'month':
+      case "month":
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
         break;
-      case 'all':
-        startDate = new Date(0); // 1er janvier 1970
+      case "all":
+        startDate = new Date(0);
         break;
       default:
         startDate = new Date(now.setHours(0, 0, 0, 0));
@@ -192,78 +232,89 @@ export class OrderService {
 
     const orders = await this.orderModel.find({
       depot: depotId,
-      createdAt: { $gte: startDate }
+      createdAt: { $gte: startDate },
     });
 
     const totalOrders = orders.length;
     const totalAmount = orders.reduce((sum, order) => sum + order.total, 0);
-    const ordersInDelivery = orders.filter(order => order.etat_livraison === 'en_cours').length;
-    const ordersDelivered = orders.filter(order => order.etat_livraison === 'livree').length;
+    const ordersInDelivery = orders.filter(
+      order => order.etat_livraison === "en_cours"
+    ).length;
+    const ordersDelivered = orders.filter(
+      order => order.etat_livraison === "livree"
+    ).length;
 
-    // Récupérer les IDs des commandes pour les réclamations
+    // IDs des commandes pour récupérer leurs réclamations
     const orderIds = orders.map(order => order._id);
 
-    // Statistiques des réclamations
     const reclamations = await this.reclamationModel.find({
-      orderId: { $in: orderIds }
+      orderId: { $in: orderIds },
     });
 
     const totalReclamations = reclamations.length;
-    const reclamationsEnAttente = reclamations.filter(r => r.status === 'en_attente').length;
-    const reclamationsRejetees = reclamations.filter(r => r.status === 'rejeter').length;
-    const reclamationsResolues = reclamations.filter(r => r.status === 'resolue').length;
+    const reclamationsEnAttente = reclamations.filter(
+      r => r.status === "en_attente"
+    ).length;
+    const reclamationsRejetees = reclamations.filter(
+      r => r.status === "rejeter"
+    ).length;
+    const reclamationsResolues = reclamations.filter(
+      r => r.status === "resolue"
+    ).length;
 
-    // Top 5 clients les plus fidèles
+    // Top 5 clients les plus fidèles pour ce dépôt
     const clientOrders = await this.orderModel.aggregate([
-      { $match: { 
-        depot: depotId,
-        createdAt: { $gte: startDate }
-      }},
-      { $group: { _id: '$clientId', count: { $sum: 1 }, total: { $sum: '$total' } } },
+      {
+        $match: {
+          depot: depotId,
+          createdAt: { $gte: startDate },
+        },
+      },
+      { $group: { _id: "$clientId", count: { $sum: 1 }, total: { $sum: "$total" } } },
       { $sort: { count: -1 } },
-      { $limit: 5 }
+      { $limit: 5 },
     ]);
 
     const topClients = await Promise.all(
-      clientOrders.map(async (client) => {
-        const clientInfo = await this.clientModel.findById(client._id);
-        const depotId = clientInfo?.affectations?.[0]?.depot;
+      clientOrders.map(async clientAgg => {
+        const clientInfo = await this.clientModel.findById(clientAgg._id);
+        const firstDepotId = clientInfo?.affectations?.[0]?.depot;
         let depotName = "Non assigné";
-        
-        if (depotId) {
-          const depotDoc = await this.depotModel.findById(depotId).lean();
+
+        if (firstDepotId) {
+          const depotDoc = await this.depotModel.findById(firstDepotId).lean<Depot>();
           if (depotDoc && typeof depotDoc.nom_depot === "string") {
             depotName = depotDoc.nom_depot;
           }
         }
 
         return {
-          clientId: client._id,
-          nom: clientInfo?.nom_client || 'Client inconnu',
-          prenom: '',
-          nombreCommandes: client.count,
-          montantTotal: client.total,
-          depotName
+          clientId: clientAgg._id,
+          nom: clientInfo?.nom_client || "Client inconnu",
+          prenom: "",
+          nombreCommandes: clientAgg.count,
+          montantTotal: clientAgg.total,
+          depotName,
         };
       })
     );
 
-    // Top produits commandés
+    // Top produits commandés pour ce dépôt
     const productStats = await this.orderModel.aggregate([
-      { $match: { 
-        depot: depotId,
-        createdAt: { $gte: startDate }
-      }},
-      { $unwind: '$items' },
-      { $group: {
-          _id: '$items.productId',
-          nom: { $first: '$items.productName' },
-          totalQuantity: { $sum: '$items.quantity' },
-          totalAmount: { $sum: { $multiply: ['$items.prix_detail', '$items.quantity'] } }
-        }
+      { $match: { depot: depotId, createdAt: { $gte: startDate } } },
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.productId",
+          nom: { $first: "$items.productName" },
+          totalQuantity: { $sum: "$items.quantity" },
+          totalAmount: {
+            $sum: { $multiply: ["$items.prix_detail", "$items.quantity"] },
+          },
+        },
       },
       { $sort: { totalQuantity: -1 } },
-      { $limit: 5 }
+      { $limit: 5 },
     ]);
 
     return {
@@ -276,79 +327,88 @@ export class OrderService {
       reclamationsRejetees,
       reclamationsResolues,
       topClients,
-      topProducts: productStats
+      topProducts: productStats,
     };
   }
 
-  async getGlobalStats(period: 'day' | 'week' | 'month' | 'all') {
+  async getGlobalStats(period: "day" | "week" | "month" | "all") {
     const now = new Date();
     let startDate: Date;
 
     switch (period) {
-      case 'day':
+      case "day":
         startDate = new Date(now.setHours(0, 0, 0, 0));
         break;
-      case 'week':
+      case "week":
         startDate = new Date(now.setDate(now.getDate() - now.getDay()));
         break;
-      case 'month':
+      case "month":
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
         break;
-      case 'all':
-        startDate = new Date(0); // 1er janvier 1970
+      case "all":
+        startDate = new Date(0);
         break;
       default:
         startDate = new Date(now.setHours(0, 0, 0, 0));
     }
 
-    // Statistiques globales
+    // Toutes les commandes depuis startDate
     const orders = await this.orderModel.find({
-      createdAt: { $gte: startDate }
+      createdAt: { $gte: startDate },
     });
 
     const totalOrders = orders.length;
     const totalAmount = orders.reduce((sum, order) => sum + order.total, 0);
-    const ordersInDelivery = orders.filter(order => order.etat_livraison === 'en_cours').length;
-    const ordersDelivered = orders.filter(order => order.etat_livraison === 'livree').length;
+    const ordersInDelivery = orders.filter(
+      order => order.etat_livraison === "en_cours"
+    ).length;
+    const ordersDelivered = orders.filter(
+      order => order.etat_livraison === "livree"
+    ).length;
 
-    // Statistiques des réclamations
     const reclamations = await this.reclamationModel.find({
-      createdAt: { $gte: startDate }
+      createdAt: { $gte: startDate },
     });
 
     const totalReclamations = reclamations.length;
-    const reclamationsEnAttente = reclamations.filter(r => r.status === 'en_attente').length;
-    const reclamationsRejetees = reclamations.filter(r => r.status === 'rejeter').length;
-    const reclamationsResolues = reclamations.filter(r => r.status === 'resolue').length;
+    const reclamationsEnAttente = reclamations.filter(
+      r => r.status === "en_attente"
+    ).length;
+    const reclamationsRejetees = reclamations.filter(
+      r => r.status === "rejeter"
+    ).length;
+    const reclamationsResolues = reclamations.filter(
+      r => r.status === "resolue"
+    ).length;
 
-    // Top 5 clients les plus fidèles (tous dépôts confondus)
+    // Top 5 clients tous dépôts confondus
     const clientOrders = await this.orderModel.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
-      { $group: { _id: '$clientId', count: { $sum: 1 }, total: { $sum: '$total' } } },
+      { $group: { _id: "$clientId", count: { $sum: 1 }, total: { $sum: "$total" } } },
       { $sort: { count: -1 } },
-      { $limit: 5 }
+      { $limit: 5 },
     ]);
 
     const topClients = await Promise.all(
-      clientOrders.map(async (client) => {
-        const clientInfo = await this.clientModel.findById(client._id);
-        const depotId = clientInfo?.affectations?.[0]?.depot;
+      clientOrders.map(async clientAgg => {
+        const clientInfo = await this.clientModel.findById(clientAgg._id);
+        const firstDepotId = clientInfo?.affectations?.[0]?.depot;
         let depotName = "Non assigné";
-        
-        if (depotId) {
-          const depotDoc = await this.depotModel.findById(depotId).lean();
+
+        if (firstDepotId) {
+          const depotDoc = await this.depotModel.findById(firstDepotId).lean<Depot>();
           if (depotDoc && typeof depotDoc.nom_depot === "string") {
             depotName = depotDoc.nom_depot;
           }
         }
 
         return {
-          clientId: client._id,
-          nom: clientInfo?.nom_client || 'Client inconnu',
-          prenom: '',
-          nombreCommandes: client.count,
-          montantTotal: client.total,
-          depotName
+          clientId: clientAgg._id,
+          nom: clientInfo?.nom_client || "Client inconnu",
+          prenom: "",
+          nombreCommandes: clientAgg.count,
+          montantTotal: clientAgg.total,
+          depotName,
         };
       })
     );
@@ -356,35 +416,39 @@ export class OrderService {
     // Statistiques par dépôt
     const depotStats = await this.orderModel.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
-      { $group: {
-          _id: '$depot',
-          depot_name: { $first: '$depot_name' },
+      {
+        $group: {
+          _id: "$depot",
+          depot_name: { $first: "$depot_name" },
           totalOrders: { $sum: 1 },
-          totalAmount: { $sum: '$total' },
+          totalAmount: { $sum: "$total" },
           ordersInDelivery: {
-            $sum: { $cond: [{ $eq: ['$etat_livraison', 'en_cours'] }, 1, 0] }
+            $sum: { $cond: [{ $eq: ["$etat_livraison", "en_cours"] }, 1, 0] },
           },
           ordersDelivered: {
-            $sum: { $cond: [{ $eq: ['$etat_livraison', 'livree'] }, 1, 0] }
-          }
-        }
+            $sum: { $cond: [{ $eq: ["$etat_livraison", "livree"] }, 1, 0] },
+          },
+        },
       },
-      { $sort: { totalAmount: -1 } }
+      { $sort: { totalAmount: -1 } },
     ]);
 
-    // Top produits les plus vendus (tous dépôts confondus)
+    // Top produits tous dépôts
     const productStats = await this.orderModel.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
-      { $unwind: '$items' },
-      { $group: {
-          _id: '$items.productId',
-          nom: { $first: '$items.productName' },
-          totalQuantity: { $sum: '$items.quantity' },
-          totalAmount: { $sum: { $multiply: ['$items.prix_detail', '$items.quantity'] } }
-        }
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.productId",
+          nom: { $first: "$items.productName" },
+          totalQuantity: { $sum: "$items.quantity" },
+          totalAmount: {
+            $sum: { $multiply: ["$items.prix_detail", "$items.quantity"] },
+          },
+        },
       },
       { $sort: { totalQuantity: -1 } },
-      { $limit: 5 }
+      { $limit: 5 },
     ]);
 
     return {
@@ -398,7 +462,7 @@ export class OrderService {
       reclamationsResolues,
       topClients,
       depotStats,
-      topProducts: productStats
+      topProducts: productStats,
     };
   }
 }

@@ -142,7 +142,7 @@ export default function AddProduct() {
     // Extract embedded images
     const imagesFolder = zip.folder("xl/media");
     if (imagesFolder) {
-      const imageFiles = imagesFolder.filter((relativePath) => /\.(png|jpg|jpeg)$/i.test(relativePath));
+      const imageFiles = imagesFolder.filter((relativePath) => /\.(png|jpg|jpeg|jfif)$/i.test(relativePath));
       const imageUrls = await Promise.all(
         imageFiles.map(async (imageFile) => {
           const blob = await imageFile.async("blob");

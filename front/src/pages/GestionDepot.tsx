@@ -3,6 +3,7 @@ import React, { useEffect, useState, ChangeEvent } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import * as XLSX from 'xlsx';
+import Header from "../components/Header";
 
 interface Disponibilite {
   depot_id: string;
@@ -189,6 +190,8 @@ export default function GestionDepot() {
   if (error) return <p style={{ color: "red" }}>{error}</p>;
 
   return (
+    <>
+    <Header />
     <div
       style={{
         padding: "2rem",
@@ -382,5 +385,6 @@ export default function GestionDepot() {
         </table>
       )}
     </div>
+    </>
   );
 }

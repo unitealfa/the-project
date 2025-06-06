@@ -43,11 +43,11 @@ export default function Cart() {
   const [editItemId, setEditItemId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState<number>(1);
 
-  // ---- Nouvel état : commande confirmée (retournée par backend)
-  const [confirmedOrder, setConfirmedOrder] = useState<any>(null);
+  // ---- Commandes confirmées (retournées par backend)
+  const [confirmedOrders, setConfirmedOrders] = useState<any[]>([]);
 
   const navigate = useNavigate();
-  const blRef = useRef<HTMLDivElement>(null);
+   const blRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   // ---- User depuis localStorage
   const user = (() => {
@@ -121,9 +121,10 @@ export default function Cart() {
   }, 0);
 
   // ----------- PDF BL (pour après confirmation) -----------
-  const handleExportPDF = async () => {
-    if (!blRef.current) return;
-    const canvas = await html2canvas(blRef.current);
+  const handleExportPDF = async (idx: number) => {
+    const el = blRefs.current[idx];
+    if (!el) return;
+    const canvas = await html2canvas(el);
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF({
       orientation: "portrait",
@@ -147,11 +148,11 @@ export default function Cart() {
         prix_detail: item.product?.prix_detail ?? 0,
         quantity: item.quantity,
       }));
-      // On récupère la commande créée (avec numéro et tout)
+      
       const res = await orderService.createOrder({ items: orderItems, total });
       await cartService.clearCart();
       setCart([]);
-      setConfirmedOrder(res); // <= stocke la commande complète
+       setConfirmedOrders(res); // <= stocke la commande complète
       setOrderSuccess("Commande envoyée avec succès !");
       // NE PAS fermer la modale ici, attends l'action du client
     } catch (error: any) {
@@ -482,7 +483,7 @@ export default function Cart() {
           }}
           onClick={() => {
             setShowModal(false);
-            setConfirmedOrder(null);
+            setConfirmedOrders([]);
           }}
         >
           <div
@@ -497,7 +498,6 @@ export default function Cart() {
           >
             <h3>Bon de Livraison</h3>
             <div
-              ref={blRef}
               style={{
                 background: "#f3f4f6",
                 padding: 16,
@@ -506,7 +506,7 @@ export default function Cart() {
               }}
             >
               {/* --------- AVANT confirmation --------- */}
-              {!confirmedOrder && (
+              {confirmedOrders.length === 0 && (
                 <>
                   <div style={{ marginBottom: 8 }}>
                     <b>Client :</b> {user?.nom_client || "-"}
@@ -521,10 +521,6 @@ export default function Cart() {
                     <b>Date :</b> {new Date().toLocaleString()}
                     <br />
                     <b>Nom du dépôt :</b> {user?.depot_name || user?.depot || "-"}
-                    <br />
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <b>Entreprise :</b> {user?.entreprise?.nom_company || "-"}
                     <br />
                   </div>
                   <table
@@ -571,8 +567,16 @@ export default function Cart() {
               )}
 
               {/* --------- APRÈS confirmation --------- */}
-              {confirmedOrder && (
-                <>
+              {confirmedOrders.map((confirmedOrder, idx) => (
+                <div
+                  key={idx}
+                  ref={(el) => {
+                    if (el) {
+                      blRefs.current[idx] = el;
+                    }
+                  }}
+                  style={{ marginBottom: 24 }}
+                >
                   <div style={{ marginBottom: 8 }}>
                     <b>Numéro de commande :</b> {confirmedOrder.numero || confirmedOrder._id?.slice(-6).toUpperCase() || "-"}
                     <br />
@@ -588,10 +592,6 @@ export default function Cart() {
                     <b>Date :</b> {new Date(confirmedOrder.createdAt).toLocaleString()}
                     <br />
                     <b>Nom du dépôt :</b> {confirmedOrder.depot_name || "-"}
-                    <br />
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <b>Entreprise :</b> {confirmedOrder.entreprise?.nom_company || "-"}
                     <br />
                   </div>
                   <table
@@ -611,7 +611,7 @@ export default function Cart() {
                     </thead>
                     <tbody>
                       {confirmedOrder.items?.map(
-                        (item: any, idx: number) =>
+                        (item: any, idx2: number) =>
                           item && (
                             <tr key={idx}>
                               <td style={{ border: "1px solid #ddd", padding: 4 }}>
@@ -634,11 +634,24 @@ export default function Cart() {
                   <div style={{ textAlign: "right", fontWeight: "bold" }}>
                     Total général : {confirmedOrder.total?.toFixed(2)} €
                   </div>
-                </>
-              )}
+                  <button
+                    onClick={() => handleExportPDF(idx)}
+                    style={{
+                      background: "#1c1917",
+                      color: "white",
+                      padding: "0.5rem 1rem",
+                      border: "none",
+                      borderRadius: 4,
+                      marginTop: 8,
+                    }}
+                  >
+                    Exporter le BL en PDF
+                  </button>
+                </div>
+              ))}
             </div>
             {/* ----------- BOUTONS MODAL ----------- */}
-            {!confirmedOrder ? (
+            {confirmedOrders.length === 0 ? (
               <>
                 {/* PAS DE bouton PDF ici */}
                 <button
@@ -658,7 +671,7 @@ export default function Cart() {
                 <button
                   onClick={() => {
                     setShowModal(false);
-                    setConfirmedOrder(null);
+                    setConfirmedOrders([]);
                   }}
                   style={{ padding: "0.5rem 1rem" }}
                 >
@@ -667,24 +680,11 @@ export default function Cart() {
               </>
             ) : (
               <>
-                {/* Bouton PDF après confirmation */}
-                <button
-                  onClick={handleExportPDF}
-                  style={{
-                    background: "#1c1917",
-                    color: "white",
-                    padding: "0.5rem 1rem",
-                    border: "none",
-                    borderRadius: 4,
-                    marginRight: 8,
-                  }}
-                >
-                  Exporter le BL en PDF
-                </button>
+
                 <button
                   onClick={() => {
                     setShowModal(false);
-                    setConfirmedOrder(null);
+                    setConfirmedOrders([]);
                   }}
                   style={{
                     background: "#6366f1",

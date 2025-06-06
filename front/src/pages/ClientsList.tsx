@@ -91,16 +91,29 @@ export default function ClientsList() {
   const mapRef = useRef<any>(null);
 
   // ── 1) On charge la liste de tous les clients dès que possible ─────────
-  useEffect(() => {
-    const url = depot ? `/clients?depot=${depot}` : `/clients`;
-    apiFetch(url)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Erreur ${res.status}`);
-        return res.json();
-      })
-      .then(setClients)
-      .catch((err) => setError(err.message));
-  }, [depot, user?.company]);
+useEffect(() => {
+  const url = depot ? `/clients?depot=${depot}` : `/clients`;
+  apiFetch(url)
+    .then((res) => {
+      if (!res.ok) throw new Error(`Erreur ${res.status}`);
+      return res.json();
+    })
+    .then((allClients: Client[]) => {
+      // Si l'utilisateur est "Admin", on ne garde que les clients dont
+      // `affectations.entreprise === user.company`
+      if (user?.role === "Admin" && user.company) {
+        const filtered = allClients.filter((c) =>
+          c.affectations.some((a) => a.entreprise === user.company)
+        );
+        setClients(filtered);
+      } else {
+        // sinon (autres rôles), on garde tout
+        setClients(allClients);
+      }
+    })
+    .catch((err) => setError(err.message));
+}, [depot, user?.company, user?.role]);
+
 
   // ── 2) On démarre immédiatement la géolocalisation si le rôle est "Pré-vendeur" ──
   // Tant que currentPos === null, on n'affiche pas la carte : on attend la position.
