@@ -654,7 +654,6 @@ useEffect(() => {
                   <th style={th}>Email</th>
                   <th style={th}>Gérant</th>
                   <th style={th}>Téléphone</th>
-                  <th style={th}>Entreprise</th>
                   <th style={th}>Actions</th>
                 </tr>
               </thead>
@@ -686,9 +685,6 @@ useEffect(() => {
                     <td style={td}>{client.email}</td>
                     <td style={td}>{client.contact.nom_gerant}</td>
                     <td style={td}>{client.contact.telephone}</td>
-                    <td style={td}>
-                      {client.affectations[0]?.entreprise ?? "—"}
-                    </td>
                     <td style={td}>
                       <button
                         onClick={() => navigate(`/clients/${client._id}`)}

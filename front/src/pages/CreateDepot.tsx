@@ -400,7 +400,7 @@ export default function CreateDepot() {
                   <p style={{ fontSize: '0.9rem', color: '#333', margin: '0.5rem 0 0 0' }}>Fichier sélectionné : {pfpFile.name}</p>
               )}
               <p style={{ fontSize: '0.9rem', color: '#555', margin: '0.25rem 0 0 0' }}>
-                (facultatif – sinon image par défaut)
+                facultatif
               </p>
             </div>
 

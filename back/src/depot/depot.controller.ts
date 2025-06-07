@@ -32,7 +32,7 @@ export class DepotController {
     @UploadedFile() file: Express.Multer.File,
     @Req() req: Request & { user: any },
   ) {
-    return this.depotService.create(dto, req.user.id, file);
+    return this.depotService.create(dto, req.user.id);
   }
 
   @Get()
