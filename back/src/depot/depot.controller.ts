@@ -8,8 +8,11 @@ import {
   Body,
   Req,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { DepotService } from './depot.service';
 import { CreateDepotDto } from './dto/create-depot.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -23,11 +26,13 @@ export class DepotController {
 
   @Post()
   @Roles('Admin')
+  @UseInterceptors(FileInterceptor('pfp'))
   create(
     @Body() dto: CreateDepotDto,
+    @UploadedFile() file: Express.Multer.File,
     @Req() req: Request & { user: any },
   ) {
-    return this.depotService.create(dto, req.user.id);
+    return this.depotService.create(dto, req.user.id, file);
   }
 
   @Get()

@@ -71,27 +71,18 @@ export default function CreateDepot() {
     e.preventDefault();
     const token = localStorage.getItem('token') || '';
     try {
-      const formData = new FormData();
-      formData.append('nom_depot', dto.nom_depot);
-      formData.append('type_depot', dto.type_depot);
-      formData.append('capacite', dto.capacite.toString());
-      formData.append('adresse', JSON.stringify(dto.adresse));
-      if (dto.coordonnees) {
-        formData.append('coordonnees', JSON.stringify(dto.coordonnees));
-      }
-      formData.append('responsable', JSON.stringify(dto.responsable));
-      if (pfpFile) {
-        formData.append('pfp', pfpFile);
-      }
-
       const res = await fetch(`${apiBase}/api/depots`, {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: formData,
+        body: JSON.stringify(dto),
       });
-      if (!res.ok) throw new Error(`Erreur ${res.status}`);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || `Erreur ${res.status}`);
+      }
       navigate('/depots');
     } catch (err: any) {
       setError(err.message);
