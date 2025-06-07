@@ -38,7 +38,10 @@ export default function Sidebar() {
       break;
 
     case "super admin":
-      items = [{ label: "Liste des entreprises", path: "/companies" }];
+      items = [
+        { label: "Liste des entreprises", path: "/companies" },
+        { label: "Publicités", path: "/ads" },
+      ];
       break;
 
     case "admin":
@@ -130,7 +133,11 @@ export default function Sidebar() {
       <div id="sidebar" className={active ? "active" : ""}>
         {/* Bouton toggle (logo inversé) */}
         <div className="toggle-btn" onClick={toggleSidebar}>
-          <img src={logoMini} alt="Toggle Sidebar" className="toggle-logo-img" />
+          <img
+            src={logoMini}
+            alt="Toggle Sidebar"
+            className="toggle-logo-img"
+          />
         </div>
 
         {/* Liste des liens */}

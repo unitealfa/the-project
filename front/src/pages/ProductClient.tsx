@@ -15,6 +15,8 @@ interface Product {
   company_id: string; // ajouté
 }
 
+const baseUrl = import.meta.env.VITE_API_URL; // e.g., "http://localhost:5000"
+
 export default function ProductClient() {
   const [produits, setProduits] = useState<Product[]>([]);
   const [searchName, setSearchName] = useState("");
@@ -31,11 +33,20 @@ export default function ProductClient() {
   useEffect(() => {
     const fetchProduits = async () => {
       try {
-        const res = await fetch("/api/products/clients", {
+        const res = await fetch(`${baseUrl}/products/clients`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         const data: Product[] = await res.json();
-        setProduits(data);
+        // Transform image paths into absolute URLs
+        const withFullPaths = data.map(p => ({
+          ...p,
+          images: p.images.map(imgPath =>
+            imgPath.startsWith("http")
+              ? imgPath
+              : `${baseUrl}/${imgPath.replace(/^\//, '')}` // remove leading slash if present
+          ),
+        }));
+        setProduits(withFullPaths);
 
         const types = Array.from(new Set(data.map((p: Product) => p.categorie))).sort();
         const companies = Array.from(new Set(data.map((p: Product) => p.company_id))).sort();
@@ -343,6 +354,13 @@ export default function ProductClient() {
                           height: '100%',
                           objectFit: 'cover',
                           borderRadius: 10,
+                        }}
+                        onError={e => {
+                          // fallback to relative path if image fails to load
+                          const target = e.currentTarget;
+                          if (target.src.startsWith(baseUrl)) {
+                            target.src = target.src.replace(baseUrl + '/', '/');
+                          }
                         }}
                       />
                     </div>

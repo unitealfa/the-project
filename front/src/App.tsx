@@ -59,6 +59,10 @@ import HistoriqueOrders from "./pages/HistoriqueOrders";
 
 import PlanifierTournee from "./pages/PlanifierTournee";
 import TourneesList from "./pages/TourneesList";
+import AdsList from "./pages/AdsList";
+import AdDetail from "./pages/AdDetail";
+import EditAd from "./pages/EditAd";
+import AddAd from "./pages/AddAd";
 import TourneeDetail from "./pages/TourneeDetail";
 
 import ChauffeurTours from "./pages/ChauffeurTours";
@@ -626,6 +630,39 @@ export default function App() {
             element={
               <RequireAuth allowedRoles={["admin"]}>
                 <StatsVentes />
+              </RequireAuth>
+            }
+          />
+
+          <Route
+            path="/ads"
+            element={
+              <RequireAuth allowedRoles={["super admin"]}>
+                <AdsList />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/ads/add"
+            element={
+              <RequireAuth allowedRoles={["super admin"]}>
+                <AddAd />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/ads/:id"
+            element={
+              <RequireAuth allowedRoles={["super admin"]}>
+                <AdDetail />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/ads/edit/:id"
+            element={
+              <RequireAuth allowedRoles={["super admin"]}>
+                <EditAd />
               </RequireAuth>
             }
           />

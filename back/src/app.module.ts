@@ -17,6 +17,7 @@ import { WishlistModule } from './wishlist/wishlist.module';
 import { VehicleModule } from './vehicle/vehicle.module'; // Add this line
 import { OrderModule } from './order/order.module';
 import { ImageUploadModule } from './upload/image-upload.module';
+import { AdModule } from './ad/ad.module';
 import { ChauffeursController } from './chauffeurs.controller';
 import { LivreursController } from './livreurs.controller';
 
@@ -47,6 +48,7 @@ import { LivreursController } from './livreurs.controller';
     OrderModule,// Add this line
     ImageUploadModule,
     TourneeModule,
+    AdModule,
   ],
   controllers: [
     ChauffeursController,
