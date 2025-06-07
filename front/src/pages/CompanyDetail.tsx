@@ -1,6 +1,6 @@
 // front/src/pages/CompanyDetail.tsx
 import React, { useEffect, useState } from 'react';
-import { useParams }                   from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Header                          from '../components/Header';
 
 interface Company {
@@ -23,6 +23,7 @@ interface Company {
 
 export default function CompanyDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [company, setCompany] = useState<Company | null>(null);
   const [error, setError]     = useState('');
   const token                  = localStorage.getItem('token') || '';
@@ -74,6 +75,25 @@ export default function CompanyDetail() {
           borderRadius: '8px',
           boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
         }}>
+          <button
+            onClick={() => navigate('/companies')}
+            style={{
+              marginBottom: '2rem',
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#1a1a1a',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontSize: '1rem'
+            }}
+          >
+            ← Retour à la liste
+          </button>
+
           <h1 style={{
             color: '#1a1a1a',
             fontSize: '2rem',
