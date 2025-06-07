@@ -37,7 +37,6 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5); /* semi-transparent sombre */
   z-index: 100; /* en dessous du sidebar (z-index:200) */
 }
 
