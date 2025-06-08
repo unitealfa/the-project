@@ -199,7 +199,7 @@ export class OrderService {
           await this.clientModel.findByIdAndUpdate(order.clientId, {
             $inc: { [`fidelite_points.${companyId}`]: pts },
           });
-          await this.loyaltyService.recordRepeatReward(companyId, order.clientId, pts);
+          await this.loyaltyService.recordRepeatPoints(companyId, order.clientId, pts);
         }
         
         await this.loyaltyService.recordSpend(companyId, order.clientId, order.total);

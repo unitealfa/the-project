@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { LoyaltyProgram, LoyaltyProgramSchema } from './schemas/program.schema';
-import { LoyaltyReward } from './schemas/reward.schema';
-import { Company } from '../company/schemas/company.schema';
-import { Client } from '../client/schemas/client.schema';
-import { Order } from '../order/schemas/order.schema';
-import { Depot } from '../depot/schemas/depot.schema';
-import { CreateTierDto } from './dto/create-tier.dto';
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { Model, Types } from "mongoose";
+import { LoyaltyProgram, LoyaltyProgramSchema } from "./schemas/program.schema";
+import { LoyaltyReward } from "./schemas/reward.schema";
+import { Company } from "../company/schemas/company.schema";
+import { Client } from "../client/schemas/client.schema";
+import { Order } from "../order/schemas/order.schema";
+import { Depot } from "../depot/schemas/depot.schema";
+import { CreateTierDto } from "./dto/create-tier.dto";
 
 @Injectable()
 export class LoyaltyService {
@@ -23,7 +23,7 @@ export class LoyaltyService {
     @InjectModel(Order.name)
     private orderModel: Model<Order>,
     @InjectModel(Depot.name)
-    private depotModel: Model<Depot>,
+    private depotModel: Model<Depot>
   ) {}
 
   async getProgram(companyId: string) {
@@ -45,35 +45,74 @@ export class LoyaltyService {
     return prog.save();
   }
 
-    async setRepeatReward(companyId: string, dto: { every: number; reward: string; image?: string }) {
+  async setRepeatReward(
+    companyId: string,
+    dto: { every: number; reward: string; image?: string }
+  ) {
     const prog = await this.ensureProgram(companyId);
     prog.repeatReward = dto as any;
     return prog.save();
   }
 
+  async setRepeat(
+    companyId: string,
+    dto: { every: number; reward: string; image?: string }
+  ) {
+    return this.setRepeatReward(companyId, dto);
+  }
+
+  async removeRepeatReward(companyId: string) {
+    const prog = await this.ensureProgram(companyId);
+    prog.repeatReward = null;
+    await prog.save();
+    await this.clientModel.updateMany(
+      {},
+      { $set: { points_since_last_repeat: 0 } }
+    );
+    return prog;
+  }
   async addTier(companyId: string, dto: CreateTierDto) {
     const prog = await this.ensureProgram(companyId);
-    const prevMax = prog.tiers.length ? prog.tiers[prog.tiers.length - 1].points : 0;
+    const prevMax = prog.tiers.length
+      ? prog.tiers[prog.tiers.length - 1].points
+      : 0;
     prog.tiers.push(dto as any);
     prog.tiers.sort((a, b) => a.points - b.points);
-     await prog.save();
+    await prog.save();
 
     // if new tier is higher than previous max, reset baseline for clients
     if (dto.points > prevMax) {
-      const clients = await this.clientModel.find({ [`fidelite_points.${companyId}`]: { $exists: true } });
+      const clients = await this.clientModel.find({
+        [`fidelite_points.${companyId}`]: { $exists: true },
+      });
       for (const client of clients) {
-        const pts = (client.fidelite_points as any)?.get?.(companyId) || client.fidelite_points?.[companyId] || 0;
+        const pts =
+          (client.fidelite_points as any)?.get?.(companyId) ||
+          client.fidelite_points?.[companyId] ||
+          0;
         if (!client.loyalty_baseline) client.loyalty_baseline = {} as any;
         client.loyalty_baseline[companyId] = pts;
         await client.save();
       }
     } else {
       // retroactive reward if client already above new tier
-      const clients = await this.clientModel.find({ [`fidelite_points.${companyId}`]: { $gte: dto.points } });
+      const clients = await this.clientModel.find({
+        [`fidelite_points.${companyId}`]: { $gte: dto.points },
+      });
       for (const client of clients) {
-        const existing = await this.rewardModel.findOne({ client: client._id, company: companyId, points: dto.points });
+        const existing = await this.rewardModel.findOne({
+          client: client._id,
+          company: companyId,
+          points: dto.points,
+        });
         if (!existing) {
-          await this.rewardModel.create({ client: client._id, company: companyId, points: dto.points, type: 'points', delivered: false });
+          await this.rewardModel.create({
+            client: client._id,
+            company: companyId,
+            points: dto.points,
+            type: "points",
+            delivered: false,
+          });
         }
       }
     }
@@ -81,7 +120,11 @@ export class LoyaltyService {
     return prog;
   }
 
-  async updateTier(companyId: string, tierId: string, dto: Partial<CreateTierDto>) {
+  async updateTier(
+    companyId: string,
+    tierId: string,
+    dto: Partial<CreateTierDto>
+  ) {
     const prog = await this.ensureProgram(companyId);
     const tier = prog.tiers.find((t: any) => t._id.toString() === tierId);
     if (tier) {
@@ -116,7 +159,7 @@ export class LoyaltyService {
       await this.rewardModel.create({
         client: client._id,
         company: new Types.ObjectId(companyId),
-        type: 'spend',
+        type: "spend",
         amount: target,
         points: 0,
         delivered: false,
@@ -140,7 +183,7 @@ export class LoyaltyService {
     return { targetAmount: prog.spendReward.amount, currentAmount: current };
   }
 
-    async getRepeatProgress(companyId: string, clientId: string) {
+  async getRepeatProgress(companyId: string, clientId: string) {
     const prog = await this.ensureProgram(companyId);
     if (!prog.repeatReward) return { every: 0, current: 0 };
     const client = await this.clientModel.findById(clientId).lean<Client>();
@@ -161,24 +204,36 @@ export class LoyaltyService {
     if (pts <= 0) return 0;
     await this.rewardModel.updateOne(
       { client: clientId, company: companyId, points: pts, delivered: false },
-      { $setOnInsert: { client: clientId, company: companyId, points: pts, delivered: false } },
+      {
+        $setOnInsert: {
+          client: clientId,
+          company: companyId,
+          points: pts,
+          delivered: false,
+        },
+      },
       { upsert: true }
     );
     return pts;
   }
 
-    async recordRepeatReward(companyId: string, clientId: string, ptsEarned: number) {
+  async recordRepeatReward(
+    companyId: string,
+    clientId: string,
+    ptsEarned: number
+  ) {
     const prog = await this.ensureProgram(companyId);
     if (!prog.repeatReward) return;
     const client = await this.clientModel.findById(clientId);
     if (!client) return;
-    client.points_since_last_repeat = (client.points_since_last_repeat || 0) + ptsEarned;
+    client.points_since_last_repeat =
+      (client.points_since_last_repeat || 0) + ptsEarned;
     while (client.points_since_last_repeat >= prog.repeatReward.every) {
       client.points_since_last_repeat -= prog.repeatReward.every;
       await this.rewardModel.create({
         client: client._id,
         company: new Types.ObjectId(companyId),
-        type: 'repeat',
+        type: "repeat",
         points: prog.repeatReward.every,
         delivered: false,
       });
@@ -186,32 +241,51 @@ export class LoyaltyService {
     await client.save();
   }
 
+  async recordRepeatPoints(
+    companyId: string,
+    clientId: string,
+    ptsEarned: number
+  ) {
+    return this.recordRepeatReward(companyId, clientId, ptsEarned);
+  }
 
   async listPending(companyId: string) {
     return this.rewardModel
       .find({ company: companyId, delivered: false })
-      .populate('client', 'nom_client')
+      .populate("client", "nom_client")
       .lean();
   }
 
   async deliver(companyId: string, clientId: string, points: number) {
-    const rewards = await this.rewardModel.find({ company: companyId, client: clientId, points, delivered: false }).lean();
+    const rewards = await this.rewardModel
+      .find({ company: companyId, client: clientId, points, delivered: false })
+      .lean();
     for (const reward of rewards) {
       await this.createRewardOrder(reward);
     }
-    await this.rewardModel.updateMany({ company: companyId, client: clientId, points, delivered: false }, { delivered: true });
+    await this.rewardModel.updateMany(
+      { company: companyId, client: clientId, points, delivered: false },
+      { delivered: true }
+    );
   }
 
   async deliverAll(companyId: string) {
-    const rewards = await this.rewardModel.find({ company: companyId, delivered: false }).lean();
+    const rewards = await this.rewardModel
+      .find({ company: companyId, delivered: false })
+      .lean();
     for (const reward of rewards) {
       await this.createRewardOrder(reward);
     }
-    await this.rewardModel.updateMany({ company: companyId, delivered: false }, { delivered: true });
+    await this.rewardModel.updateMany(
+      { company: companyId, delivered: false },
+      { delivered: true }
+    );
   }
 
-   private async createRewardOrder(reward: LoyaltyReward) {
-    const client = await this.clientModel.findById(reward.client).lean<Client>();
+  private async createRewardOrder(reward: LoyaltyReward) {
+    const client = await this.clientModel
+      .findById(reward.client)
+      .lean<Client>();
     if (!client) return;
 
     const lastOrder = await this.orderModel
@@ -219,36 +293,42 @@ export class LoyaltyService {
       .sort({ createdAt: -1 })
       .lean<Order>();
 
-    const depotId = lastOrder?.depot || client.affectations?.[0]?.depot?.toString();
+    const depotId =
+      lastOrder?.depot || client.affectations?.[0]?.depot?.toString();
     if (!depotId) return;
 
     const depot = await this.depotModel.findById(depotId).lean<Depot>();
-    const prog = await this.programModel.findOne({ company: reward.company }).lean<LoyaltyProgram>();
-    let rewardName = '';
-    if (reward.type === 'spend') {
-      rewardName = prog?.spendReward?.reward || 'Récompense dépenses';
-      } else if (reward.type === 'repeat') {
+    const prog = await this.programModel
+      .findOne({ company: reward.company })
+      .lean<LoyaltyProgram>();
+    let rewardName = "";
+    if (reward.type === "spend") {
+      rewardName = prog?.spendReward?.reward || "Récompense dépenses";
+    } else if (reward.type === "repeat") {
       rewardName = prog?.repeatReward?.reward || `Défi ${reward.points} pts`;
     } else {
-      const tier = prog?.tiers.find(t => t.points === reward.points);
+      const tier = prog?.tiers.find((t) => t.points === reward.points);
       rewardName = tier?.reward || `Récompense ${reward.points} pts`;
     }
 
     const order = new this.orderModel({
       clientId: reward.client.toString(),
       nom_client: client.nom_client,
-      telephone: client.contact?.telephone || '',
+      telephone: client.contact?.telephone || "",
       depot: depotId,
-      depot_name: depot?.nom_depot || '',
+      depot_name: depot?.nom_depot || "",
       adresse_client: {
-        adresse: client.localisation?.adresse || '',
-        ville: client.localisation?.ville || '',
-        code_postal: client.localisation?.code_postal || '',
-        region: client.localisation?.region || '',
+        adresse: client.localisation?.adresse || "",
+        ville: client.localisation?.ville || "",
+        code_postal: client.localisation?.code_postal || "",
+        region: client.localisation?.region || "",
       },
       items: [
         {
-          productId: reward.type === 'spend' ? 'spend-reward' : `reward-${reward.points}`,
+          productId:
+            reward.type === "spend"
+              ? "spend-reward"
+              : `reward-${reward.points}`,
           productName: rewardName,
           quantity: 1,
           prix_detail: 0,
@@ -267,17 +347,20 @@ export class LoyaltyService {
     if (!client) return [];
 
     // 2) Extract company IDs from their affectations
-    const companyIds = (client.affectations || [])
-      .map((a: any) => a.entreprise.toString());
+    const companyIds = (client.affectations || []).map((a: any) =>
+      a.entreprise.toString()
+    );
 
     // 3) Find only programs that exist and have at least one tier
-    const programs = await this.programModel.find({
-      company: { $in: companyIds },
-      'tiers.0': { $exists: true } // tiers.0 exists <=> length > 0
-    }).lean();
+    const programs = await this.programModel
+      .find({
+        company: { $in: companyIds },
+        "tiers.0": { $exists: true }, // tiers.0 exists <=> length > 0
+      })
+      .lean();
 
     // 4) Keep the list of "active" company IDs
-    const activeIds = programs.map(p => p.company.toString());
+    const activeIds = programs.map((p) => p.company.toString());
 
     // 5) Load their info (name + pfp)
     const companies = await this.companyModel
@@ -285,10 +368,10 @@ export class LoyaltyService {
       .lean();
 
     // 6) Return only this format
-    return companies.map(c => ({
-      _id:         c._id.toString(),
+    return companies.map((c) => ({
+      _id: c._id.toString(),
       nom_company: c.nom_company,
-      pfp:         c.pfp,
+      pfp: c.pfp,
     }));
   }
 }

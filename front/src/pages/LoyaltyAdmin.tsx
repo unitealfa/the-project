@@ -262,9 +262,9 @@ export default function LoyaltyAdmin() {
               type="file"
               accept="image/*"
               onChange={e => {
-                const f = e.target.files?.[0] || null
-                setRepeatImageFile(f)
-                setRepeatImagePreview(f ? URL.createObjectURL(f) : null)
+                const file = e.target.files?.[0] || null
+                setRepeatImageFile(file)
+                setRepeatImagePreview(file ? URL.createObjectURL(file) : null)
               }}
             />
           </label>
@@ -281,6 +281,29 @@ export default function LoyaltyAdmin() {
 
           <button type="submit" style={{ marginLeft: '1rem' }}>
             Enregistrer défi
+          </button>
+                    <button
+            type="button"
+            onClick={async () => {
+              if (!companyId) return;
+              if (!confirm('Supprimer le défi ?')) return;
+              const res = await fetch(`${api}/loyalty/${companyId}/repeat`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              if (res.ok) {
+                setRepeatEvery(0);
+                setRepeatLabel('');
+                setRepeatImageFile(null);
+                setRepeatImagePreview(null);
+              } else {
+                const err = await res.json().catch(() => null);
+                alert(err?.message || res.statusText);
+              }
+            }}
+            style={{ marginLeft: '1rem', color: 'red' }}
+          >
+            Supprimer défi
           </button>
         </form>
 

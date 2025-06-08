@@ -1,91 +1,120 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
-import { LoyaltyService } from './loyalty.service';
-import { CreateTierDto } from './dto/create-tier.dto';
-import { GetUser } from '../auth/decorators';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Delete,
+  UseGuards,
+  UploadedFile,
+  UseInterceptors,
+} from "@nestjs/common";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { RolesGuard } from "../auth/roles.guard";
+import { Roles } from "../auth/roles.decorator";
+import { LoyaltyService } from "./loyalty.service";
+import { CreateTierDto } from "./dto/create-tier.dto";
+import { GetUser } from "../auth/decorators";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { diskStorage } from "multer";
 
-@Controller('loyalty')
+@Controller("loyalty")
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class LoyaltyController {
   constructor(private readonly loyaltyService: LoyaltyService) {}
 
-  @Get('available')
-  getAvailable(@GetUser('id') clientId: string) {
+  @Get("available")
+  getAvailable(@GetUser("id") clientId: string) {
     return this.loyaltyService.availableForClient(clientId);
   }
 
-  @Get(':companyId')
-  getProgram(@Param('companyId') companyId: string) {
+  @Get(":companyId")
+  getProgram(@Param("companyId") companyId: string) {
     return this.loyaltyService.getProgram(companyId);
   }
 
-    @Get(':companyId/client-data')
+  @Get(":companyId/client-data")
   getClientData(
-    @Param('companyId') companyId: string,
-    @GetUser('id') clientId: string,
+    @Param("companyId") companyId: string,
+    @GetUser("id") clientId: string
   ) {
     return this.loyaltyService.getClientData(companyId, clientId);
   }
 
-  @Get(':companyId/spend-progress')
+  @Get(":companyId/spend-progress")
   getSpendProgress(
-    @Param('companyId') companyId: string,
-    @GetUser('id') clientId: string,
+    @Param("companyId") companyId: string,
+    @GetUser("id") clientId: string
   ) {
     return this.loyaltyService.getSpendProgress(companyId, clientId);
   }
 
-  
-  @Get(':companyId/repeat-progress')
+  @Get(":companyId/repeat-progress")
   getRepeatProgress(
-    @Param('companyId') companyId: string,
-    @GetUser('id') clientId: string,
+    @Param("companyId") companyId: string,
+    @GetUser("id") clientId: string
   ) {
     return this.loyaltyService.getRepeatProgress(companyId, clientId);
   }
 
-  @Roles('admin')
-  @Patch(':companyId/ratio')
+  @Roles("admin")
+  @Patch(":companyId/ratio")
   setRatio(
-    @Param('companyId') companyId: string,
-    @Body('amount') amount: number,
-    @Body('points') points: number,
+    @Param("companyId") companyId: string,
+    @Body("amount") amount: number,
+    @Body("points") points: number
   ) {
     return this.loyaltyService.setRatio(companyId, amount, points);
   }
 
-    @Roles('admin')
-  @Patch(':companyId/repeat')
-  setRepeatReward(
-    @Param('companyId') companyId: string,
-    @Body('every') every: number,
-    @Body('reward') reward: string,
-    @Body('image') image?: string,
+  @Roles("admin")
+  @Patch(":companyId/repeat")
+  @UseInterceptors(
+    FileInterceptor("image", {
+      storage: diskStorage({
+        destination: "./public/uploads/tiers",
+        filename: (_, file, cb) => {
+          const ext = file.originalname.split(".").pop();
+          cb(null, `repeat-${Date.now()}.${ext}`);
+        },
+      }),
+    })
+  )
+  async setRepeatReward(
+    @Param("companyId") companyId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body("every") every: number,
+    @Body("reward") reward: string
   ) {
-    return this.loyaltyService.setRepeatReward(companyId, { every, reward, image });
+    const dto: any = { every: Number(every), reward };
+    if (file) dto.image = `uploads/tiers/${file.filename}`;
+    return this.loyaltyService.setRepeat(companyId, dto);
   }
 
-  @Roles('admin')
-  @Post(':companyId/tiers')
+  @Roles("admin")
+  @Delete(":companyId/repeat")
+  removeRepeatReward(@Param("companyId") companyId: string) {
+    return this.loyaltyService.removeRepeatReward(companyId);
+  }
+
+  @Roles("admin")
+  @Post(":companyId/tiers")
   @UseInterceptors(
-    FileInterceptor('image', {
+    FileInterceptor("image", {
       storage: diskStorage({
-        destination: './public/uploads/tiers',
+        destination: "./public/uploads/tiers",
         filename: (_, file, cb) => {
-          const ext = file.originalname.split('.').pop();
+          const ext = file.originalname.split(".").pop();
           cb(null, `tier-${Date.now()}.${ext}`);
         },
       }),
-    }),
+    })
   )
   async addTier(
-    @Param('companyId') companyId: string,
+    @Param("companyId") companyId: string,
     @UploadedFile() file: Express.Multer.File,
-    @Body() dto: CreateTierDto,
+    @Body() dto: CreateTierDto
   ) {
     if (file) {
       dto.image = `uploads/tiers/${file.filename}`;
@@ -93,57 +122,61 @@ export class LoyaltyController {
     return this.loyaltyService.addTier(companyId, dto);
   }
 
-  @Roles('admin')
-  @Patch(':companyId/tiers/:tierId')
+  @Roles("admin")
+  @Patch(":companyId/tiers/:tierId")
   @UseInterceptors(
-    FileInterceptor('image', {
+    FileInterceptor("image", {
       storage: diskStorage({
-        destination: './public/uploads/tiers',
+        destination: "./public/uploads/tiers",
         filename: (_, file, cb) => {
-          const ext = file.originalname.split('.').pop();
+          const ext = file.originalname.split(".").pop();
           cb(null, `tier-${Date.now()}.${ext}`);
         },
       }),
-    }),
+    })
   )
   async updateTier(
-    @Param('companyId') companyId: string,
-    @Param('tierId') tierId: string,
+    @Param("companyId") companyId: string,
+    @Param("tierId") tierId: string,
     @UploadedFile() file: Express.Multer.File,
-    @Body() dto: Partial<CreateTierDto>,
+    @Body() dto: Partial<CreateTierDto>
   ) {
     if (file) dto.image = `uploads/tiers/${file.filename}`;
     return this.loyaltyService.updateTier(companyId, tierId, dto);
   }
 
-  @Roles('admin')
-  @Post(':companyId/tiers/:tierId/delete')
+  @Roles("admin")
+  @Post(":companyId/tiers/:tierId/delete")
   removeTier(
-    @Param('companyId') companyId: string,
-    @Param('tierId') tierId: string,
+    @Param("companyId") companyId: string,
+    @Param("tierId") tierId: string
   ) {
     return this.loyaltyService.removeTier(companyId, tierId);
   }
 
-  @Roles('admin')
-  @Get(':companyId/pending')
-  listPending(@Param('companyId') companyId: string) {
+  @Roles("admin")
+  @Get(":companyId/pending")
+  listPending(@Param("companyId") companyId: string) {
     return this.loyaltyService.listPending(companyId);
   }
 
-  @Roles('admin')
-  @Post(':companyId/deliver/:clientId/:points')
+  @Roles("admin")
+  @Post(":companyId/deliver/:clientId/:points")
   deliver(
-    @Param('companyId') companyId: string,
-    @Param('clientId') clientId: string,
-    @Param('points') points: string,
+    @Param("companyId") companyId: string,
+    @Param("clientId") clientId: string,
+    @Param("points") points: string
   ) {
-    return this.loyaltyService.deliver(companyId, clientId, parseInt(points, 10));
+    return this.loyaltyService.deliver(
+      companyId,
+      clientId,
+      parseInt(points, 10)
+    );
   }
 
-  @Roles('admin')
-  @Post(':companyId/deliver-all')
-  deliverAll(@Param('companyId') companyId: string) {
+  @Roles("admin")
+  @Post(":companyId/deliver-all")
+  deliverAll(@Param("companyId") companyId: string) {
     return this.loyaltyService.deliverAll(companyId);
   }
 }
