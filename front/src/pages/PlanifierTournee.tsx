@@ -283,9 +283,8 @@ const PlanifierTournee: React.FC = () => {
 
     try {
       // 1) Envoi au backend
-      const res = await fetch(`/api/tournees/planifier`, {
+      const res = await apiFetch(`/tournees/planifier`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error(await res.text());
