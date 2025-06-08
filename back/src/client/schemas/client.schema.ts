@@ -49,6 +49,12 @@ export class Client extends Document {
 
   @Prop({ type: Map, of: Number, default: {} })
   fidelite_points: Record<string, number>;
+  
+  @Prop({ type: Map, of: Number, default: {} })
+  spend_since_last_reward: Record<string, number>;
+
+  @Prop({ type: Map, of: Number, default: {} })
+  loyalty_baseline: Record<string, number>;
   @Prop({ type: Statistiques, default: () => ({}) }) statistiques: Statistiques;
   @Prop()
   pfp: string;

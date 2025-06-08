@@ -23,6 +23,22 @@ export class LoyaltyController {
     return this.loyaltyService.getProgram(companyId);
   }
 
+    @Get(':companyId/client-data')
+  getClientData(
+    @Param('companyId') companyId: string,
+    @GetUser('id') clientId: string,
+  ) {
+    return this.loyaltyService.getClientData(companyId, clientId);
+  }
+
+  @Get(':companyId/spend-progress')
+  getSpendProgress(
+    @Param('companyId') companyId: string,
+    @GetUser('id') clientId: string,
+  ) {
+    return this.loyaltyService.getSpendProgress(companyId, clientId);
+  }
+
   @Roles('admin')
   @Patch(':companyId/ratio')
   setRatio(

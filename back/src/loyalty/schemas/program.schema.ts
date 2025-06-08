@@ -21,6 +21,12 @@ export class LoyaltyProgram extends Document {
 
   @Prop({ type: [LoyaltyTier], default: [] })
   tiers: LoyaltyTier[];
+  
+  @Prop({
+    type: { amount: Number, reward: String },
+    default: null,
+  })
+  spendReward?: { amount: number; reward: string } | null;
 }
 
 export const LoyaltyTierSchema = SchemaFactory.createForClass(LoyaltyTier);

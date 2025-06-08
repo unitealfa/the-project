@@ -13,6 +13,8 @@ interface Reward {
   _id:    string
   client: { _id: string; nom_client: string }
   points: number
+  type: 'points' | 'spend'
+  amount?: number
 }
 
 export default function LoyaltyAdmin() {
@@ -287,10 +289,13 @@ export default function LoyaltyAdmin() {
           <button onClick={deliverAll}>Livrer tout le monde</button>
           <ul>
             {pending.map(p => (
-              <li key={`${p.client._id}-${p.points}`}>
-                {p.client.nom_client} – {p.points} pts
+              <li key={p._id}>
+                {p.client.nom_client} –{' '}
+                {p.type === 'spend'
+                  ? `${p.amount} dépensés`
+                  : `${p.points} pts`}
                 <button
-                  onClick={() => deliver(p.client._id, p.points)}
+                  onClick={() => deliver(p.client._id, p.type === 'spend' ? 0 : p.points)}
                   style={{ marginLeft: 8 }}
                 >
                   Livrer

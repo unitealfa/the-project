@@ -200,6 +200,8 @@ export class OrderService {
             $inc: { [`fidelite_points.${companyId}`]: pts },
           });
         }
+        
+        await this.loyaltyService.recordSpend(companyId, order.clientId, order.total);
       }
     }
 

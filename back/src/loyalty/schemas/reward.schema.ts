@@ -9,8 +9,14 @@ export class LoyaltyReward extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Company', required: true })
   company: Types.ObjectId;
 
+  @Prop({ enum: ['points', 'spend'], default: 'points' })
+  type: 'points' | 'spend';
+
   @Prop({ required: true })
   points: number;
+
+  @Prop()
+  amount?: number;
 
   @Prop({ default: false })
   delivered: boolean;
