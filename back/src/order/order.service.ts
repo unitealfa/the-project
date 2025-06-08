@@ -197,7 +197,7 @@ export class OrderService {
         );
         if (pts > 0) {
           await this.clientModel.findByIdAndUpdate(order.clientId, {
-            $inc: { fidelite_points: pts },
+            $inc: { [`fidelite_points.${companyId}`]: pts },
           });
         }
       }

@@ -5,6 +5,8 @@ import { LoyaltyProgram, LoyaltyProgramSchema } from './schemas/program.schema';
 import { LoyaltyReward } from './schemas/reward.schema';
 import { Company } from '../company/schemas/company.schema';
 import { Client } from '../client/schemas/client.schema';
+import { Order } from '../order/schemas/order.schema';
+import { Depot } from '../depot/schemas/depot.schema';
 import { CreateTierDto } from './dto/create-tier.dto';
 
 @Injectable()
@@ -18,6 +20,10 @@ export class LoyaltyService {
     private companyModel: Model<Company>,
     @InjectModel(Client.name)
     private clientModel: Model<Client>,
+    @InjectModel(Order.name)
+    private orderModel: Model<Order>,
+    @InjectModel(Depot.name)
+    private depotModel: Model<Depot>,
   ) {}
 
   async getProgram(companyId: string) {
@@ -84,11 +90,63 @@ export class LoyaltyService {
   }
 
   async deliver(companyId: string, clientId: string, points: number) {
+    const rewards = await this.rewardModel.find({ company: companyId, client: clientId, points, delivered: false }).lean();
+    for (const reward of rewards) {
+      await this.createRewardOrder(reward);
+    }
     await this.rewardModel.updateMany({ company: companyId, client: clientId, points, delivered: false }, { delivered: true });
   }
 
   async deliverAll(companyId: string) {
+    const rewards = await this.rewardModel.find({ company: companyId, delivered: false }).lean();
+    for (const reward of rewards) {
+      await this.createRewardOrder(reward);
+    }
     await this.rewardModel.updateMany({ company: companyId, delivered: false }, { delivered: true });
+  }
+
+   private async createRewardOrder(reward: LoyaltyReward) {
+    const client = await this.clientModel.findById(reward.client).lean<Client>();
+    if (!client) return;
+
+    const lastOrder = await this.orderModel
+      .findOne({ clientId: reward.client.toString() })
+      .sort({ createdAt: -1 })
+      .lean<Order>();
+
+    const depotId = lastOrder?.depot || client.affectations?.[0]?.depot?.toString();
+    if (!depotId) return;
+
+    const depot = await this.depotModel.findById(depotId).lean<Depot>();
+    const prog = await this.programModel.findOne({ company: reward.company }).lean<LoyaltyProgram>();
+    const tier = prog?.tiers.find(t => t.points === reward.points);
+    const rewardName = tier?.reward || `Récompense ${reward.points} pts`;
+
+    const order = new this.orderModel({
+      clientId: reward.client.toString(),
+      nom_client: client.nom_client,
+      telephone: client.contact?.telephone || '',
+      depot: depotId,
+      depot_name: depot?.nom_depot || '',
+      adresse_client: {
+        adresse: client.localisation?.adresse || '',
+        ville: client.localisation?.ville || '',
+        code_postal: client.localisation?.code_postal || '',
+        region: client.localisation?.region || '',
+      },
+      items: [
+        {
+          productId: `reward-${reward.points}`,
+          productName: rewardName,
+          quantity: 1,
+          prix_detail: 0,
+        },
+      ],
+      total: 0,
+      confirmed: false,
+    });
+
+    await order.save();
   }
 
   async availableForClient(clientId: string) {
