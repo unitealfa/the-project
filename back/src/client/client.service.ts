@@ -2,25 +2,25 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-} from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Client } from './schemas/client.schema';
-import { Model, Types } from 'mongoose';
-import { CreateClientDto } from './dto/create-client.dto';
-import * as bcrypt from 'bcrypt';
-import { Order } from '../order/schemas/order.schema';
-import * as mongoose from 'mongoose';
-import { Logger } from '@nestjs/common';
-import { DepotHelperService } from '../common/helpers/depot-helper.service';
+} from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { Client } from "./schemas/client.schema";
+import { Model, Types } from "mongoose";
+import { CreateClientDto } from "./dto/create-client.dto";
+import * as bcrypt from "bcrypt";
+import { Order } from "../order/schemas/order.schema";
+import * as mongoose from "mongoose";
+import { Logger } from "@nestjs/common";
+import { DepotHelperService } from "../common/helpers/depot-helper.service";
 
 @Injectable()
 export class ClientService {
   private readonly logger = new Logger(ClientService.name);
 
   constructor(
-    @InjectModel('Client') private readonly clientModel: Model<Client>,
-    @InjectModel('Order') private readonly orderModel: Model<Order>,
-    private readonly depotHelper: DepotHelperService,
+    @InjectModel("Client") private readonly clientModel: Model<Client>,
+    @InjectModel("Order") private readonly orderModel: Model<Order>,
+    private readonly depotHelper: DepotHelperService
   ) {}
 
   /* ───────────── CRÉATION ───────────── */
@@ -34,12 +34,39 @@ export class ClientService {
         depot: new Types.ObjectId(a.depot),
       })) ?? [];
 
+    // Vérifier qu'aucune affectation ne cible deux dépôts de la même entreprise
+    const entreprisesMap = new Map<string, string>();
+    for (const a of affectations) {
+      const ent = a.entreprise.toString();
+      if (
+        entreprisesMap.has(ent) &&
+        entreprisesMap.get(ent) !== a.depot.toString()
+      ) {
+        throw new BadRequestException(
+          "Un client ne peut pas être affecté à plusieurs dépôts d'une même entreprise"
+        );
+      }
+      entreprisesMap.set(ent, a.depot.toString());
+    }
+
     if (existing) {
+      // Refuser si le client est déjà affecté dans la même entreprise
+      for (const a of affectations) {
+        const sameCompany = existing.affectations.some(
+          (e) => e.entreprise.toString() === a.entreprise.toString()
+        );
+        if (sameCompany) {
+          throw new BadRequestException(
+            "Ce client est déjà affecté dans cette entreprise."
+          );
+        }
+      }
+
       const newAffectations = affectations.filter(
         (a) =>
           !existing.affectations.some(
-            (e) => e.depot.toString() === a.depot.toString(),
-          ),
+            (e) => e.depot.toString() === a.depot.toString()
+          )
       );
       if (newAffectations.length > 0) {
         existing.affectations.push(...newAffectations);
@@ -64,14 +91,14 @@ export class ClientService {
   async findByDepot(depotId: string, prevendeurId?: string): Promise<Client[]> {
     const query: any = {
       $or: [
-        { 'affectations.depot': depotId },
-        { 'affectations.depot': new Types.ObjectId(depotId) },
+        { "affectations.depot": depotId },
+        { "affectations.depot": new Types.ObjectId(depotId) },
       ],
     };
 
     // Si un prévendeur est spécifié, ne retourner que ses clients
     if (prevendeurId) {
-      query['affectations.prevendeur_id'] = new Types.ObjectId(prevendeurId);
+      query["affectations.prevendeur_id"] = new Types.ObjectId(prevendeurId);
     }
 
     return this.clientModel.find(query).lean();
@@ -87,57 +114,71 @@ export class ClientService {
 
   async getClientStats(id: string) {
     this.logger.debug(`Calcul des stats pour client ${id}`);
-    
+
     try {
       // Vérifier d'abord si le client existe
       const client = await this.clientModel.findById(id);
       this.logger.debug(`Client trouvé:`, client);
-      
+
       if (!client) {
         this.logger.warn(`Client ${id} non trouvé`);
         return {
           totalAmount: 0,
           orderCount: 0,
-          lastOrder: null
+          lastOrder: null,
         };
       }
 
       // Vérifier toutes les commandes dans la base
       const allOrders = await this.orderModel.find({});
-      this.logger.debug(`Nombre total de commandes dans la base:`, allOrders.length);
+      this.logger.debug(
+        `Nombre total de commandes dans la base:`,
+        allOrders.length
+      );
       this.logger.debug(`Exemple de commande:`, allOrders[0]);
 
       // Vérifier les commandes du client avec différentes approches
       const ordersById = await this.orderModel.find({ clientId: id });
-      this.logger.debug(`Commandes trouvées avec clientId=${id}:`, ordersById.length);
+      this.logger.debug(
+        `Commandes trouvées avec clientId=${id}:`,
+        ordersById.length
+      );
 
-      const ordersByStringId = await this.orderModel.find({ clientId: id.toString() });
-      this.logger.debug(`Commandes trouvées avec clientId=${id.toString()}:`, ordersByStringId.length);
-
-      const ordersByObjectId = await this.orderModel.find({ 
-        clientId: new mongoose.Types.ObjectId(id) 
+      const ordersByStringId = await this.orderModel.find({
+        clientId: id.toString(),
       });
-      this.logger.debug(`Commandes trouvées avec ObjectId:`, ordersByObjectId.length);
+      this.logger.debug(
+        `Commandes trouvées avec clientId=${id.toString()}:`,
+        ordersByStringId.length
+      );
+
+      const ordersByObjectId = await this.orderModel.find({
+        clientId: new mongoose.Types.ObjectId(id),
+      });
+      this.logger.debug(
+        `Commandes trouvées avec ObjectId:`,
+        ordersByObjectId.length
+      );
 
       // Essayer l'agrégation avec différentes approches
       const stats = await this.orderModel.aggregate([
-        { 
-          $match: { 
+        {
+          $match: {
             $or: [
               { clientId: id },
               { clientId: id.toString() },
-              { clientId: new mongoose.Types.ObjectId(id) }
-            ]
-          } 
+              { clientId: new mongoose.Types.ObjectId(id) },
+            ],
+          },
         },
         {
           $group: {
             _id: null,
-            totalAmount: { $sum: '$total' },
+            totalAmount: { $sum: "$total" },
             orderCount: { $sum: 1 },
-            lastOrder: { $max: '$createdAt' }
-          }
-        }
+            lastOrder: { $max: "$createdAt" },
+          },
+        },
       ]);
 
       this.logger.debug(`Résultat de l'agrégation:`, stats);
@@ -146,21 +187,21 @@ export class ClientService {
         return {
           totalAmount: 0,
           orderCount: 0,
-          lastOrder: null
+          lastOrder: null,
         };
       }
 
       return {
         totalAmount: stats[0].totalAmount || 0,
         orderCount: stats[0].orderCount || 0,
-        lastOrder: stats[0].lastOrder || null
+        lastOrder: stats[0].lastOrder || null,
       };
     } catch (error) {
       this.logger.error(`Erreur lors du calcul des stats:`, error);
       return {
         totalAmount: 0,
         orderCount: 0,
-        lastOrder: null
+        lastOrder: null,
       };
     }
   }
@@ -169,30 +210,37 @@ export class ClientService {
   async addAffectation(
     clientId: string,
     entrepriseId: string,
-    depotId: string,
+    depotId: string
   ) {
     const client = await this.clientModel.findById(clientId);
     if (!client) return null;
 
-    const exists = client.affectations.some(
-      (a) => a.depot.toString() === depotId,
+    const existsDepot = client.affectations.some(
+      (a) => a.depot.toString() === depotId
     );
-    if (exists) {
-      throw new Error('Ce client est déjà affecté à ce dépôt.');
+    if (existsDepot) {
+      throw new Error("Ce client est déjà affecté à ce dépôt.");
     }
-        let entrepriseObj: Types.ObjectId | null = null;
+    let entrepriseObj: Types.ObjectId | null = null;
 
     if (entrepriseId && Types.ObjectId.isValid(entrepriseId)) {
       entrepriseObj = new Types.ObjectId(entrepriseId);
     } else {
       entrepriseObj = await this.depotHelper.getEntrepriseFromDepot(depotId);
       if (!entrepriseObj) {
-        throw new Error('Entreprise introuvable pour ce dépôt.');
+        throw new Error("Entreprise introuvable pour ce dépôt.");
       }
     }
 
+    const sameEntreprise = client.affectations.some(
+      (a) => a.entreprise.toString() === entrepriseObj!.toString()
+    );
+    if (sameEntreprise) {
+      throw new Error("Ce client est déjà affecté dans cette entreprise.");
+    }
+
     client.affectations.push({
-       entreprise: entrepriseObj,
+      entreprise: entrepriseObj,
       depot: new Types.ObjectId(depotId),
     });
 
@@ -208,19 +256,19 @@ export class ClientService {
 
     // 2. Filtrer le tableau d'affectations : on enlève uniquement l'entrée correspondant à depotId
     const nouvellesAffectations = (client.affectations ?? []).filter(
-      (aff) => aff.depot.toString() !== depotId.toString(),
+      (aff) => aff.depot.toString() !== depotId.toString()
     );
 
     // 3. Si on n'a filtré aucune entrée, l'utilisateur n'était pas affecté à ce dépôt
     if (nouvellesAffectations.length === (client.affectations?.length ?? 0)) {
-      return { message: 'Aucune affectation trouvée pour ce dépôt.' };
+      return { message: "Aucune affectation trouvée pour ce dépôt." };
     }
 
     // 4. Si, après filtrage, il n'a plus d'affectations → suppression définitive
     if (nouvellesAffectations.length === 0) {
       await this.clientModel.findByIdAndDelete(clientId).exec();
       return {
-        message: 'Client supprimé définitivement car plus d\'affectations.',
+        message: "Client supprimé définitivement car plus d'affectations.",
       };
     }
 
@@ -230,25 +278,32 @@ export class ClientService {
       .exec();
 
     // Pour renvoyer éventuellement le client mis à jour, on peut le refetcher :
-    const clientMisAJour = await this.clientModel.findById(clientId).lean().exec();
+    const clientMisAJour = await this.clientModel
+      .findById(clientId)
+      .lean()
+      .exec();
     return {
-      message: 'Affectation retirée. Le client reste actif (autres dépôts).',
+      message: "Affectation retirée. Le client reste actif (autres dépôts).",
       client: clientMisAJour,
     };
   }
 
-  async assignPrevendeur(clientId: string, prevendeurId: string, depotId: string) {
+  async assignPrevendeur(
+    clientId: string,
+    prevendeurId: string,
+    depotId: string
+  ) {
     const client = await this.clientModel.findById(clientId);
     if (!client) {
-      throw new NotFoundException('Client non trouvé');
+      throw new NotFoundException("Client non trouvé");
     }
 
     // Vérifier que le client est bien affecté au dépôt
     const affectation = client.affectations.find(
-      a => a.depot.toString() === depotId
+      (a) => a.depot.toString() === depotId
     );
     if (!affectation) {
-      throw new BadRequestException('Ce client n\'est pas affecté à ce dépôt');
+      throw new BadRequestException("Ce client n'est pas affecté à ce dépôt");
     }
 
     // Mettre à jour l'affectation avec l'ID du prévendeur
@@ -259,15 +314,15 @@ export class ClientService {
   async unassignPrevendeur(clientId: string, depotId: string) {
     const client = await this.clientModel.findById(clientId);
     if (!client) {
-      throw new NotFoundException('Client non trouvé');
+      throw new NotFoundException("Client non trouvé");
     }
 
     // Vérifier que le client est bien affecté au dépôt
     const affectation = client.affectations.find(
-      a => a.depot.toString() === depotId
+      (a) => a.depot.toString() === depotId
     );
     if (!affectation) {
-      throw new BadRequestException('Ce client n\'est pas affecté à ce dépôt');
+      throw new BadRequestException("Ce client n'est pas affecté à ce dépôt");
     }
 
     // Retirer l'ID du prévendeur
