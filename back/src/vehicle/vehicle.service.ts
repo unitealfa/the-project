@@ -3,6 +3,8 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  ConflictException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -66,11 +68,26 @@ export class VehicleService {
       }
     }
 
-    const newVehicle = new this.vehicleModel({
-      ...createVehicleDto,
-      depot_id: adminUser.depot,
-    });
-    return newVehicle.save();
+    // Normalisation de la plaque
+    createVehicleDto.license_plate = createVehicleDto.license_plate.trim().replace(/\s+/g, ' ');
+
+    // Création avec gestion du duplicate key
+    try {
+      const newVehicle = new this.vehicleModel({
+        ...createVehicleDto,
+        depot_id: adminUser.depot,
+      });
+      return await newVehicle.save();
+    } catch (err: any) {
+      if (err.code === 11000 && err.keyPattern?.license_plate) {
+        throw new ConflictException(
+          `La plaque "${createVehicleDto.license_plate}" existe déjà.`,
+        );
+      }
+      throw new InternalServerErrorException(
+        'Erreur lors de la création du véhicule.',
+      );
+    }
   }
 
   async findAll(adminUser: UserDocument): Promise<Vehicle[]> {
