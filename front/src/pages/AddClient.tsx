@@ -484,26 +484,27 @@ export default function AddClient() {
             </>
           )}
 
-          {/* Bouton de soumission */}
-          <button
-            type="submit"
-            style={{
-              marginTop: '1.5rem',
-              padding: '1rem 2rem',
-              backgroundColor: '#1a1a1a',
-              color: 'white',
-              border: 'none',
-              borderRadius: '20px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: 'bold',
-              textTransform: 'uppercase',
-              alignSelf: 'center',
-              transition: 'background-color 0.3s ease',
-            }}
-          >
-            Ajouter le client
-          </button>
+          {verifDone && showFullForm && (
+            <button
+              type="submit"
+              style={{
+                marginTop: '1.5rem',
+                padding: '1rem 2rem',
+                backgroundColor: '#1a1a1a',
+                color: 'white',
+                border: 'none',
+                borderRadius: '20px',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                textTransform: 'uppercase',
+                alignSelf: 'center',
+                transition: 'background-color 0.3s ease',
+              }}
+            >
+              Ajouter le client
+            </button>
+          )}
         </form>
       </div>
     </>
