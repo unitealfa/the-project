@@ -95,12 +95,12 @@ const PlanifierTournee: React.FC = () => {
         setLoading(true);
         if (!depotId) throw new Error("Aucun dépôt spécifié dans l’URL.");
 
-        // 1. commandes
-        const rOrders = await apiFetch(`/api/orders?depot=${depotId}`);
+        // 1. commandes : uniquement celles non confirmées du dépôt de l'utilisateur
+        const rOrders = await apiFetch(`/api/orders?confirmed=false`);
         if (!rOrders.ok) throw new Error("Erreur API orders");
         const raw: Order[] = await rOrders.json();
 
-        const filtered = raw.filter((o) => o.depot === depotId && !o.confirmed);
+        const filtered = raw.filter((o) => o.depot === depotId);
         setOrders(filtered);
         if (filtered.length === 0) {
           setClients([]);

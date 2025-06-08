@@ -47,12 +47,18 @@ export class OrderController {
   }
 
   @Get()
-  async getAllOrders(@GetUser() user: any) {
+    async getAllOrders(
+    @GetUser() user: any,
+    @Query('confirmed') confirmed?: string
+  ) {
     const depotId = user.depot;
     if (!depotId) {
       throw new UnauthorizedException("Aucun dépôt associé à cet utilisateur");
     }
-    return this.orderService.findByDepot(depotId);
+        let confirmedFlag: boolean | undefined;
+    if (confirmed === 'true') confirmedFlag = true;
+    if (confirmed === 'false') confirmedFlag = false;
+    return this.orderService.findByDepot(depotId, confirmedFlag);
   }
 
   @Get('client')

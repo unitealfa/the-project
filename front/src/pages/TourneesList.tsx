@@ -55,7 +55,10 @@ export default function TourneesList() {
   if (error) return <div style={{ color: 'red' }}>{error}</div>;
 
   // On affiche uniquement les 5 dernières tournées sur la page principale
-  const recentTournees = tournees.slice(-5);
+  const recentTournees = [...tournees] // copie pour ne pas muter l’état
+    .sort((a, b) => new Date(b.date).getTime() // tri décroissant par date
+                      - new Date(a.date).getTime())
+    .slice(0, 5); // puis garde les 5 premières (les plus récentes)
 
   // Pagination logic for history
   const totalPages = Math.ceil(tournees.length / itemsPerPage);

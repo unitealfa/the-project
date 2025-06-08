@@ -125,10 +125,14 @@ export class OrderService {
     return this.orderModel.findById(id).lean<Order>();
   }
 
-  async findByDepot(depotId: string) {
-    // 1. On récupère toutes les commandes du dépôt, triées par date
+  async findByDepot(depotId: string, confirmed?: boolean) {
+    // 1. On récupère toutes les commandes du dépôt (optionnellement filtrées sur le statut), triées par date
+    const query: any = { depot: depotId };
+    if (typeof confirmed === 'boolean') {
+      query.confirmed = confirmed;
+    }
     const orders = await this.orderModel
-      .find({ depot: depotId })
+      .find(query)
       .sort({ createdAt: -1 })
       .lean<Order[]>(); // <-- bien préciser Order[] pour que TS sache que c'est un tableau
 

@@ -104,9 +104,10 @@ export class TourneeService {
         stopIds: Array.from(stopIds)
       });
 
-      // Récupérer uniquement les commandes des clients qui sont dans la solution
+       // Récupérer uniquement les commandes des clients de ce dépôt qui sont dans la solution
       const orders = await this.orderModel.find({
         clientId: { $in: Array.from(stopIds) },
+        depot: depotId,
         confirmed: false
       }).lean();
 
