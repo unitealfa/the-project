@@ -172,7 +172,7 @@ export default function AddClient() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            entreprise: user.entreprise,
+            entreprise: (user as any)?.company || (user as any)?.entreprise,
             depot: user.depot,
           }),
         }

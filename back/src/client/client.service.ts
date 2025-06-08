@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Client } from './schemas/client.schema';
 import { Model, Types } from 'mongoose';
@@ -7,6 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { Order } from '../order/schemas/order.schema';
 import * as mongoose from 'mongoose';
 import { Logger } from '@nestjs/common';
+import { DepotHelperService } from '../common/helpers/depot-helper.service';
 
 @Injectable()
 export class ClientService {
@@ -15,6 +20,7 @@ export class ClientService {
   constructor(
     @InjectModel('Client') private readonly clientModel: Model<Client>,
     @InjectModel('Order') private readonly orderModel: Model<Order>,
+    private readonly depotHelper: DepotHelperService,
   ) {}
 
   /* ───────────── CRÉATION ───────────── */
@@ -174,9 +180,19 @@ export class ClientService {
     if (exists) {
       throw new Error('Ce client est déjà affecté à ce dépôt.');
     }
+        let entrepriseObj: Types.ObjectId | null = null;
+
+    if (entrepriseId && Types.ObjectId.isValid(entrepriseId)) {
+      entrepriseObj = new Types.ObjectId(entrepriseId);
+    } else {
+      entrepriseObj = await this.depotHelper.getEntrepriseFromDepot(depotId);
+      if (!entrepriseObj) {
+        throw new Error('Entreprise introuvable pour ce dépôt.');
+      }
+    }
 
     client.affectations.push({
-      entreprise: new Types.ObjectId(entrepriseId),
+       entreprise: entrepriseObj,
       depot: new Types.ObjectId(depotId),
     });
 
