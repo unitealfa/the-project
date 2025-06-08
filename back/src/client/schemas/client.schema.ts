@@ -3,8 +3,12 @@ import { Document, Types } from 'mongoose';
 
 @Schema({ _id: false })
 class Coordonnees {
-  @Prop() latitude: number;
-  @Prop() longitude: number;
+  // Store coordinates as floating point numbers (double precision)
+  @Prop({ type: Number })
+  latitude: number;
+
+  @Prop({ type: Number })
+  longitude: number;
 }
 
 @Schema({ _id: false })
