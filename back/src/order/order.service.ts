@@ -190,7 +190,7 @@ export class OrderService {
       const depot = await this.depotModel.findById(order.depot).lean<Depot>();
       const companyId = depot?.company_id?.toString();
       if (companyId) {
-        const pts = await this.loyaltyService.recordPoints(
+        const pts = await this.loyaltyService.recordTierPoints(
           companyId,
           order.clientId,
           order.total
@@ -199,6 +199,7 @@ export class OrderService {
           await this.clientModel.findByIdAndUpdate(order.clientId, {
             $inc: { [`fidelite_points.${companyId}`]: pts },
           });
+          await this.loyaltyService.recordRepeatReward(companyId, order.clientId, pts);
         }
         
         await this.loyaltyService.recordSpend(companyId, order.clientId, order.total);

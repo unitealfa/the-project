@@ -39,6 +39,15 @@ export class LoyaltyController {
     return this.loyaltyService.getSpendProgress(companyId, clientId);
   }
 
+  
+  @Get(':companyId/repeat-progress')
+  getRepeatProgress(
+    @Param('companyId') companyId: string,
+    @GetUser('id') clientId: string,
+  ) {
+    return this.loyaltyService.getRepeatProgress(companyId, clientId);
+  }
+
   @Roles('admin')
   @Patch(':companyId/ratio')
   setRatio(
@@ -47,6 +56,17 @@ export class LoyaltyController {
     @Body('points') points: number,
   ) {
     return this.loyaltyService.setRatio(companyId, amount, points);
+  }
+
+    @Roles('admin')
+  @Patch(':companyId/repeat')
+  setRepeatReward(
+    @Param('companyId') companyId: string,
+    @Body('every') every: number,
+    @Body('reward') reward: string,
+    @Body('image') image?: string,
+  ) {
+    return this.loyaltyService.setRepeatReward(companyId, { every, reward, image });
   }
 
   @Roles('admin')

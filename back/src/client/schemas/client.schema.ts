@@ -55,6 +55,9 @@ export class Client extends Document {
 
   @Prop({ type: Map, of: Number, default: {} })
   loyalty_baseline: Record<string, number>;
+  
+  @Prop({ default: 0 })
+  points_since_last_repeat: number;
   @Prop({ type: Statistiques, default: () => ({}) }) statistiques: Statistiques;
   @Prop()
   pfp: string;

@@ -13,7 +13,7 @@ interface Reward {
   _id:    string
   client: { _id: string; nom_client: string }
   points: number
-  type: 'points' | 'spend'
+  type: 'points' | 'spend' | 'repeat'
   amount?: number
 }
 
@@ -28,6 +28,10 @@ export default function LoyaltyAdmin() {
   const [ratioPoints, setRatioPoints] = useState(0)
   const [tiers,       setTiers]       = useState<Tier[]>([])
   const [pending,     setPending]     = useState<Reward[]>([])
+  const [repeatEvery, setRepeatEvery] = useState(0)
+  const [repeatLabel, setRepeatLabel] = useState('')
+  const [repeatImageFile, setRepeatImageFile] = useState<File | null>(null)
+  const [repeatImagePreview, setRepeatImagePreview] = useState<string | null>(null)
 
   // états de modification par palier
   const [edited, setEdited] = useState<{
@@ -46,6 +50,12 @@ export default function LoyaltyAdmin() {
         setRatioAmount(data.ratio.amount)
         setRatioPoints(data.ratio.points)
         setTiers(data.tiers)
+        if (data.repeatReward) {
+          setRepeatEvery(data.repeatReward.every)
+          setRepeatLabel(data.repeatReward.reward)
+          if (data.repeatReward.image)
+            setRepeatImagePreview(`${api}/${data.repeatReward.image}`)
+        }
         // initialiser edited avec les valeurs existantes
         const init: any = {}
         data.tiers.forEach((t: Tier) => {
@@ -191,6 +201,86 @@ export default function LoyaltyAdmin() {
           </label>
           <button type="submit" style={{ marginLeft: '1rem' }}>
             Enregistrer ratio
+          </button>
+        </form>
+
+        {/* Défi répétitif */}
+        <form
+          onSubmit={async e => {
+            e.preventDefault()
+
+            const form = new FormData()
+            form.append('every', repeatEvery.toString())
+            form.append('reward', repeatLabel)
+            if (repeatImageFile) form.append('image', repeatImageFile)
+
+            const res = await fetch(`${api}/loyalty/${companyId}/repeat`, {
+              method: 'PATCH',
+              headers: { Authorization: `Bearer ${token}` },
+              body: form,
+            })
+
+            if (!res.ok) {
+              const err = await res.json().catch(() => null)
+              return alert(err?.message || res.statusText)
+            }
+
+            // Le back renvoie le programme mis à jour
+            const updated = await res.json()
+            // Màj de l’aperçu avec l’URL stockée en base
+            if (updated.repeatReward?.image) {
+              setRepeatImagePreview(`${api}/${updated.repeatReward.image}`)
+              setRepeatImageFile(null) // on vide l’input
+            }
+          }}
+          style={{ marginBottom: '2rem' }}
+        >
+          <label>
+            Tous les&nbsp;
+            <input
+              type="number"
+              min={1}
+              value={repeatEvery}
+              onChange={e => setRepeatEvery(+e.target.value)}
+              style={{ margin: '0 0.5rem' }}
+            />
+            pts
+          </label>
+
+          <label style={{ marginLeft: '1rem' }}>
+            Récompense&nbsp;:
+            <input
+              type="text"
+              value={repeatLabel}
+              onChange={e => setRepeatLabel(e.target.value)}
+            />
+          </label>
+
+          <label style={{ marginLeft: '1rem' }}>
+            Image&nbsp;:
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => {
+                const f = e.target.files?.[0] || null
+                setRepeatImageFile(f)
+                setRepeatImagePreview(f ? URL.createObjectURL(f) : null)
+              }}
+            />
+          </label>
+
+          {repeatImagePreview && (
+            <img
+              src={repeatImagePreview}
+              alt=""
+              width={40}
+              height={40}
+              style={{ objectFit: 'cover', marginLeft: 8, verticalAlign: 'middle' }}
+            />
+          )}
+
+          <button type="submit" style={{ marginLeft: '1rem' }}>
+            Enregistrer défi
           </button>
         </form>
 
