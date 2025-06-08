@@ -97,6 +97,13 @@ export default function LoyaltyAdmin() {
   // Mettre à jour ratio
   const handleRatioSubmit = (e: FormEvent) => {
     e.preventDefault()
+
+    // Validation du Ratio
+    if (!ratioAmount || !ratioPoints) {
+      alert('Merci de remplir le montant et les points.')
+      return
+    }
+
     fetch(`${api}/loyalty/${companyId}/ratio`, {
       method: 'PATCH',
       headers: {
@@ -110,6 +117,13 @@ export default function LoyaltyAdmin() {
   // Gestion des paliers
   const updateTier = async (id: string) => {
     const { points, reward, imageFile } = editedTiers[id]
+
+    // Validation des Paliers
+    if (!points || !reward.trim()) {
+      alert('Points et nom de récompense sont obligatoires.')
+      return
+    }
+
     const form = new FormData()
     form.append('points', points.toString())
     form.append('reward', reward)
@@ -161,6 +175,12 @@ export default function LoyaltyAdmin() {
     form.append('reward', newRepeat.reward)
     if (newRepeat.imageFile) form.append('image', newRepeat.imageFile)
 
+    // Validation du Nouveau Défi Répétitif
+    if (!newRepeat.every || !newRepeat.reward.trim()) {
+      alert('Merci de remplir tous les champs du défi répétitif.')
+      return
+    }
+
     const res = await fetch(`${api}/loyalty/${companyId}/repeat-rewards`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
@@ -176,11 +196,18 @@ export default function LoyaltyAdmin() {
   }
 
   const updateRepeatReward = async (id: string) => {
-    const { every, reward, imageFile } = editedRepeats[id]
+    const edit = editedRepeats[id] ?? { every: 0, reward: '' }
+
+    // Validation de la Mise à Jour d’un Défi Répétitif
+    if (!edit.every || !edit.reward.trim()) {
+      alert('Merci de remplir tous les champs du défi répétitif.')
+      return
+    }
+
     const form = new FormData()
-    form.append('every', every.toString())
-    form.append('reward', reward)
-    if (imageFile) form.append('image', imageFile)
+    form.append('every', edit.every.toString())
+    form.append('reward', edit.reward)
+    if (edit.imageFile) form.append('image', edit.imageFile)
 
     const res = await fetch(`${api}/loyalty/${companyId}/repeat-rewards/${id}`, {
       method: 'PATCH',
@@ -253,10 +280,13 @@ export default function LoyaltyAdmin() {
                   <tr key={t._id}>
                     <td style={{ textAlign: 'center' }}>
                       {t.image && <img src={`${api}/${t.image}`} width={40} height={40} style={{ objectFit: 'cover' }} />}
-                      <input type="file" accept="image/*" onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                        const f = e.target.files?.[0]
-                        if (f) setEditedTiers(et => ({ ...et, [t._id]: { ...edit, imageFile: f } }))
-                      }} />
+                      <input
+                        type="file" accept="image/*"
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                          const f = e.target.files?.[0]
+                          if (f) setEditedTiers(et => ({ ...et, [t._id]: { ...edit, imageFile: f } }))
+                        }}
+                      />
                     </td>
                     <td><input type="number" min={1} value={edit.points} onChange={e => setEditedTiers(et => ({ ...et, [t._id]: { ...edit, points: +e.target.value } }))} /></td>
                     <td><input type="text" value={edit.reward} onChange={e => setEditedTiers(et => ({ ...et, [t._id]: { ...edit, reward: e.target.value } }))} /></td>
@@ -278,24 +308,39 @@ export default function LoyaltyAdmin() {
 
         {/* Défis Répétitifs */}
         <section style={{ marginBottom: '2rem' }}>
-          <h2>Défis Répétitifs (tout les X point il gagne la recompense)</h2>
+          <h2>Défis Répétitifs</h2>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr><th>Pts</th><th>Récompense</th><th>Image</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {repeatRewards.map(r => {
-                const edit = editedRepeats[r._id]
+                const edit = editedRepeats[r._id] ?? { every: r.every, reward: r.reward }
                 return (
                   <tr key={r._id}>
-                    <td><input type="number" min={1} value={edit.every} onChange={e => setEditedRepeats(er => ({ ...er, [r._id]: { ...edit, every: +e.target.value } }))} /></td>
-                    <td><input type="text" value={edit.reward} onChange={e => setEditedRepeats(er => ({ ...er, [r._id]: { ...edit, reward: e.target.value } }))} /></td>
+                    <td>
+                      <input
+                        type="number" min={1}
+                        value={edit.every}
+                        onChange={e => setEditedRepeats(er => ({ ...er, [r._id]: { ...edit, every: +e.target.value } }))}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        value={edit.reward}
+                        onChange={e => setEditedRepeats(er => ({ ...er, [r._id]: { ...edit, reward: e.target.value } }))}
+                      />
+                    </td>
                     <td style={{ textAlign: 'center' }}>
                       {r.image && <img src={`${api}/${r.image}`} width={40} height={40} style={{ objectFit: 'cover' }} />}
-                      <input type="file" accept="image/*" onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                        const f = e.target.files?.[0]
-                        if (f) setEditedRepeats(er => ({ ...er, [r._id]: { ...edit, imageFile: f } }))
-                      }} />
+                      <input
+                        type="file" accept="image/*"
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                          const f = e.target.files?.[0]
+                          if (f) setEditedRepeats(er => ({ ...er, [r._id]: { ...edit, imageFile: f } }))
+                        }}
+                      />
                     </td>
                     <td>
                       <button onClick={() => updateRepeatReward(r._id)}>Enregistrer</button>
@@ -305,16 +350,33 @@ export default function LoyaltyAdmin() {
                 )
               })}
               <tr>
-                <td><input type="number" min={1} value={newRepeat.every} onChange={e => setNewRepeat(nr => ({ ...nr, every: +e.target.value }))} /></td>
-                <td><input type="text" value={newRepeat.reward} onChange={e => setNewRepeat(nr => ({ ...nr, reward: e.target.value }))} /></td>
+                <td>
+                  <input
+                    type="number" min={1}
+                    value={newRepeat.every}
+                    onChange={e => setNewRepeat(nr => ({ ...nr, every: +e.target.value }))}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    value={newRepeat.reward}
+                    onChange={e => setNewRepeat(nr => ({ ...nr, reward: e.target.value }))}
+                  />
+                </td>
                 <td style={{ textAlign: 'center' }}>
-                  <input type="file" accept="image/*" onChange={e => {
-                    const f = e.target.files?.[0] || null
-                    setNewRepeat(nr => ({ ...nr, imageFile: f, preview: f ? URL.createObjectURL(f) : null }))
-                  }} />
+                  <input
+                    type="file" accept="image/*"
+                    onChange={e => {
+                      const f = e.target.files?.[0] || null
+                      setNewRepeat(nr => ({ ...nr, imageFile: f, preview: f ? URL.createObjectURL(f) : null }))
+                    }}
+                  />
                   {newRepeat.preview && <img src={newRepeat.preview} width={40} height={40} style={{ objectFit: 'cover', marginLeft: 4 }} />}
                 </td>
-                <td><button onClick={addRepeatReward}>Ajouter</button></td>
+                <td>
+                  <button onClick={addRepeatReward}>Ajouter</button>
+                </td>
               </tr>
             </tbody>
           </table>
