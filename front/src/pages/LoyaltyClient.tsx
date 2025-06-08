@@ -12,9 +12,11 @@ interface SpendProgress {
   targetAmount: number;
   currentAmount: number;
 }
-interface RepeatProgress {
+interface RepeatReward {
+  _id: string;
   every: number;
-  current: number;
+  reward: string;
+  image?: string;
 }
 
 export default function LoyaltyClient() {
@@ -24,7 +26,8 @@ export default function LoyaltyClient() {
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [points, setPoints] = useState(0);
   const [spend, setSpend] = useState<SpendProgress | null>(null);
-  const [repeat, setRepeat] = useState<RepeatProgress | null>(null);
+  const [repeatRewards, setRepeatRewards] = useState<RepeatReward[]>([]);
+  const [progress, setProgress] = useState<{ [id: string]: number | undefined }>({});
 
   useEffect(() => {
     if (!companyId) return;
@@ -57,21 +60,24 @@ export default function LoyaltyClient() {
       })
       .catch(() => setSpend(null));
 
-    // progrès défi répétitif
-    fetch(`${api}/loyalty/${companyId}/repeat-progress`, {
-      headers: { Authorization: `Bearer ${token}` },
+    fetch(`${api}/loyalty/${companyId}/repeat-rewards`, {
+      headers: { Authorization: `Bearer ${token}` }
     })
-      .then((r) => {
-        if (r.status === 404) {
-          setRepeat(null);
-          return null;
-        }
-        return r.json();
+      .then(r => r.json())
+      .then((rewards: RepeatReward[]) => {
+        setRepeatRewards(rewards)
+        rewards.forEach(rr => {
+          fetch(`${api}/loyalty/${companyId}/repeat-progress/${rr._id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+            .then(res => res.json())
+            .then(data => {
+              setProgress(p => ({ ...p, [rr._id]: data.current }))
+            })
+            .catch(() => setProgress(p => ({ ...p, [rr._id]: undefined })))
+        })
       })
-      .then((data) => {
-        if (data) setRepeat(data);
-      })
-      .catch(() => setRepeat(null));
+      .catch(console.error)
   }, [api, token, companyId]);
 
   const totalRequired = tiers.length ? tiers[tiers.length - 1].points : 0;
@@ -81,11 +87,6 @@ export default function LoyaltyClient() {
   const spendPercent =
     spend && spend.targetAmount > 0
       ? Math.min(100, (spend.currentAmount / spend.targetAmount) * 100)
-      : 0;
-
-  const repeatPercent =
-    repeat && repeat.every > 0
-      ? Math.min(100, (repeat.current / repeat.every) * 100)
       : 0;
 
   return (
@@ -169,36 +170,38 @@ export default function LoyaltyClient() {
           ))}
         </div>
 
-                {/* barre défi répétitif */}
-        {repeat && repeat.every > 0 && (
-          <>
-            <h2 style={{ marginTop: '2rem' }}>Récompense tous les {repeat.every} pts</h2>
-            <div
-              style={{
-                position: 'relative',
-                width: '100%',
-                height: 24,
-                background: '#eee',
-                borderRadius: 12,
-                overflow: 'hidden'
-              }}
-            >
+{repeatRewards.map(r => {
+          const curr = progress[r._id];
+          if (curr === undefined) return null;
+          const percent = Math.min(100, (curr / r.every) * 100);
+          return (
+            <div key={r._id} style={{ marginTop: '2rem' }}>
+              <h2>Récompense tous les {r.every} pts</h2>
               <div
                 style={{
-                  width: `${repeatPercent}%`,
-                  height: '100%',
-                  background: 'orange',
-                  transition: 'width .5s ease'
+                  position: 'relative',
+                  width: '100%',
+                  height: 24,
+                  background: '#eee',
+                  borderRadius: 12,
+                  overflow: 'hidden'
                 }}
-              />
+              >
+                <div
+                  style={{
+                    width: `${percent}%`,
+                    height: '100%',
+                    background: 'orange',
+                    transition: 'width .5s ease'
+                  }}
+                />
+              </div>
+              <p style={{ marginTop: 8 }}>
+                {curr} / {r.every} pts
+              </p>
             </div>
-            <p style={{ marginTop: 8 }}>
-              {repeat.current} / {repeat.every} pts
-            </p>
-          </>
-        )}
-
-
+          );
+        })}
         {/* barre dépenses – affichée seulement si configurée */}
         {spend && spend.targetAmount > 0 && (
           <>

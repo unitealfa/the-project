@@ -50,12 +50,13 @@ export class LoyaltyController {
     return this.loyaltyService.getSpendProgress(companyId, clientId);
   }
 
-  @Get(":companyId/repeat-progress")
+  @Get(":companyId/repeat-progress/:rewardId")
   getRepeatProgress(
     @Param("companyId") companyId: string,
+    @Param("rewardId") rewardId: string,
     @GetUser("id") clientId: string
   ) {
-    return this.loyaltyService.getRepeatProgress(companyId, clientId);
+    return this.loyaltyService.getRepeatProgress(companyId, clientId, rewardId);
   }
 
   @Roles("admin")
@@ -69,7 +70,7 @@ export class LoyaltyController {
   }
 
   @Roles("admin")
-  @Patch(":companyId/repeat")
+  @Post(":companyId/repeat-rewards")
   @UseInterceptors(
     FileInterceptor("image", {
       storage: diskStorage({
@@ -81,7 +82,7 @@ export class LoyaltyController {
       }),
     })
   )
-  async setRepeatReward(
+  async addRepeatReward(
     @Param("companyId") companyId: string,
     @UploadedFile() file: Express.Multer.File,
     @Body("every") every: number,
@@ -89,13 +90,48 @@ export class LoyaltyController {
   ) {
     const dto: any = { every: Number(every), reward };
     if (file) dto.image = `uploads/tiers/${file.filename}`;
-    return this.loyaltyService.setRepeat(companyId, dto);
+    return this.loyaltyService.addRepeatReward(companyId, dto);
   }
 
   @Roles("admin")
-  @Delete(":companyId/repeat")
-  removeRepeatReward(@Param("companyId") companyId: string) {
-    return this.loyaltyService.removeRepeatReward(companyId);
+  @Patch(":companyId/repeat-rewards/:rewardId")
+  @UseInterceptors(
+    FileInterceptor("image", {
+      storage: diskStorage({
+        destination: "./public/uploads/tiers",
+        filename: (_, file, cb) => {
+          const ext = file.originalname.split(".").pop();
+          cb(null, `repeat-${Date.now()}.${ext}`);
+        },
+      }),
+    })
+  )
+  async updateRepeatReward(
+    @Param("companyId") companyId: string,
+    @Param("rewardId") rewardId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body("every") every: number,
+    @Body("reward") reward: string
+  ) {
+    const dto: any = {};
+    if (every !== undefined) dto.every = Number(every);
+    if (reward !== undefined) dto.reward = reward;
+    if (file) dto.image = `uploads/tiers/${file.filename}`;
+    return this.loyaltyService.updateRepeatReward(companyId, rewardId, dto);
+  }
+
+  @Roles("admin")
+  @Delete(":companyId/repeat-rewards/:rewardId")
+  removeRepeatReward(
+    @Param("companyId") companyId: string,
+    @Param("rewardId") rewardId: string
+  ) {
+    return this.loyaltyService.removeRepeatReward(companyId, rewardId);
+  }
+
+  @Get(":companyId/repeat-rewards")
+  getRepeatRewards(@Param("companyId") companyId: string) {
+    return this.loyaltyService.getRepeatRewards(companyId);
   }
 
   @Roles("admin")

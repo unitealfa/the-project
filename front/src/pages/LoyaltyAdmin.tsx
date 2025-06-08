@@ -17,31 +17,43 @@ interface Reward {
   amount?: number
 }
 
+interface RepeatReward {
+  _id:   string
+  every: number
+  reward: string
+  image?: string
+}
+
 export default function LoyaltyAdmin() {
   const api       = import.meta.env.VITE_API_URL
   const token     = localStorage.getItem('token') || ''
   const userRaw   = localStorage.getItem('user')
   const user      = userRaw ? JSON.parse(userRaw) : null
-  const companyId = user?.company
+  const companyId = user?.company as string
 
+  // Ratio & Paliers
   const [ratioAmount, setRatioAmount] = useState(0)
   const [ratioPoints, setRatioPoints] = useState(0)
-  const [tiers,       setTiers]       = useState<Tier[]>([])
-  const [pending,     setPending]     = useState<Reward[]>([])
-  const [repeatEvery, setRepeatEvery] = useState(0)
-  const [repeatLabel, setRepeatLabel] = useState('')
-  const [repeatImageFile, setRepeatImageFile] = useState<File | null>(null)
-  const [repeatImagePreview, setRepeatImagePreview] = useState<string | null>(null)
+  const [tiers, setTiers] = useState<Tier[]>([])
+  const [editedTiers, setEditedTiers] = useState<Record<string, { points: number; reward: string; imageFile?: File }>>({})
 
-  // états de modification par palier
-  const [edited, setEdited] = useState<{
-    [tierId: string]: { points: number; reward: string; imageFile?: File }
-  }>({})
+  // Défis répétitifs
+  const [repeatRewards, setRepeatRewards] = useState<RepeatReward[]>([])
+  const [editedRepeats, setEditedRepeats] = useState<Record<string, { every: number; reward: string; imageFile?: File }>>({})
+  const [newRepeat, setNewRepeat] = useState<{
+    every: number
+    reward: string
+    imageFile: File | null
+    preview: string | null
+  }>({ every: 0, reward: '', imageFile: null, preview: null })
+
+  // Récompenses pending
+  const [pending, setPending] = useState<Reward[]>([])
 
   useEffect(() => {
     if (!companyId || !token) return
 
-    // charger ratio + paliers
+    // Charger ratio + paliers
     fetch(`${api}/loyalty/${companyId}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -50,22 +62,30 @@ export default function LoyaltyAdmin() {
         setRatioAmount(data.ratio.amount)
         setRatioPoints(data.ratio.points)
         setTiers(data.tiers)
-        if (data.repeatReward) {
-          setRepeatEvery(data.repeatReward.every)
-          setRepeatLabel(data.repeatReward.reward)
-          if (data.repeatReward.image)
-            setRepeatImagePreview(`${api}/${data.repeatReward.image}`)
-        }
-        // initialiser edited avec les valeurs existantes
-        const init: any = {}
+        const initT: any = {}
         data.tiers.forEach((t: Tier) => {
-          init[t._id] = { points: t.points, reward: t.reward }
+          initT[t._id] = { points: t.points, reward: t.reward }
         })
-        setEdited(init)
+        setEditedTiers(initT)
       })
       .catch(console.error)
 
-    // charger les récompenses en attente
+    // Charger défis répétitifs
+    fetch(`${api}/loyalty/${companyId}/repeat-rewards`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(r => r.json())
+      .then((data: RepeatReward[]) => {
+        setRepeatRewards(data)
+        const initR: any = {}
+        data.forEach(rr => {
+          initR[rr._id] = { every: rr.every, reward: rr.reward }
+        })
+        setEditedRepeats(initR)
+      })
+      .catch(console.error)
+
+    // Charger récompenses en attente
     fetch(`${api}/loyalty/${companyId}/pending`, {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -74,11 +94,11 @@ export default function LoyaltyAdmin() {
       .catch(console.error)
   }, [api, token, companyId])
 
-  // soumettre le ratio
+  // Mettre à jour ratio
   const handleRatioSubmit = (e: FormEvent) => {
     e.preventDefault()
     fetch(`${api}/loyalty/${companyId}/ratio`, {
-      method:  'PATCH',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
@@ -87,74 +107,104 @@ export default function LoyaltyAdmin() {
     }).catch(console.error)
   }
 
-  // ajouter un palier
-  const addTier = async () => {
+  // Gestion des paliers
+  const updateTier = async (id: string) => {
+    const { points, reward, imageFile } = editedTiers[id]
+    const form = new FormData()
+    form.append('points', points.toString())
+    form.append('reward', reward)
+    if (imageFile) form.append('image', imageFile)
+
+    const res = await fetch(`${api}/loyalty/${companyId}/tiers/${id}`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form
+    })
+    if (res.ok) {
+      const data = await res.json()
+      setTiers(data.tiers)
+    } else {
+      alert('Erreur mise à jour palier')
+    }
+  }
+
+  const deleteTier = async (id: string) => {
+    await fetch(`${api}/loyalty/${companyId}/tiers/${id}/delete`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    setTiers(ts => ts.filter(t => t._id !== id))
+    setEditedTiers(et => { delete et[id]; return { ...et } })
+  }
+
+  const addTier = () => {
     const p = prompt('Points requis ?')
     const r = prompt('Nom de la récompense ?')
     if (!p || !r) return
-
-    const res = await fetch(`${api}/loyalty/${companyId}/tiers`, {
-      method:  'POST',
+    fetch(`${api}/loyalty/${companyId}/tiers`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
       },
       body: JSON.stringify({ points: +p, reward: r })
     })
-    const data = await res.json()
-    if (!res.ok) return alert(`Erreur : ${data.message || res.statusText}`)
-    setTiers(data.tiers)
-    setEdited(ed => ({
-      ...ed,
-      [data.tiers.slice(-1)[0]._id]: {
-        points: data.tiers.slice(-1)[0].points,
-        reward: data.tiers.slice(-1)[0].reward
-      }
-    }))
+      .then(r => r.json())
+      .then(data => setTiers(data.tiers))
+      .catch(() => alert('Erreur création palier'))
   }
 
-  // mettre à jour un palier
-  const updateTier = async (tierId: string) => {
-    const { points, reward, imageFile } = edited[tierId]
+  // Gestion des défis répétitifs
+  const addRepeatReward = async () => {
     const form = new FormData()
-    form.append('points', points.toString())
+    form.append('every', newRepeat.every.toString())
+    form.append('reward', newRepeat.reward)
+    if (newRepeat.imageFile) form.append('image', newRepeat.imageFile)
+
+    const res = await fetch(`${api}/loyalty/${companyId}/repeat-rewards`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form
+    })
+    if (res.ok) {
+      const data = await res.json()
+      setRepeatRewards(data.repeatRewards)
+    } else {
+      alert('Erreur création défi répétitif')
+    }
+    setNewRepeat({ every: 0, reward: '', imageFile: null, preview: null })
+  }
+
+  const updateRepeatReward = async (id: string) => {
+    const { every, reward, imageFile } = editedRepeats[id]
+    const form = new FormData()
+    form.append('every', every.toString())
     form.append('reward', reward)
     if (imageFile) form.append('image', imageFile)
 
-    const res = await fetch(
-      `${api}/loyalty/${companyId}/tiers/${tierId}`,
-      {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${token}` },
-        body: form
-      }
-    )
-    if (!res.ok) {
-      const err = await res.json().catch(() => null)
-      return alert(`Erreur modification : ${err?.message || res.statusText}`)
-    }
-    const prog = await res.json()
-    setTiers(prog.tiers)
-  }
-
-  // supprimer un palier
-  const deleteTier = async (tierId: string) => {
-    await fetch(
-      `${api}/loyalty/${companyId}/tiers/${tierId}/delete`,
-      {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      }
-    )
-    setTiers(tiers.filter(t => t._id !== tierId))
-    setEdited(ed => {
-      const c = { ...ed }
-      delete c[tierId]
-      return c
+    const res = await fetch(`${api}/loyalty/${companyId}/repeat-rewards/${id}`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form
     })
+    if (res.ok) {
+      const data = await res.json()
+      setRepeatRewards(data.repeatRewards)
+    } else {
+      alert('Erreur mise à jour défi répétitif')
+    }
   }
 
-  // livrer une récompense
+  const deleteRepeatReward = async (id: string) => {
+    await fetch(`${api}/loyalty/${companyId}/repeat-rewards/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    setRepeatRewards(rr => rr.filter(r => r._id !== id))
+    setEditedRepeats(er => { delete er[id]; return { ...er } })
+  }
+
+  // Livraison des récompenses
   const deliver = (clientId: string, pts: number) => {
     fetch(`${api}/loyalty/${companyId}/deliver/${clientId}/${pts}`, {
       method: 'POST',
@@ -163,7 +213,6 @@ export default function LoyaltyAdmin() {
       setPending(p => p.filter(x => x.client._id !== clientId || x.points !== pts))
     )
   }
-
   const deliverAll = () => {
     fetch(`${api}/loyalty/${companyId}/deliver-all`, {
       method: 'POST',
@@ -177,223 +226,98 @@ export default function LoyaltyAdmin() {
       <main style={{ padding: '2rem' }}>
         <h1>Programme Fidélité</h1>
 
-        {/* Ratio */}
-        <form onSubmit={handleRatioSubmit} style={{ marginBottom: '2rem' }}>
-          <label>
-            Montant (€) :
-            <input
-              type="number"
-              min={1}
-              required
-              value={ratioAmount}
-              onChange={e => setRatioAmount(+e.target.value)}
-            />
-          </label>
-          <label style={{ marginLeft: '1rem' }}>
-            Points :
-            <input
-              type="number"
-              min={1}
-              required
-              value={ratioPoints}
-              onChange={e => setRatioPoints(+e.target.value)}
-            />
-          </label>
-          <button type="submit" style={{ marginLeft: '1rem' }}>
-            Enregistrer ratio
-          </button>
-        </form>
-
-        {/* Défi répétitif */}
-        <form
-          onSubmit={async e => {
-            e.preventDefault()
-
-            const form = new FormData()
-            form.append('every', repeatEvery.toString())
-            form.append('reward', repeatLabel)
-            if (repeatImageFile) form.append('image', repeatImageFile)
-
-            const res = await fetch(`${api}/loyalty/${companyId}/repeat`, {
-              method: 'PATCH',
-              headers: { Authorization: `Bearer ${token}` },
-              body: form,
-            })
-
-            if (!res.ok) {
-              const err = await res.json().catch(() => null)
-              return alert(err?.message || res.statusText)
-            }
-
-            // Le back renvoie le programme mis à jour
-            const updated = await res.json()
-            // Màj de l’aperçu avec l’URL stockée en base
-            if (updated.repeatReward?.image) {
-              setRepeatImagePreview(`${api}/${updated.repeatReward.image}`)
-              setRepeatImageFile(null) // on vide l’input
-            }
-          }}
-          style={{ marginBottom: '2rem' }}
-        >
-          <label>
-            Tous les&nbsp;
-            <input
-              type="number"
-              min={1}
-              value={repeatEvery}
-              onChange={e => setRepeatEvery(+e.target.value)}
-              style={{ margin: '0 0.5rem' }}
-            />
-            pts
-          </label>
-
-          <label style={{ marginLeft: '1rem' }}>
-            Récompense&nbsp;:
-            <input
-              type="text"
-              value={repeatLabel}
-              onChange={e => setRepeatLabel(e.target.value)}
-            />
-          </label>
-
-          <label style={{ marginLeft: '1rem' }}>
-            Image&nbsp;:
-            <input
-              type="file"
-              accept="image/*"
-              onChange={e => {
-                const file = e.target.files?.[0] || null
-                setRepeatImageFile(file)
-                setRepeatImagePreview(file ? URL.createObjectURL(file) : null)
-              }}
-            />
-          </label>
-
-          {repeatImagePreview && (
-            <img
-              src={repeatImagePreview}
-              alt=""
-              width={40}
-              height={40}
-              style={{ objectFit: 'cover', marginLeft: 8, verticalAlign: 'middle' }}
-            />
-          )}
-
-          <button type="submit" style={{ marginLeft: '1rem' }}>
-            Enregistrer défi
-          </button>
-                    <button
-            type="button"
-            onClick={async () => {
-              if (!companyId) return;
-              if (!confirm('Supprimer le défi ?')) return;
-              const res = await fetch(`${api}/loyalty/${companyId}/repeat`, {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              if (res.ok) {
-                setRepeatEvery(0);
-                setRepeatLabel('');
-                setRepeatImageFile(null);
-                setRepeatImagePreview(null);
-              } else {
-                const err = await res.json().catch(() => null);
-                alert(err?.message || res.statusText);
-              }
-            }}
-            style={{ marginLeft: '1rem', color: 'red' }}
-          >
-            Supprimer défi
-          </button>
-        </form>
-
-        {/* Paliers */}
+        {/* Ratio & Paliers */}
         <section style={{ marginBottom: '2rem' }}>
-          <h2>Paliers</h2>
+          <h2>Ratio</h2>
+          <form onSubmit={handleRatioSubmit} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <label>
+              Montant (€):
+              <input type="number" min={1} value={ratioAmount} onChange={e => setRatioAmount(+e.target.value)} />
+            </label>
+            <label>
+              Points:
+              <input type="number" min={1} value={ratioPoints} onChange={e => setRatioPoints(+e.target.value)} />
+            </label>
+            <button type="submit">Enregistrer</button>
+          </form>
+
+          <h3 style={{ marginTop: '1rem' }}>Paliers</h3>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr>
-                <th>Image</th>
-                <th>Points</th>
-                <th>Récompense</th>
-                <th>Actions</th>
-              </tr>
+              <tr><th>Image</th><th>Pts</th><th>Récompense</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {tiers.map(t => {
-                const edit = edited[t._id] || { points: t.points, reward: t.reward }
+                const edit = editedTiers[t._id]
                 return (
                   <tr key={t._id}>
                     <td style={{ textAlign: 'center' }}>
-                      {t.image && (
-                        <img
-                          src={`${api}/${t.image}`}
-                          alt=""
-                          width={40}
-                          height={40}
-                          style={{ objectFit: 'cover' }}
-                        />
-                      )}
-                      <div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                            const file = e.target.files?.[0]
-                            if (file) {
-                              setEdited(ed => ({
-                                ...ed,
-                                [t._id]: { ...ed[t._id], imageFile: file }
-                              }))
-                            }
-                          }}
-                        />
-                      </div>
+                      {t.image && <img src={`${api}/${t.image}`} width={40} height={40} style={{ objectFit: 'cover' }} />}
+                      <input type="file" accept="image/*" onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                        const f = e.target.files?.[0]
+                        if (f) setEditedTiers(et => ({ ...et, [t._id]: { ...edit, imageFile: f } }))
+                      }} />
                     </td>
+                    <td><input type="number" min={1} value={edit.points} onChange={e => setEditedTiers(et => ({ ...et, [t._id]: { ...edit, points: +e.target.value } }))} /></td>
+                    <td><input type="text" value={edit.reward} onChange={e => setEditedTiers(et => ({ ...et, [t._id]: { ...edit, reward: e.target.value } }))} /></td>
                     <td>
-                      <input
-                        type="number"
-                        min={1}
-                        value={edit.points}
-                        onChange={e =>
-                          setEdited(ed => ({
-                            ...ed,
-                            [t._id]: { ...ed[t._id], points: +e.target.value }
-                          }))
-                        }
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        value={edit.reward}
-                        onChange={e =>
-                          setEdited(ed => ({
-                            ...ed,
-                            [t._id]: { ...ed[t._id], reward: e.target.value }
-                          }))
-                        }
-                      />
-                    </td>
-                    <td>
-                      <button onClick={() => updateTier(t._id)}>
-                        Enregistrer
-                      </button>
-                      <button
-                        onClick={() => deleteTier(t._id)}
-                        style={{ marginLeft: 8, color: 'red' }}
-                      >
-                        Supprimer
-                      </button>
+                      <button onClick={() => updateTier(t._id)}>Enregistrer</button>
+                      <button onClick={() => deleteTier(t._id)} style={{ marginLeft: 8, color: 'red' }}>Supprimer</button>
                     </td>
                   </tr>
                 )
               })}
+              <tr>
+                <td colSpan={4} style={{ textAlign: 'center' }}>
+                  <button onClick={addTier}>+ Ajouter un palier</button>
+                </td>
+              </tr>
             </tbody>
           </table>
-          <button onClick={addTier} style={{ marginTop: '1rem' }}>
-            Ajouter un palier
-          </button>
+        </section>
+
+        {/* Défis Répétitifs */}
+        <section style={{ marginBottom: '2rem' }}>
+          <h2>Défis Répétitifs (tout les X point il gagne la recompense)</h2>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr><th>Pts</th><th>Récompense</th><th>Image</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {repeatRewards.map(r => {
+                const edit = editedRepeats[r._id]
+                return (
+                  <tr key={r._id}>
+                    <td><input type="number" min={1} value={edit.every} onChange={e => setEditedRepeats(er => ({ ...er, [r._id]: { ...edit, every: +e.target.value } }))} /></td>
+                    <td><input type="text" value={edit.reward} onChange={e => setEditedRepeats(er => ({ ...er, [r._id]: { ...edit, reward: e.target.value } }))} /></td>
+                    <td style={{ textAlign: 'center' }}>
+                      {r.image && <img src={`${api}/${r.image}`} width={40} height={40} style={{ objectFit: 'cover' }} />}
+                      <input type="file" accept="image/*" onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                        const f = e.target.files?.[0]
+                        if (f) setEditedRepeats(er => ({ ...er, [r._id]: { ...edit, imageFile: f } }))
+                      }} />
+                    </td>
+                    <td>
+                      <button onClick={() => updateRepeatReward(r._id)}>Enregistrer</button>
+                      <button onClick={() => deleteRepeatReward(r._id)} style={{ marginLeft: 8, color: 'red' }}>Supprimer</button>
+                    </td>
+                  </tr>
+                )
+              })}
+              <tr>
+                <td><input type="number" min={1} value={newRepeat.every} onChange={e => setNewRepeat(nr => ({ ...nr, every: +e.target.value }))} /></td>
+                <td><input type="text" value={newRepeat.reward} onChange={e => setNewRepeat(nr => ({ ...nr, reward: e.target.value }))} /></td>
+                <td style={{ textAlign: 'center' }}>
+                  <input type="file" accept="image/*" onChange={e => {
+                    const f = e.target.files?.[0] || null
+                    setNewRepeat(nr => ({ ...nr, imageFile: f, preview: f ? URL.createObjectURL(f) : null }))
+                  }} />
+                  {newRepeat.preview && <img src={newRepeat.preview} width={40} height={40} style={{ objectFit: 'cover', marginLeft: 4 }} />}
+                </td>
+                <td><button onClick={addRepeatReward}>Ajouter</button></td>
+              </tr>
+            </tbody>
+          </table>
         </section>
 
         {/* Clients à récompenser */}
@@ -403,16 +327,8 @@ export default function LoyaltyAdmin() {
           <ul>
             {pending.map(p => (
               <li key={p._id}>
-                {p.client.nom_client} –{' '}
-                {p.type === 'spend'
-                  ? `${p.amount} dépensés`
-                  : `${p.points} pts`}
-                <button
-                  onClick={() => deliver(p.client._id, p.type === 'spend' ? 0 : p.points)}
-                  style={{ marginLeft: 8 }}
-                >
-                  Livrer
-                </button>
+                {p.client.nom_client} – {p.type === 'spend' ? `${p.amount} dépensés` : `${p.points} pts`}
+                <button onClick={() => deliver(p.client._id, p.points)} style={{ marginLeft: 8 }}>Livrer</button>
               </li>
             ))}
           </ul>

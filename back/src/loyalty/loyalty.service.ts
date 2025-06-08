@@ -45,29 +45,45 @@ export class LoyaltyService {
     return prog.save();
   }
 
-  async setRepeatReward(
+  async addRepeatReward(
     companyId: string,
     dto: { every: number; reward: string; image?: string }
   ) {
     const prog = await this.ensureProgram(companyId);
-    prog.repeatReward = dto as any;
-    return prog.save();
+    prog.repeatRewards.push(dto as any);
+    await prog.save();
+    return prog;
   }
 
-  async setRepeat(
+  async updateRepeatReward(
     companyId: string,
-    dto: { every: number; reward: string; image?: string }
+    rewardId: string,
+    dto: Partial<{ every: number; reward: string; image?: string }>
   ) {
-    return this.setRepeatReward(companyId, dto);
+    const prog = await this.ensureProgram(companyId);
+    const item = (prog.repeatRewards as any).find(
+      (r: any) => r._id.toString() === rewardId
+    );
+    if (item) {
+      if (dto.every !== undefined) item.every = dto.every;
+      if (dto.reward !== undefined) item.reward = dto.reward;
+      if (dto.image !== undefined) item.image = dto.image;
+    }
+    await prog.save();
+    return prog;
   }
 
-  async removeRepeatReward(companyId: string) {
+  async removeRepeatReward(companyId: string, rewardId: string) {
     const prog = await this.ensureProgram(companyId);
-    prog.repeatReward = null;
+    prog.repeatRewards = (prog.repeatRewards as any).filter(
+      (r: any) => r._id.toString() !== rewardId
+    );
     await prog.save();
     await this.clientModel.updateMany(
       {},
-      { $set: { points_since_last_repeat: 0 } }
+      {
+        $unset: { [`points_since_last_repeat.${rewardId}`]: "" },
+      }
     );
     return prog;
   }
@@ -183,12 +199,24 @@ export class LoyaltyService {
     return { targetAmount: prog.spendReward.amount, currentAmount: current };
   }
 
-  async getRepeatProgress(companyId: string, clientId: string) {
+  async getRepeatRewards(companyId: string) {
     const prog = await this.ensureProgram(companyId);
-    if (!prog.repeatReward) return { every: 0, current: 0 };
+    return prog.repeatRewards;
+  }
+
+  async getRepeatProgress(
+    companyId: string,
+    clientId: string,
+    rewardId: string
+  ) {
+    const prog = await this.ensureProgram(companyId);
+    const reward = (prog.repeatRewards as any).find(
+      (r: any) => r._id.toString() === rewardId
+    );
+    if (!reward) return { every: 0, current: undefined };
     const client = await this.clientModel.findById(clientId).lean<Client>();
-    const current = client?.points_since_last_repeat || 0;
-    return { every: prog.repeatReward.every, current };
+    const current = client?.points_since_last_repeat?.[rewardId];
+    return { every: reward.every, current };
   }
 
   async getClientData(companyId: string, clientId: string) {
@@ -223,20 +251,28 @@ export class LoyaltyService {
     ptsEarned: number
   ) {
     const prog = await this.ensureProgram(companyId);
-    if (!prog.repeatReward) return;
+    if (!prog.repeatRewards || prog.repeatRewards.length === 0) return;
     const client = await this.clientModel.findById(clientId);
     if (!client) return;
-    client.points_since_last_repeat =
-      (client.points_since_last_repeat || 0) + ptsEarned;
-    while (client.points_since_last_repeat >= prog.repeatReward.every) {
-      client.points_since_last_repeat -= prog.repeatReward.every;
-      await this.rewardModel.create({
-        client: client._id,
-        company: new Types.ObjectId(companyId),
-        type: "repeat",
-        points: prog.repeatReward.every,
-        delivered: false,
-      });
+
+    for (const r of prog.repeatRewards as any) {
+      const id = r._id.toString();
+      const current = (client.points_since_last_repeat?.[id] || 0) + ptsEarned;
+      let remaining = current;
+      while (remaining >= r.every) {
+        remaining -= r.every;
+        await this.rewardModel.create({
+          client: client._id,
+          company: new Types.ObjectId(companyId),
+          type: "repeat",
+          points: r.every,
+          delivered: false,
+        });
+      }
+      client.points_since_last_repeat = {
+        ...(client.points_since_last_repeat || {}),
+        [id]: remaining,
+      } as any;
     }
     await client.save();
   }
@@ -305,7 +341,8 @@ export class LoyaltyService {
     if (reward.type === "spend") {
       rewardName = prog?.spendReward?.reward || "Récompense dépenses";
     } else if (reward.type === "repeat") {
-      rewardName = prog?.repeatReward?.reward || `Défi ${reward.points} pts`;
+      const rr = prog?.repeatRewards?.find((r) => r.every === reward.points);
+      rewardName = rr?.reward || `Défi ${reward.points} pts`;
     } else {
       const tier = prog?.tiers.find((t) => t.points === reward.points);
       rewardName = tier?.reward || `Récompense ${reward.points} pts`;
