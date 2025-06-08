@@ -407,13 +407,33 @@ export class TourneeService {
     this.logger.debug('  tournée trouvée, orderIds =', tournee?.orderIds);
     if (!tournee) return [];
 
-    // 3) Va chercher directement les commandes par leurs IDs
+    // 3) Récupère les stops associés au véhicule du livreur
+    const solution = tournee.solution as any;
+    const clientIds = new Set<string>();
+
+    // Pour chaque véhicule du livreur, récupère les stops qui lui sont assignés
+    for (const vehicleId of vehicleIds) {
+      const vehicleSolution = solution.date1?.[vehicleId];
+      if (vehicleSolution?.ordered_stops) {
+        vehicleSolution.ordered_stops.forEach((stop: any) => {
+          if (!stop.stop_id.startsWith('end_')) {
+            clientIds.add(stop.stop_id);
+          }
+        });
+      }
+    }
+
+    // 4) Récupère les commandes pour ces clients qui sont dans la tournée
     const orders = await this.orderModel
-      .find({ _id: { $in: tournee.orderIds } })
+      .find({
+        clientId: { $in: Array.from(clientIds) },
+        _id: { $in: tournee.orderIds }
+      })
       .lean();
+
     this.logger.debug('  orders from DB:', orders);
 
-    // 4) Formate la réponse
+    // 5) Formate la réponse
     return orders.map(o => ({
       _id: o._id.toString(),
       nom_client: o.nom_client,
