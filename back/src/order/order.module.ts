@@ -9,6 +9,7 @@ import { OrderService } from './order.service';
 import { ReclamationService } from './reclamation.service';
 import { ProductModule } from '../product/product.module';
 import { Depot, DepotSchema } from '../depot/schemas/depot.schema';
+import { LoyaltyModule } from '../loyalty/loyalty.module';
 
 @Module({
   imports: [
@@ -19,10 +20,10 @@ import { Depot, DepotSchema } from '../depot/schemas/depot.schema';
       { name: Depot.name, schema: DepotSchema },
     ]),
     ProductModule,
+    LoyaltyModule,
   ],
   controllers: [OrderController, ReclamationController],
   providers: [OrderService, ReclamationService],
   exports: [OrderService, ReclamationService]
 })
 export class OrderModule {}
-    

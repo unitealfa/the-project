@@ -3,7 +3,7 @@ import { Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "../utils/cropImage";
-import "../pages-css/header/Header.css"; // <-- Import du CSS brutalist
+import "../pages-css/header/header.css"; // <-- Import du CSS brutalist
 
 const ACCENT = "#4f46e5";
 

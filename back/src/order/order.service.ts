@@ -9,6 +9,7 @@ import { Client } from "../client/schemas/client.schema";
 import { ProductService } from "../product/product.service";
 import { Reclamation } from "./schemas/reclamation.schema";
 import { Depot } from "../depot/schemas/depot.schema";
+import { LoyaltyService } from '../loyalty/loyalty.service';
 
 @Injectable()
 export class OrderService {
@@ -17,7 +18,8 @@ export class OrderService {
     @InjectModel(Client.name) private clientModel: Model<Client>,
     @InjectModel(Reclamation.name) private reclamationModel: Model<Reclamation>,
     @InjectModel(Depot.name) private depotModel: Model<Depot>,
-    private productService: ProductService
+    private productService: ProductService,
+    private loyaltyService: LoyaltyService,
   ) {}
 
   async createOrder(userId: string, dto: CreateOrderDto): Promise<Order[]> {
@@ -178,11 +180,30 @@ export class OrderService {
     orderId: string,
     status: "en_attente" | "en_cours" | "livree"
   ) {
-    return this.orderModel.findByIdAndUpdate(
-      orderId,
-      { etat_livraison: status },
-      { new: true }
-    );
+    const order = await this.orderModel.findById(orderId);
+    if (!order) throw new NotFoundException("Commande non trouvée");
+    const prev = order.etat_livraison;
+    order.etat_livraison = status;
+    await order.save();
+
+    if (status === "livree" && prev !== "livree") {
+      const depot = await this.depotModel.findById(order.depot).lean<Depot>();
+      const companyId = depot?.company_id?.toString();
+      if (companyId) {
+        const pts = await this.loyaltyService.recordPoints(
+          companyId,
+          order.clientId,
+          order.total
+        );
+        if (pts > 0) {
+          await this.clientModel.findByIdAndUpdate(order.clientId, {
+            $inc: { fidelite_points: pts },
+          });
+        }
+      }
+    }
+
+    return order;
   }
 
   async addDeliveryPhotos(

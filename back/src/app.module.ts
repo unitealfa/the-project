@@ -1,3 +1,4 @@
+
 import { Module }         from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule }   from '@nestjs/config';
@@ -18,6 +19,7 @@ import { VehicleModule } from './vehicle/vehicle.module'; // Add this line
 import { OrderModule } from './order/order.module';
 import { ImageUploadModule } from './upload/image-upload.module';
 import { AdModule } from './ad/ad.module';
+import { LoyaltyModule } from './loyalty/loyalty.module';
 import { ChauffeursController } from './chauffeurs.controller';
 import { LivreursController } from './livreurs.controller';
 
@@ -49,6 +51,7 @@ import { LivreursController } from './livreurs.controller';
     ImageUploadModule,
     TourneeModule,
     AdModule,
+    LoyaltyModule,
   ],
   controllers: [
     ChauffeursController,

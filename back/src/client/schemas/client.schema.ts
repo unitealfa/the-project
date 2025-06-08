@@ -47,7 +47,8 @@ export class Client extends Document {
   @Prop({ type: Localisation, required: true }) localisation: Localisation;
   @Prop([Affectation]) affectations: Affectation[];
 
-  @Prop({ default: 0 }) fidelite_points: number;
+  @Prop({ type: Map, of: Number, default: {} })
+  fidelite_points: Record<string, number>;
   @Prop({ type: Statistiques, default: () => ({}) }) statistiques: Statistiques;
   @Prop()
   pfp: string;

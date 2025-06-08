@@ -34,6 +34,7 @@ export default function Sidebar() {
         { label: "Produits disponibles", path: "/productclient" },
         { label: "Mon panier", path: "/cart" },
         { label: "Historique de mes commandes", path: "/historiqueorders" },
+        { label: "Mes Points Fidélité", path: "/loyalty-client" },
       ];
       break;
 
@@ -49,6 +50,7 @@ export default function Sidebar() {
         { label: "Statistiques globales", path: "/admin/stats" },
         { label: "Mes dépôts", path: "/depots" },
         { label: "Liste des clients", path: "/clients" },
+        { label: "Programme Fidélité", path: "/loyalty" },
       ];
       break;
 

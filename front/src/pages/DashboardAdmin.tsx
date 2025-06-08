@@ -114,6 +114,9 @@ export default function DashboardAdmin() {
               <Link to="/clients" style={linkStyle}>
                 • Consulter tous les clients
               </Link>
+              <Link to="/loyalty" style={linkStyle}>
+                • Programme Fidélité
+              </Link>
             </section>
           </div>
         </div>

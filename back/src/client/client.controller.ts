@@ -24,6 +24,8 @@ import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { RolesGuard } from "../auth/roles.guard";
 import { Roles } from "../auth/roles.decorator";
 import { DepotHelperService } from "../common/helpers/depot-helper.service";
+import { GetUser } from '../auth/decorators';
+import { Client } from './schemas/client.schema';
 
 import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
@@ -372,5 +374,14 @@ export class ClientController {
       `POST /clients/${clientId}/unassign-prevendeur – superviseur=${user.id}`
     );
     return this.clientService.unassignPrevendeur(clientId, user.depot);
+  }
+
+  /**
+   * Renvoie les infos du client connecté (dont fidelite_points)
+   */
+  @Get("me")
+  @UseGuards(JwtAuthGuard)
+  async getMe(@GetUser("id") clientId: string): Promise<Client> {
+    return this.clientService.findById(clientId);
   }
 }

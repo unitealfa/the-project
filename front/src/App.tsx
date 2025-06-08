@@ -79,6 +79,10 @@ import LivreurCommandeDetail from "./pages/LivreurCommandeDetail";
 import StatsVentes from "./pages/StatsVentes";
 import AdminStats from "./pages/AdminStats";
 
+import LoyaltyAdmin from "./pages/LoyaltyAdmin";
+import LoyaltyChooseCompany from "./pages/LoyaltyChooseCompany";
+import LoyaltyClient from "./pages/LoyaltyClient";
+
 import AssignPrevendeurs from "./pages/AssignPrevendeurs";
 import Sidebar from "./components/Sidebar";
 
@@ -464,7 +468,31 @@ export default function App() {
               </RequireAuth>
             }
           />
+          <Route
+            path="/loyalty-client"
+            element={
+              <RequireAuth allowedRoles={["client"]}>
+                <LoyaltyChooseCompany />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/loyalty-client/:companyId"
+            element={
+              <RequireAuth allowedRoles={["client"]}>
+                <LoyaltyClient />
+              </RequireAuth>
+            }
+          />
 
+          <Route
+            path="/loyalty"
+            element={
+              <RequireAuth allowedRoles={["admin"]}>
+                <LoyaltyAdmin />
+              </RequireAuth>
+            }
+          />
           <Route
             path="/admin-ventes"
             element={
