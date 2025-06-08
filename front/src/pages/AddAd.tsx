@@ -119,7 +119,7 @@ export default function AddAd() {
               onChange={e => setDuration(+e.target.value)}
               style={{ marginLeft: 8 }}
             >
-              {[5, 15, 30].map(sec => (
+              {[15, 30].map(sec => (
                 <option key={sec} value={sec}>{sec} s</option>
               ))}
             </select>
