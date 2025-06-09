@@ -18,6 +18,15 @@ interface CompanyData {
   gerant_company: string;
   contact: Contact;
   pfp: string; // ← on attend que le backend envoie la propriété pfp ("images/xxx.png" ou "uploads/xxx.png")
+  password?: string;
+}
+
+interface FormState {
+  nom: string;
+  email: string;
+  num: string;
+  adresse: string;
+  password?: string;
 }
 
 export default function CompanyEdit() {
@@ -39,6 +48,7 @@ export default function CompanyEdit() {
   const [pfpPreview, setPfpPreview] = useState<string>(''); 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [passwordError, setPasswordError] = useState<string>('');
 
   const token = localStorage.getItem('token') || '';
   const apiBase = import.meta.env.VITE_API_URL;
@@ -71,6 +81,7 @@ export default function CompanyEdit() {
             },
           },
           pfp: c.pfp,
+          password: c.password,
         });
         // 2) Initialiser pfpPreview avec l'URL de l'image courante
         setPfpPreview(`${apiBase}/${c.pfp}`);
@@ -108,6 +119,30 @@ export default function CompanyEdit() {
     };
   }, [pfpFile, data.pfp, apiBase]);
 
+  // Fonction de validation du mot de passe
+  const validatePassword = (password: string): boolean => {
+    if (!password) return true; // Le mot de passe est optionnel en édition
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasMinLength = password.length >= 6;
+
+    if (!hasUpperCase) {
+      setPasswordError('Le mot de passe doit contenir au moins une lettre majuscule');
+      return false;
+    }
+    if (!hasNumber) {
+      setPasswordError('Le mot de passe doit contenir au moins un chiffre');
+      return false;
+    }
+    if (!hasMinLength) {
+      setPasswordError('Le mot de passe doit contenir au moins 6 caractères');
+      return false;
+    }
+
+    setPasswordError('');
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -116,16 +151,21 @@ export default function CompanyEdit() {
         nom_company: data.nom_company,
         gerant_company: data.gerant_company,
         contact: data.contact,
+        password: data.password, // Ajouter le mot de passe s'il est fourni
       }));
       if (pfpFile) {
         formData.append('pfp', pfpFile);
+      }
+
+      // Vérifier le mot de passe avant de soumettre
+      if (data.password && !validatePassword(data.password)) {
+        return;
       }
 
       const res = await fetch(`${apiBase}/companies/${id}`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,
-          // Pas de Content-Type ici
         },
         body: formData,
       });
@@ -284,119 +324,12 @@ export default function CompanyEdit() {
           </div>
 
           {/* Champs du formulaire */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Nom :</label>
-            <input
-              value={data.nom_company}
-              onChange={e => setData({ ...data, nom_company: e.target.value })}
-              required
-              style={{
-                padding: '0.75rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Gérant :</label>
-            <input
-              value={data.gerant_company}
-              onChange={e => setData({ ...data, gerant_company: e.target.value })}
-              required
-              style={{
-                padding: '0.75rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Téléphone :</label>
-            <input
-              value={data.contact.telephone}
-              onChange={e =>
-                setData({
-                  ...data,
-                  contact: { ...data.contact, telephone: e.target.value },
-                })
-              }
-              required
-              style={{
-                padding: '0.75rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Email :</label>
-            <input
-              type="email"
-              value={data.contact.email}
-              onChange={e =>
-                setData({
-                  ...data,
-                  contact: { ...data.contact, email: e.target.value },
-                })
-              }
-              required
-              style={{
-                padding: '0.75rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
-          {/* Champ de fichier pour la photo de profil */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Photo de profil :</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={e => setPfpFile(e.target.files ? e.target.files[0] : null)}
-              style={{
-                padding: '0.75rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
-
-          <fieldset
-            style={{
-              marginTop: '1rem',
-              padding: '1.5rem',
-              border: '1px solid #ddd', // Bordure douce pour le fieldset
-              borderRadius: '8px', // Coins arrondis
-              backgroundColor: '#fafafa', // Fond très léger pour le fieldset
-            }}
-          >
-            <legend
-              style={{
-                fontWeight: 'bold',
-                color: '#1a1a1a', // Titre de légende sombre
-                padding: '0 0.5rem',
-                fontSize: '1.1rem', // Taille légèrement augmentée
-              }}
-            >Adresse</legend>
-            <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '1rem' }}>
-              <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Rue :</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Nom :</label>
               <input
-                value={data.contact.adresse.rue}
-                onChange={e =>
-                  setData({
-                    ...data,
-                    contact: {
-                      ...data.contact,
-                      adresse: { ...data.contact.adresse, rue: e.target.value },
-                    },
-                  })
-                }
+                value={data.nom_company}
+                onChange={e => setData({ ...data, nom_company: e.target.value })}
                 required
                 style={{
                   padding: '0.75rem',
@@ -406,19 +339,11 @@ export default function CompanyEdit() {
                 }}
               />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '1rem' }}>
-              <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Ville :</label>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Gérant :</label>
               <input
-                value={data.contact.adresse.ville}
-                onChange={e =>
-                  setData({
-                    ...data,
-                    contact: {
-                      ...data.contact,
-                      adresse: { ...data.contact.adresse, ville: e.target.value },
-                    },
-                  })
-                }
+                value={data.gerant_company}
+                onChange={e => setData({ ...data, gerant_company: e.target.value })}
                 required
                 style={{
                   padding: '0.75rem',
@@ -428,17 +353,14 @@ export default function CompanyEdit() {
                 }}
               />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '1rem' }}>
-              <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Code postal :</label>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Téléphone :</label>
               <input
-                value={data.contact.adresse.code_postal}
+                value={data.contact.telephone}
                 onChange={e =>
                   setData({
                     ...data,
-                    contact: {
-                      ...data.contact,
-                      adresse: { ...data.contact.adresse, code_postal: e.target.value },
-                    },
+                    contact: { ...data.contact, telephone: e.target.value },
                   })
                 }
                 required
@@ -451,16 +373,14 @@ export default function CompanyEdit() {
               />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Pays :</label>
+              <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Email :</label>
               <input
-                value={data.contact.adresse.pays}
+                type="email"
+                value={data.contact.email}
                 onChange={e =>
                   setData({
                     ...data,
-                    contact: {
-                      ...data.contact,
-                      adresse: { ...data.contact.adresse, pays: e.target.value },
-                    },
+                    contact: { ...data.contact, email: e.target.value },
                   })
                 }
                 required
@@ -472,28 +392,178 @@ export default function CompanyEdit() {
                 }}
               />
             </div>
-          </fieldset>
+            {/* Champ de mot de passe */}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>
+                Nouveau mot de passe (optionnel) :
+              </label>
+              <input
+                type="password"
+                value={data.password || ''}
+                onChange={e => {
+                  setData({ ...data, password: e.target.value });
+                  if (e.target.value) {
+                    validatePassword(e.target.value);
+                  } else {
+                    setPasswordError('');
+                  }
+                }}
+                style={{ 
+                  padding: '0.75rem', 
+                  border: passwordError ? '1px solid #dc2626' : '1px solid #ccc', 
+                  borderRadius: '4px' 
+                }}
+              />
+              {passwordError && (
+                <p style={{ color: '#dc2626', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                  {passwordError}
+                </p>
+              )}
+            </div>
+            {/* Champ de fichier pour la photo de profil */}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Photo de profil :</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={e => setPfpFile(e.target.files ? e.target.files[0] : null)}
+                style={{
+                  padding: '0.75rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
 
-          {/* Bouton de soumission */}
-          <button
-            type="submit"
-            style={{
-              marginTop: '1.5rem',
-              padding: '1rem 2rem',
-              backgroundColor: '#1a1a1a',
-              color: 'white',
-              border: 'none',
-              borderRadius: '20px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: 'bold',
-              textTransform: 'uppercase',
-              alignSelf: 'center',
-              transition: 'background-color 0.3s ease',
-            }}
-          >
-            Enregistrer les modifications
-          </button>
+            <fieldset
+              style={{
+                marginTop: '1rem',
+                padding: '1.5rem',
+                border: '1px solid #ddd', // Bordure douce pour le fieldset
+                borderRadius: '8px', // Coins arrondis
+                backgroundColor: '#fafafa', // Fond très léger pour le fieldset
+              }}
+            >
+              <legend
+                style={{
+                  fontWeight: 'bold',
+                  color: '#1a1a1a', // Titre de légende sombre
+                  padding: '0 0.5rem',
+                  fontSize: '1.1rem', // Taille légèrement augmentée
+                }}
+              >Adresse</legend>
+              <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '1rem' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Rue :</label>
+                <input
+                  value={data.contact.adresse.rue}
+                  onChange={e =>
+                    setData({
+                      ...data,
+                      contact: {
+                        ...data.contact,
+                        adresse: { ...data.contact.adresse, rue: e.target.value },
+                      },
+                    })
+                  }
+                  required
+                  style={{
+                    padding: '0.75rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '1rem' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Ville :</label>
+                <input
+                  value={data.contact.adresse.ville}
+                  onChange={e =>
+                    setData({
+                      ...data,
+                      contact: {
+                        ...data.contact,
+                        adresse: { ...data.contact.adresse, ville: e.target.value },
+                      },
+                    })
+                  }
+                  required
+                  style={{
+                    padding: '0.75rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '1rem' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Code postal :</label>
+                <input
+                  value={data.contact.adresse.code_postal}
+                  onChange={e =>
+                    setData({
+                      ...data,
+                      contact: {
+                        ...data.contact,
+                        adresse: { ...data.contact.adresse, code_postal: e.target.value },
+                      },
+                    })
+                  }
+                  required
+                  style={{
+                    padding: '0.75rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Pays :</label>
+                <input
+                  value={data.contact.adresse.pays}
+                  onChange={e =>
+                    setData({
+                      ...data,
+                      contact: {
+                        ...data.contact,
+                        adresse: { ...data.contact.adresse, pays: e.target.value },
+                      },
+                    })
+                  }
+                  required
+                  style={{
+                    padding: '0.75rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            </fieldset>
+
+            {/* Bouton de soumission */}
+            <button
+              type="submit"
+              style={{
+                marginTop: '1.5rem',
+                padding: '1rem 2rem',
+                backgroundColor: '#1a1a1a',
+                color: 'white',
+                border: 'none',
+                borderRadius: '20px',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                textTransform: 'uppercase',
+                alignSelf: 'center',
+                transition: 'background-color 0.3s ease',
+              }}
+            >
+              Enregistrer les modifications
+            </button>
+          </div>
         </form>
       </div>
     </>

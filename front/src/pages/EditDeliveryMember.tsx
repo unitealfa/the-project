@@ -17,6 +17,7 @@ interface FormState {
   poste: 'Livraison';
   role: string;
   pfp?: string;
+  password?: string;
 }
 
 export default function EditPreventeMember() {
@@ -25,6 +26,7 @@ export default function EditPreventeMember() {
   const [f, setF] = useState<FormState | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [passwordError, setPasswordError] = useState<string>('');
   const [pfpFile, setPfpFile] = useState<File | null>(null);
   const [pfpPreview, setPfpPreview] = useState('');
 
@@ -64,10 +66,42 @@ export default function EditPreventeMember() {
     }
   }, [pfpFile, f?.pfp]);
 
+  // Fonction de validation du mot de passe
+  const validatePassword = (password: string): boolean => {
+    if (!password) return true; // Le mot de passe est optionnel en édition
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasMinLength = password.length >= 6;
+
+    if (!hasUpperCase) {
+      setPasswordError('Le mot de passe doit contenir au moins une lettre majuscule');
+      return false;
+    }
+    if (!hasNumber) {
+      setPasswordError('Le mot de passe doit contenir au moins un chiffre');
+      return false;
+    }
+    if (!hasMinLength) {
+      setPasswordError('Le mot de passe doit contenir au moins 6 caractères');
+      return false;
+    }
+
+    setPasswordError('');
+    return true;
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!f) return;
+    setError('');
     setSaving(true);
+
+    // Vérifier le mot de passe avant de soumettre
+    if (f.password && !validatePassword(f.password)) {
+      setSaving(false);
+      return;
+    }
+
     try {
       await apiFetch(`/api/teams/members/${memberId}`, {
         method: 'PUT',
@@ -78,7 +112,7 @@ export default function EditPreventeMember() {
       }
       nav(-1);
     } catch (err: any) {
-      setError(err.message || 'Erreur');
+      setError(err.message || 'Une erreur est survenue');
     } finally {
       setSaving(false);
     }
@@ -249,6 +283,33 @@ export default function EditPreventeMember() {
                 <option key={jt} value={jt}>{jt}</option>
               ))}
             </select>
+          </div>
+
+          {/* Mot de passe Section */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Nouveau mot de passe (optionnel) :</label>
+            <input
+              type="password"
+              value={f.password || ''}
+              onChange={e => {
+                setF({ ...f, password: e.target.value });
+                if (e.target.value) {
+                  validatePassword(e.target.value);
+                } else {
+                  setPasswordError('');
+                }
+              }}
+              style={{ 
+                padding: '0.75rem', 
+                border: passwordError ? '1px solid #dc2626' : '1px solid #ccc', 
+                borderRadius: '4px' 
+              }}
+            />
+            {passwordError && (
+              <p style={{ color: '#dc2626', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                {passwordError}
+              </p>
+            )}
           </div>
 
           {/* Bouton de soumission */}

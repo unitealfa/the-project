@@ -30,7 +30,7 @@ interface FormData {
 export default function EditClient() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState('');
   const [formData, setFormData] = useState<FormData>({
     nom_client: '',
@@ -58,6 +58,7 @@ export default function EditClient() {
   const [pfpFile, setPfpFile] = useState<File | null>(null);
   const [removePfp, setRemovePfp] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const [passwordError, setPasswordError] = useState<string>('');
 
   const apiBase = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem('token') || '';
@@ -124,10 +125,38 @@ export default function EditClient() {
     }
   };
 
+  // Fonction de validation du mot de passe
+  const validatePassword = (password: string): boolean => {
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasMinLength = password.length >= 6;
+
+    if (!hasUpperCase) {
+      setPasswordError('Le mot de passe doit contenir au moins une lettre majuscule');
+      return false;
+    }
+    if (!hasNumber) {
+      setPasswordError('Le mot de passe doit contenir au moins un chiffre');
+      return false;
+    }
+    if (!hasMinLength) {
+      setPasswordError('Le mot de passe doit contenir au moins 6 caractères');
+      return false;
+    }
+
+    setPasswordError('');
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    // Vérifier le mot de passe avant de soumettre
+    if (!validatePassword(formData.password)) {
+      return;
+    }
 
     try {
       const dataToSend = {
@@ -311,21 +340,27 @@ export default function EditClient() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label htmlFor="password" style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Nouveau mot de passe (optionnel):</label>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Mot de passe :</label>
             <input
               type="password"
-              id="password"
               name="password"
               value={formData.password}
-              onChange={handleChange}
-              placeholder="Laissez vide pour ne pas modifier"
-              style={{
-                padding: '0.75rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                boxSizing: 'border-box',
+              onChange={e => {
+                setFormData({ ...formData, password: e.target.value });
+                validatePassword(e.target.value);
+              }}
+              required
+              style={{ 
+                padding: '0.75rem', 
+                border: passwordError ? '1px solid #dc2626' : '1px solid #ccc', 
+                borderRadius: '4px' 
               }}
             />
+            {passwordError && (
+              <p style={{ color: '#dc2626', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                {passwordError}
+              </p>
+            )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>

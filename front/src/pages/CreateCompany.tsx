@@ -54,12 +54,42 @@ export default function CreateCompany() {
     num: '',
   });
   const [error, setError] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string>('');
 
   // ─── NOUVEL ÉTAT POUR LA PFP ──────────────────────────────────────────────────
   const [pfpFile, setPfpFile] = useState<File | null>(null);
 
+  // Fonction de validation du mot de passe
+  const validatePassword = (password: string): boolean => {
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasMinLength = password.length >= 6;
+
+    if (!hasUpperCase) {
+      setPasswordError('Le mot de passe doit contenir au moins une lettre majuscule');
+      return false;
+    }
+    if (!hasNumber) {
+      setPasswordError('Le mot de passe doit contenir au moins un chiffre');
+      return false;
+    }
+    if (!hasMinLength) {
+      setPasswordError('Le mot de passe doit contenir au moins 6 caractères');
+      return false;
+    }
+
+    setPasswordError('');
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Vérifier le mot de passe avant de soumettre
+    if (!validatePassword(adminData.password)) {
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token') || '';
 
@@ -421,10 +451,22 @@ export default function CreateCompany() {
                 type="password"
                 name="password"
                 value={adminData.password}
-                onChange={e => setAdminData({ ...adminData, password: e.target.value })}
+                onChange={e => {
+                  setAdminData({ ...adminData, password: e.target.value });
+                  validatePassword(e.target.value);
+                }}
                 required
-                 style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                style={{ 
+                  padding: '0.75rem', 
+                  border: passwordError ? '1px solid #dc2626' : '1px solid #ccc', 
+                  borderRadius: '4px' 
+                }}
               />
+              {passwordError && (
+                <p style={{ color: '#dc2626', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                  {passwordError}
+                </p>
+              )}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Tél. Admin :</label>

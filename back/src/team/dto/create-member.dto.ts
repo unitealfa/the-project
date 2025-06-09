@@ -1,5 +1,5 @@
 import {
-  IsIn, IsNotEmpty, IsString, IsOptional
+  IsIn, IsNotEmpty, IsString, IsOptional, MinLength, Matches
 } from 'class-validator';
 
 /** fonctions métiers possibles (→ role) */
@@ -15,7 +15,7 @@ export const JOB_TITLES = [
 ] as const;
 export type JobTitle = typeof JOB_TITLES[number];
 
-/** catégories d’équipe (→ poste) */
+/** catégories d'équipe (→ poste) */
 export const TEAM_CATEGORIES = ['Livraison', 'Prévente', 'Entrepôt'] as const;
 export type TeamCategory = typeof TEAM_CATEGORIES[number];
 
@@ -29,7 +29,11 @@ export class CreateMemberDto {
   @IsString() @IsNotEmpty() nom!     : string;
   @IsString() @IsNotEmpty() prenom!  : string;
   @IsString() @IsNotEmpty() email!   : string;
-  @IsString() @IsNotEmpty() password!: string;
+  @IsString() @IsNotEmpty() 
+  @MinLength(6, { message: 'Le mot de passe doit contenir au moins 6 caractères' })
+  @Matches(/[A-Z]/, { message: 'Le mot de passe doit contenir au moins une lettre majuscule' })
+  @Matches(/[0-9]/, { message: 'Le mot de passe doit contenir au moins un chiffre' })
+  password!: string;
   @IsString() @IsNotEmpty() num!     : string;
   @IsString() @IsOptional() pfp?: string;
 }
@@ -44,6 +48,10 @@ export class UpdateMemberDto {
   @IsString() @IsOptional() prenom?  : string;
   @IsString() @IsOptional() email?   : string;
   @IsString() @IsOptional() num?     : string;
-  @IsString() @IsOptional() password?: string;
+  @IsString() @IsOptional()
+  @MinLength(6, { message: 'Le mot de passe doit contenir au moins 6 caractères' })
+  @Matches(/[A-Z]/, { message: 'Le mot de passe doit contenir au moins une lettre majuscule' })
+  @Matches(/[0-9]/, { message: 'Le mot de passe doit contenir au moins un chiffre' })
+  password?: string;
   @IsString() @IsOptional() pfp?: string;
 }
