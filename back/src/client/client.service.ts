@@ -9,6 +9,7 @@ import { Model, Types } from "mongoose";
 import { CreateClientDto } from "./dto/create-client.dto";
 import * as bcrypt from "bcrypt";
 import { Order } from "../order/schemas/order.schema";
+import { User, UserDocument } from "../user/schemas/user.schema";
 import * as mongoose from "mongoose";
 import { Logger } from "@nestjs/common";
 import { DepotHelperService } from "../common/helpers/depot-helper.service";
@@ -19,12 +20,18 @@ export class ClientService {
 
   constructor(
     @InjectModel("Client") private readonly clientModel: Model<Client>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @InjectModel("Order") private readonly orderModel: Model<Order>,
     private readonly depotHelper: DepotHelperService
   ) {}
 
   /* ───────────── CRÉATION ───────────── */
   async create(dto: CreateClientDto): Promise<Client> {
+    const emailInUser = await this.userModel.exists({ email: dto.email });
+    const emailInClient = await this.clientModel.exists({ email: dto.email });
+    if (emailInUser || emailInClient) {
+      throw new BadRequestException("Email d\u00e9j\u00e0 utilis\u00e9");
+    }
     const existing = await this.clientModel.findOne({ email: dto.email });
 
     const hashed = await bcrypt.hash(dto.password, 10);
@@ -47,32 +54,6 @@ export class ClientService {
         );
       }
       entreprisesMap.set(ent, a.depot.toString());
-    }
-
-    if (existing) {
-      // Refuser si le client est déjà affecté dans la même entreprise
-      for (const a of affectations) {
-        const sameCompany = existing.affectations.some(
-          (e) => e.entreprise.toString() === a.entreprise.toString()
-        );
-        if (sameCompany) {
-          throw new BadRequestException(
-            "Ce client est déjà affecté dans cette entreprise."
-          );
-        }
-      }
-
-      const newAffectations = affectations.filter(
-        (a) =>
-          !existing.affectations.some(
-            (e) => e.depot.toString() === a.depot.toString()
-          )
-      );
-      if (newAffectations.length > 0) {
-        existing.affectations.push(...newAffectations);
-        return existing.save();
-      }
-      return existing;
     }
 
     const created = new this.clientModel({
@@ -332,6 +313,16 @@ export class ClientService {
 
   /* ───────────── MISE À JOUR ───────────── */
   async update(id: string, dto: Partial<CreateClientDto>) {
+    if (dto.email) {
+      const existsInUser = await this.userModel.exists({ email: dto.email });
+      const existsInClient = await this.clientModel.exists({
+        email: dto.email,
+        _id: { $ne: id },
+      });
+      if (existsInUser || existsInClient) {
+        throw new BadRequestException("Email d\u00e9j\u00e0 utilis\u00e9");
+      }
+    }
     if (dto.password) {
       dto.password = await bcrypt.hash(dto.password, 10);
     }

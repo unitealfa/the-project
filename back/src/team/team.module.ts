@@ -7,6 +7,7 @@ import { TeamController }       from './team.controller';
 
 import { Depot, DepotSchema } from '../depot/schemas/depot.schema';
 import { User,  UserSchema }  from '../user/schemas/user.schema';
+import { Client, ClientSchema } from '../client/schemas/client.schema';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { User,  UserSchema }  from '../user/schemas/user.schema';
       { name: Member.name, schema: MemberSchema },
       { name: Depot.name,  schema: DepotSchema  },
       { name: User.name,   schema: UserSchema   },
+      { name: Client.name, schema: ClientSchema },
     ]),
   ],
   providers:   [TeamService],

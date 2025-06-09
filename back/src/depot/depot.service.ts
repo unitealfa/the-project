@@ -2,6 +2,7 @@ import {
   Injectable,
   ForbiddenException,
   NotFoundException,
+  ConflictException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
@@ -10,12 +11,14 @@ import * as bcrypt from "bcrypt";
 import { Depot, DepotDocument } from "./schemas/depot.schema";
 import { CreateDepotDto } from "./dto/create-depot.dto";
 import { User, UserDocument } from "../user/schemas/user.schema";
+import { Client } from "../client/schemas/client.schema";
 
 @Injectable()
 export class DepotService {
   constructor(
     @InjectModel(Depot.name) private depotModel: Model<DepotDocument>,
-    @InjectModel(User.name) private userModel: Model<UserDocument>
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Client.name) private clientModel: Model<Client>
   ) {}
 
   /** CREATE */
@@ -25,6 +28,13 @@ export class DepotService {
       throw new ForbiddenException("Aucune entreprise associée");
 
     const { responsable, ...payload } = dto;
+
+    if (
+      (await this.userModel.exists({ email: responsable.email })) ||
+      (await this.clientModel.exists({ email: responsable.email }))
+    ) {
+      throw new ConflictException("Email déjà utilisé");
+    }
     const depot = new this.depotModel({
       ...payload,
       company_id: new Types.ObjectId(admin.company),
@@ -82,7 +92,11 @@ export class DepotService {
     if (user.role === "responsable depot") {
       console.log("[DEBUG] Utilisateur est responsable depot");
       if (!user.depot || user.depot != id) {
-        console.error("[❌] Responsable depot sans droit sur ce dépôt :", user.depot, id);
+        console.error(
+          "[❌] Responsable depot sans droit sur ce dépôt :",
+          user.depot,
+          id
+        );
         throw new NotFoundException("Accès interdit ou introuvable");
       }
       const dp = await this.depotModel
@@ -122,11 +136,17 @@ export class DepotService {
       adminCompany = new Types.ObjectId(admin.company);
       console.log("[DEBUG] Company ObjectId créé:", adminCompany);
     } catch (err) {
-      console.error("[❌] company n'est pas un ObjectId MongoDB:", admin.company);
+      console.error(
+        "[❌] company n'est pas un ObjectId MongoDB:",
+        admin.company
+      );
       throw new ForbiddenException("L'entreprise de l'admin n'est pas valide");
     }
 
-    console.log('[DEBUG] Recherche dépôt avec:', { _id: objId, company_id: adminCompany });
+    console.log("[DEBUG] Recherche dépôt avec:", {
+      _id: objId,
+      company_id: adminCompany,
+    });
 
     // Recherche "béton" : jamais de string, TOUJOURS ObjectId
     const dp = await this.depotModel
@@ -135,11 +155,14 @@ export class DepotService {
       .lean();
 
     if (!dp) {
-      console.error("[❌] Aucun dépôt trouvé pour ce couple _id/company_id", { _id: objId, company_id: adminCompany });
+      console.error("[❌] Aucun dépôt trouvé pour ce couple _id/company_id", {
+        _id: objId,
+        company_id: adminCompany,
+      });
       throw new NotFoundException("Dépôt introuvable");
     }
 
-    console.log('[DEBUG] Dépôt trouvé:', dp);
+    console.log("[DEBUG] Dépôt trouvé:", dp);
     return dp;
   }
 
@@ -162,6 +185,15 @@ export class DepotService {
 
     if (dto.responsable) {
       const { nom, prenom, email, num, password } = dto.responsable;
+      if (
+        (await this.userModel.exists({
+          email,
+          _id: { $ne: existing.responsable_id },
+        })) ||
+        (await this.clientModel.exists({ email }))
+      ) {
+        throw new ConflictException("Email déjà utilisé");
+      }
       if (existing.responsable_id) {
         const u = await this.userModel.findById(existing.responsable_id);
         if (!u) throw new NotFoundException("Responsable introuvable");
