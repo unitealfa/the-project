@@ -46,14 +46,24 @@ export class OrderService {
         throw new NotFoundException(`Produit ${item.productName} non trouvé`);
       }
 
-      const dispo = product.disponibilite.find(
-        d =>
-          clientDepots.includes(d.depot_id.toString()) &&
-          d.quantite >= item.quantity
+      // Cherche la disponibilité du produit dans l'un des dépôts du client
+      const dispo = product.disponibilite.find(d =>
+        clientDepots.includes(d.depot_id.toString()),
       );
+
       if (!dispo) {
         throw new BadRequestException(
-          `Le produit ${item.productName} n'est pas disponible dans vos dépôts`
+          `Le produit ${item.productName} n'est pas disponible dans vos dépôts`,
+        );
+      }
+      if (dispo.quantite <= 0) {
+        throw new BadRequestException(
+          `Le produit ${item.productName} est en rupture de stock`,
+        );
+      }
+      if (dispo.quantite < item.quantity) {
+        throw new BadRequestException(
+          `Stock insuffisant pour ${item.productName}. Quantité disponible : ${dispo.quantite}`,
         );
       }
 
@@ -76,11 +86,16 @@ export class OrderService {
       for (const item of items) {
         const product = await this.productService.findOne(item.productId);
         const depotDispo = product.disponibilite.find(
-          d => d.depot_id.toString() === depotId
+          d => d.depot_id.toString() === depotId,
         );
-        if (!depotDispo || depotDispo.quantite < item.quantity) {
+        if (!depotDispo || depotDispo.quantite <= 0) {
           throw new BadRequestException(
-            `Stock insuffisant pour ${item.productName}`
+            `Le produit ${item.productName} est en rupture de stock`,
+          );
+        }
+        if (depotDispo.quantite < item.quantity) {
+          throw new BadRequestException(
+            `Stock insuffisant pour ${item.productName}. Quantité disponible : ${depotDispo.quantite}`,
           );
         }
         const newQuantite = depotDispo.quantite - item.quantity;

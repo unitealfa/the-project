@@ -1,10 +1,10 @@
-const apiBase = 'http://localhost:5000';
+const apiBase = "http://localhost:5000";
 
 const getHeaders = () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
   };
 };
 
@@ -32,7 +32,7 @@ export interface Order {
   };
   items: OrderItem[];
   total: number;
-  etat_livraison: 'en_attente' | 'en_cours' | 'livree';
+  etat_livraison: "en_attente" | "en_cours" | "livree";
   createdAt: string;
   photosLivraison?: Array<{ url: string; takenAt: string }>;
 }
@@ -45,18 +45,20 @@ export const orderService = {
       body: JSON.stringify(orderData),
     });
     if (!response.ok) {
-      const error = await response.json();
-      throw error;
+      const errorData = await response.json().catch(() => null);
+      const message =
+        errorData?.message || "Erreur lors de la création de la commande";
+      throw new Error(message);
     }
     return response.json();
   },
 
   getOrders: async () => {
     const response = await fetch(`${apiBase}/api/orders`, {
-      headers: getHeaders()
+      headers: getHeaders(),
     });
     if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des commandes');
+      throw new Error("Erreur lors de la récupération des commandes");
     }
     const data = await response.json();
     return Array.isArray(data) ? data : [];
@@ -64,10 +66,10 @@ export const orderService = {
 
   getClientOrders: async () => {
     const response = await fetch(`${apiBase}/api/orders/client`, {
-      headers: getHeaders()
+      headers: getHeaders(),
     });
     if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des commandes');
+      throw new Error("Erreur lors de la récupération des commandes");
     }
     const data = await response.json();
     return Array.isArray(data) ? data : [];
@@ -75,10 +77,10 @@ export const orderService = {
 
   getOrderById: async (id: string) => {
     const response = await fetch(`${apiBase}/api/orders/${id}`, {
-      headers: getHeaders()
+      headers: getHeaders(),
     });
     if (!response.ok) {
-      throw new Error('Erreur lors de la récupération de la commande');
+      throw new Error("Erreur lors de la récupération de la commande");
     }
     return response.json();
   },
@@ -86,11 +88,11 @@ export const orderService = {
   confirmOrder: async (id: string) => {
     const response = await fetch(`${apiBase}/api/orders/${id}/confirm`, {
       method: "PATCH",
-      headers: getHeaders()
+      headers: getHeaders(),
     });
     if (!response.ok) {
-      throw new Error('Erreur lors de la confirmation de la commande');
+      throw new Error("Erreur lors de la confirmation de la commande");
     }
     return response.json();
-  }
+  },
 };
