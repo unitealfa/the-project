@@ -241,6 +241,46 @@ const PlanifierTournee: React.FC = () => {
     if (!depotId) return;
     const today = new Date().toISOString().slice(0, 10);
 
+     // --- Vérifications préalables ------------------------------------
+    if (
+      !depotCoords ||
+      isNaN(depotCoords.latitude) ||
+      isNaN(depotCoords.longitude) ||
+      (depotCoords.latitude === 0 && depotCoords.longitude === 0)
+    ) {
+      alert("Coordonnées du dépôt manquantes ou invalides.");
+      return;
+    }
+
+    for (const cl of clients) {
+      if (
+        cl.latitude == null ||
+        cl.longitude == null ||
+        isNaN(cl.latitude) ||
+        isNaN(cl.longitude) ||
+        (cl.latitude === 0 && cl.longitude === 0)
+      ) {
+        alert(
+          `Coordonnées manquantes ou invalides pour le client ${cl.nom_client}.`
+        );
+        return;
+      }
+    }
+
+    if (!fleet.length) {
+      alert("Aucun véhicule disponible pour la tournée.");
+      return;
+    }
+    const totalWeight = clients.reduce((sum, c) => sum + c.totalWeight, 0);
+    const totalCapacity = fleet.reduce((sum, v) => sum + v.capacity, 0);
+    if (totalCapacity < totalWeight) {
+      alert(
+        "Capacité totale de la flotte insuffisante pour livrer toutes les commandes."
+      );
+      return;
+    }
+
+
     // --- Construction du payload VRP ---
     const stops = clients.map((cl) => ({
       id: cl._id,
