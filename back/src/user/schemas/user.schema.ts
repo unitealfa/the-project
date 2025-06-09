@@ -14,7 +14,18 @@ export class User {
   @Prop({ required: true, unique: true })
   email!: string;
 
-  @Prop({ required: true, select: false })
+  @Prop({ required: true })
+  num!: string;
+
+  @Prop({ 
+    required: true,
+    validate: {
+      validator: function(v: string) {
+        return /^(?=.*[A-Z])(?=.*\d).{6,}$/.test(v);
+      },
+      message: 'Le mot de passe doit contenir au moins 6 caractères, une lettre majuscule et un chiffre'
+    }
+  })
   password!: string;
 
   /**
@@ -41,13 +52,13 @@ export class User {
   role!: string;
 
   /**
-   * Catégorie d’équipe (Livraison|Prévente|Entrepôt)
-   * – requise seulement pour les membres d’équipe (lorsque role est un job title)
+   * Catégorie d'équipe (Livraison|Prévente|Entrepôt)
+   * – requise seulement pour les membres d'équipe (lorsque role est un job title)
    */
   @Prop({
     enum: ["Livraison", "Prévente", "Entrepôt"],
     required(this: User) {
-      // si role est l’un des job titles, alors poste est obligatoire
+      // si role est l'un des job titles, alors poste est obligatoire
       const jobs = [
         "Administrateur des ventes",
         "Livreur",
@@ -61,15 +72,13 @@ export class User {
       return jobs.includes(this.role);
     },
   })
-  poste?: string;
+  poste!: string;
 
-  @Prop({ type: Types.ObjectId, ref: "Company", default: null })
-  company!: Types.ObjectId | null;
+  @Prop({ type: Types.ObjectId, ref: "Company", required: true })
+  company!: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: "Depot", default: null })
-  depot!: Types.ObjectId | null;
-
-  @Prop() num!: string;
+  @Prop({ type: Types.ObjectId, ref: "Depot", required: true })
+  depot!: Types.ObjectId;
 
   @Prop({ default: "images/default-user.webp" })
   pfp!: string;

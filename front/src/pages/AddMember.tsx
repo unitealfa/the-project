@@ -30,10 +30,12 @@ export default function AddMember() {
     role : JOB_TITLES['Livraison'][0],
   });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string>('');
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setError('');
     try {
       await apiFetch(`/api/teams/${depotId}/members`, {
         method: 'POST',
@@ -41,7 +43,7 @@ export default function AddMember() {
       });
       nav(`/teams/${depotId}/livraison`, { replace: true });
     } catch (err: any) {
-      alert(err.message);
+      setError(err.message || 'Une erreur est survenue');
     } finally {
       setSaving(false);
     }
@@ -76,6 +78,19 @@ export default function AddMember() {
             letterSpacing: '0.05em', // Espacement entre les lettres
           }}>Nouveau membre – Livraison</h1>
         </div>
+
+        {error && (
+          <div style={{ 
+            padding: '1rem', 
+            marginBottom: '1rem', 
+            backgroundColor: '#fee2e2', 
+            border: '1px solid #ef4444',
+            borderRadius: '4px',
+            color: '#dc2626'
+          }}>
+            {error}
+          </div>
+        )}
 
         {/* Formulaire centré et stylisé */}
         <form onSubmit={submit} style={{

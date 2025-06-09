@@ -44,7 +44,15 @@ class Affectation {
 export class Client extends Document {
   @Prop({ required: true }) nom_client: string;
   @Prop({ required: true, unique: true }) email: string;
-  @Prop({ required: true }) password: string;
+  @Prop({ 
+    required: true,
+    validate: {
+      validator: function(v: string) {
+        return /^(?=.*[A-Z])(?=.*\d).{6,}$/.test(v);
+      },
+      message: 'Le mot de passe doit contenir au moins 6 caractères, une lettre majuscule et un chiffre'
+    }
+  }) password: string;
   @Prop({ default: 'Client' }) role: string;
 
   @Prop({ type: Contact, required: true }) contact: Contact;

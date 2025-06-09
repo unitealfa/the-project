@@ -1,7 +1,7 @@
 import {
   Controller, Get, Post, Put, Delete, Param, Body, Req, Query,
   UseGuards, Logger, BadRequestException, ForbiddenException,
-   UseInterceptors, UploadedFile,
+  UseInterceptors, UploadedFile, ValidationPipe, UsePipes,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -16,6 +16,20 @@ import { existsSync, mkdirSync } from 'fs';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('api/teams')
+@UsePipes(new ValidationPipe({ 
+  transform: true,
+  whitelist: true,
+  forbidNonWhitelisted: true,
+  exceptionFactory: (errors) => {
+    const messages = errors.map(error => {
+      if (error.constraints) {
+        return Object.values(error.constraints)[0];
+      }
+      return 'Erreur de validation';
+    });
+    return new BadRequestException(messages.join(', '));
+  }
+}))
 export class TeamController {
   private readonly logger = new Logger(TeamController.name);
 
@@ -92,6 +106,9 @@ export class TeamController {
       return await this.svc.addMember(depotId, dto, req.user.id);
     } catch (e: any) {
       this.logger.error('addMember failed', e.stack || e.message);
+      if (e instanceof BadRequestException) {
+        throw e;
+      }
       throw new BadRequestException(e.message);
     }
   }
@@ -109,6 +126,9 @@ export class TeamController {
       return await this.svc.updateMember(memberId, dto, req.user.id);
     } catch (e: any) {
       this.logger.error('updateMember failed', e.stack || e.message);
+      if (e instanceof BadRequestException) {
+        throw e;
+      }
       throw new BadRequestException(e.message);
     }
   }

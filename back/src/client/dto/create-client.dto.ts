@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, Matches, MinLength } from 'class-validator';
 
 class AffectationDto {
   entreprise: string;
@@ -13,6 +13,9 @@ export class CreateClientDto {
   email: string;
 
   @IsNotEmpty()
+  @MinLength(6, { message: 'Le mot de passe doit contenir au moins 6 caractères' })
+  @Matches(/[A-Z]/, { message: 'Le mot de passe doit contenir au moins une lettre majuscule' })
+  @Matches(/[0-9]/, { message: 'Le mot de passe doit contenir au moins un chiffre' })
   password: string;
 
   @IsNotEmpty()

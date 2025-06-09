@@ -5,6 +5,7 @@ import {
   IsOptional,
   ValidateNested,
   MinLength,
+  Matches,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -12,7 +13,11 @@ class ResponsableDto {
   @IsString() @IsNotEmpty() nom: string;
   @IsString() @IsNotEmpty() prenom: string;
   @IsString() @IsNotEmpty() email: string;
-  @IsString() @MinLength(2) password: string;
+  @IsString() 
+  @MinLength(6, { message: 'Le mot de passe doit contenir au moins 6 caractères' })
+  @Matches(/[A-Z]/, { message: 'Le mot de passe doit contenir au moins une lettre majuscule' })
+  @Matches(/[0-9]/, { message: 'Le mot de passe doit contenir au moins un chiffre' })
+  password: string;
   @IsString() @IsNotEmpty() num: string;
 }
 

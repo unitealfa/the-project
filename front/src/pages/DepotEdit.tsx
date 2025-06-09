@@ -24,8 +24,9 @@ export default function DepotEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [data, setData] = useState<DepotDto | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState('');
+  const [passwordError, setPasswordError] = useState<string>('');
   const token = localStorage.getItem('token') || '';
   const apiBase = import.meta.env.VITE_API_URL;
 
@@ -71,11 +72,39 @@ export default function DepotEdit() {
     }
   };
 
+  // Fonction de validation du mot de passe
+  const validatePassword = (password: string): boolean => {
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasMinLength = password.length >= 6;
+
+    if (!hasUpperCase) {
+      setPasswordError('Le mot de passe doit contenir au moins une lettre majuscule');
+      return false;
+    }
+    if (!hasNumber) {
+      setPasswordError('Le mot de passe doit contenir au moins un chiffre');
+      return false;
+    }
+    if (!hasMinLength) {
+      setPasswordError('Le mot de passe doit contenir au moins 6 caractères');
+      return false;
+    }
+
+    setPasswordError('');
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!data) return;
     setError('');
     setSuccess('');
+
+    // Vérifier le mot de passe avant de soumettre
+    if (data.responsable_id?.password && !validatePassword(data.responsable_id.password)) {
+      return;
+    }
 
     try {
       const body = {
@@ -384,7 +413,7 @@ export default function DepotEdit() {
               fontSize: '1.1rem',
             }}>Responsable</legend>
 
-            {(['nom', 'prenom', 'email', 'num', 'password'] as (keyof UserRef)[]).map(k => (
+            {(['nom', 'prenom', 'email', 'num'] as (keyof UserRef)[]).map(k => (
               <div key={k} style={{ display: 'flex', flexDirection: 'column' }}>
                 <label htmlFor={`responsable_id.${k}`} style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>
                   {k.charAt(0).toUpperCase() + k.slice(1)}:
@@ -392,10 +421,10 @@ export default function DepotEdit() {
                 <input
                   id={`responsable_id.${k}`}
                   name={`responsable_id.${k}`}
-                  type={k === 'email' ? 'email' : k === 'password' ? 'password' : 'text'}
+                  type={k === 'email' ? 'email' : 'text'}
                   value={(data.responsable_id as any)?.[k] || ''}
                   onChange={handleChange}
-                  required={k !== 'password'}
+                  required={k !== 'email'}
                   style={{
                     padding: '0.75rem',
                     border: '1px solid #ccc',
@@ -405,6 +434,39 @@ export default function DepotEdit() {
                 />
               </div>
             ))}
+
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Nouveau mot de passe (optionnel) :</label>
+              <input
+                type="password"
+                name="responsable_id.password"
+                value={data.responsable_id?.password || ''}
+                onChange={e => {
+                  setData({
+                    ...data,
+                    responsable_id: {
+                      ...data.responsable_id!,
+                      password: e.target.value
+                    }
+                  });
+                  if (e.target.value) {
+                    validatePassword(e.target.value);
+                  } else {
+                    setPasswordError('');
+                  }
+                }}
+                style={{ 
+                  padding: '0.75rem', 
+                  border: passwordError ? '1px solid #dc2626' : '1px solid #ccc', 
+                  borderRadius: '4px' 
+                }}
+              />
+              {passwordError && (
+                <p style={{ color: '#dc2626', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                  {passwordError}
+                </p>
+              )}
+            </div>
           </fieldset>
 
           <button
