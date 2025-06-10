@@ -4,7 +4,9 @@
    ------------------------------------------- */
 
 /* 1) Reset minimal pour le header */
-* {
+/* on ne cible plus tout le site, seulement le header et ses enfants */
+.brutalist-header,
+.brutalist-header * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -50,7 +52,7 @@
 }
 
 /* 6) Bouton “Déconnexion” (sera dans la popup) */
-.brutalist-button {
+.brutalist-popup__logout-button {
   display: block;
   width: 100%;
   padding: 0.75rem;
@@ -71,7 +73,7 @@
 }
 
 /* Effet “shine” sur le bouton */
-.brutalist-button::before {
+.brutalist-popup__logout-button::before {
   content: "";
   position: absolute;
   top: 0;
@@ -87,16 +89,16 @@
   transition: all 0.6s;
 }
 
-.brutalist-button:hover::before {
+.brutalist-popup__logout-button:hover::before {
   left: 100%;
 }
 
-.brutalist-button:hover {
+.brutalist-popup__logout-button:hover {
   transform: translate(-2px, -2px);
   box-shadow: 7px 7px 0 #000;
 }
 
-.brutalist-button:active {
+.brutalist-popup__logout-button:active {
   transform: translate(5px, 5px);
   box-shadow: none;
 }

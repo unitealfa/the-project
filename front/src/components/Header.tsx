@@ -226,7 +226,7 @@ export default function Header() {
 
             {/* Bouton "Déconnexion" */}
             <button
-              className="brutalist-button"
+              className="brutalist-popup__logout-button"
               onClick={() => {
                 localStorage.clear();
                 navigate("/", { replace: true });
