@@ -1,0 +1,96 @@
+/* src/pages-css/DashboardControleur.css */
+
+/* Wrapper: centré + padding responsive */
+.brutalist-page-wrapper {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .brutalist-page-wrapper {
+    padding: 2rem;
+  }
+}
+
+/* Center content utility */
+.center-content {
+  text-align: center;
+}
+
+/* Action button: centré, padding, taille texte */
+.brutalist-action-button {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 1.5rem auto 0;
+  padding: 1rem 2rem;
+  font-size: 1.25rem;
+  height: auto;
+  border: 4px solid #000;
+  background: #fff;
+  color: #000;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 5px 5px 0 #000;
+}
+
+/* Prevent overflow on mobile */
+main {
+  overflow-x: hidden;
+}
+
+/* You can keep existing brutalist-loading, brutalist-error, etc. in your CSS */
+/* src/pages-css/DashboardControleur.css */
+
+/* Wrapper: centré + padding responsive */
+.brutalist-page-wrapper {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .brutalist-page-wrapper {
+    padding: 2rem;
+  }
+}
+
+/* Center content utility */
+.center-content {
+  text-align: center;
+}
+
+/* Action button: centré, padding, taille texte */
+.brutalist-action-button {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 1.5rem auto 0;
+  padding: 1rem 2rem;
+  font-size: 1.25rem;
+  height: auto;
+  border: 4px solid #000;
+  background: #fff;
+  color: #000;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 5px 5px 0 #000;
+}
+
+/* Prevent overflow on mobile */
+main {
+  overflow-x: hidden;
+}
+
+/* You can keep existing brutalist-loading, brutalist-error, etc. in your CSS */

@@ -1,0 +1,35 @@
+/* src/pages-css/DashboardLivreur.css */
+/* Import des styles brutalist de base */
+@import "./DashboardAdmin.css";
+
+/* Accent bleu pour le bouton de tournée */
+.accent-blue {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Centre le contenu dans les sections */
+.center-content {
+  text-align: center;
+}
+
+/* Responsive mobile fixes */
+@media (max-width: 640px) {
+  .brutalist-page-wrapper {
+    padding: 1rem !important;
+  }
+  .brutalist-welcome-card,
+  .brutalist-card {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .brutalist-card-title {
+    font-size: 1.25rem !important;
+  }
+  .brutalist-action-button {
+    width: 100% !important;
+    padding: 0.75rem !important;
+    font-size: 1rem !important;
+    margin-top: 40% !important;
+  }
+}

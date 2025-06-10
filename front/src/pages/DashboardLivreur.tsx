@@ -1,45 +1,94 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import Header from "../components/Header";
+// src/pages/DashboardLivreur.tsx
+"use client"
+
+import React, { useEffect, useState } from "react"
+import { useNavigate, Link } from "react-router-dom"
+import Header from "../components/Header"
+import { Truck, Loader2, AlertCircle, UserCheck } from "lucide-react"
+import "../pages-css/DashboardLivreur.css"
+
+interface User {
+  nom: string
+  prenom: string
+  role: string
+}
 
 export default function DashboardLivreur() {
-  const raw = localStorage.getItem("user");
-  const u = raw
-    ? (JSON.parse(raw) as { nom: string; prenom: string; role: string })
-    : null;
-  if (!u) return null;
-  if (u.role !== "Livreur") return <div>Accès non autorisé</div>;
+  const navigate = useNavigate()
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    const raw = localStorage.getItem("user")
+    if (!raw) {
+      setError("Utilisateur non trouvé. Veuillez vous reconnecter.")
+      setLoading(false)
+      return
+    }
+    try {
+      const u = JSON.parse(raw) as User
+      if (u.role !== "Livreur") {
+        setError("Accès non autorisé.")
+      } else {
+        setUser(u)
+      }
+    } catch {
+      setError("Données utilisateur invalides.")
+    } finally {
+      setLoading(false)
+    }
+  }, [navigate])
+
+  if (loading) {
+    return (
+      <div className="brutalist-loading">
+        <div className="brutalist-loading-card">
+          <Loader2 className="animate-spin" />
+          <span className="brutalist-loading-text">Chargement…</span>
+        </div>
+      </div>
+    )
+  }
+  if (error) {
+    return (
+      <div className="brutalist-error">
+        <div className="brutalist-error-card">
+          <AlertCircle />
+          <span>{error}</span>
+        </div>
+      </div>
+    )
+  }
+  if (!user) return null
 
   return (
     <>
       <Header />
-      <main style={{ padding: "2rem", fontFamily: "Arial, sans-serif" }}>
-        <h1>
-          Bienvenue {u.prenom} {u.nom}
-        </h1>
-        <p>
-          Rôle : <strong>Livreur</strong>
-        </p>
 
-        <section style={{ marginTop: "2rem" }}>
-          <h2>🚚 Tournées prévues aujourd'hui</h2>
+      <div className="brutalist-page-wrapper">
+        <main>
+          {/* Welcome Section */}
+          <div className="brutalist-welcome-card brutalist-spacing-large center-content">
+            <div className="brutalist-welcome-title">
+              <UserCheck /> Bienvenue {user.prenom} {user.nom}
+            </div>
+            <div className="brutalist-welcome-role">
+              Rôle : Livreur
+            </div>
+          </div>
 
-          <Link
-            to="/livreur/commandes"
-            style={{
-              display: "inline-block",
-              marginTop: "0.5rem",
-              padding: "0.5rem 1rem",
-              backgroundColor: "#4f46e5",
-              color: "white",
-              textDecoration: "none",
-              borderRadius: "4px",
-            }}
-          >
-            Voir mes commandes
-          </Link>
-        </section>
-      </main>
+          {/* Tournées prévues */}
+          <section className="brutalist-card brutalist-spacing-large center-content">
+            <h2 className="brutalist-card-title flex items-center gap-2 justify-center">
+              <Truck /> Tournées prévues aujourd’hui
+            </h2>
+            <Link to="/livreur/commandes" className="brutalist-action-button accent-blue">
+              Voir mes commandes
+            </Link>
+          </section>
+        </main>
+      </div>
     </>
-  );
+  )
 }

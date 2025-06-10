@@ -1,0 +1,466 @@
+/* ===== STYLE BRUTALIST NOIR & BLANC ===== */
+
+/* Reset et base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #ffffff;
+  color: #000000;
+}
+
+/* Empêche le scroll horizontal global */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Wrapper général centré + padding responsive */
+.brutalist-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .brutalist-container {
+    padding: 2rem;
+  }
+}
+
+/* ===== HEADER BRUTALIST ===== */
+.brutalist-header {
+  width: 100%;
+  border: 4px solid #000000;
+  background-color: #ffffff;
+  box-shadow: 10px 10px 0 #000000;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding: 0.5rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brutalist-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #000000;
+  cursor: pointer;
+}
+
+.brutalist-user {
+  font-weight: 700;
+  color: #000000;
+}
+
+/* ===== BOUTONS BRUTALIST ===== */
+.brutalist-button {
+  border: 4px solid #000000;
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: 900;
+  text-transform: uppercase;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 5px 5px 0 #000000;
+  position: relative;
+  overflow: hidden;
+}
+
+.brutalist-button:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 8px 8px 0 #000000;
+}
+
+.brutalist-button:active {
+  transform: translate(5px, 5px);
+  box-shadow: none;
+}
+
+/* Boutons d'action (grands) */
+.brutalist-action-button {
+  height: 6rem;
+  border: 4px solid #000000;
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 5px 5px 0 #000000;
+}
+
+.brutalist-action-button:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 8px 8px 0 #000000;
+}
+
+/* Boutons moyens */
+.brutalist-medium-button {
+  height: 4rem;
+  border: 4px solid #000000;
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: 900;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 5px 5px 0 #000000;
+}
+
+.brutalist-medium-button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #000000;
+}
+
+/* ===== CARDS BRUTALIST ===== */
+.brutalist-card {
+  border: 4px solid #000000;
+  background-color: #ffffff;
+  box-shadow: 8px 8px 0 #000000;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.brutalist-card-header {
+  border-bottom: 2px solid #000000;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.brutalist-card-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ===== MODAL/DIALOG BRUTALIST ===== */
+.brutalist-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+.brutalist-modal {
+  max-width: 64rem;
+  width: 90%;
+  border: 4px solid #000000;
+  background-color: #ffffff;
+  box-shadow: 15px 15px 0 #000000;
+  padding: 2rem;
+  position: relative;
+}
+
+.brutalist-modal-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #000000;
+  margin-bottom: 1rem;
+}
+
+/* ===== TABLEAU BRUTALIST ===== */
+.brutalist-table {
+  width: 100%;
+  border: 4px solid #000000;
+  background-color: #ffffff;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.brutalist-table thead tr {
+  border-bottom: 4px solid #000000;
+}
+
+.brutalist-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #000000;
+  background-color: #ffffff;
+}
+
+.brutalist-table tbody tr:not(:last-child) {
+  border-bottom: 2px solid #000000;
+}
+
+.brutalist-table td {
+  padding: 1rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+/* ===== DROPDOWN PROFIL ===== */
+.brutalist-profile-dropdown {
+  position: absolute;
+  right: 1.25rem;
+  top: 100%;
+  margin-top: 0.5rem;
+  width: 20rem;
+  border: 4px solid #000000;
+  background-color: #ffffff;
+  box-shadow: 10px 10px 0 #000000;
+  z-index: 50;
+  padding: 1.5rem;
+}
+
+.brutalist-profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 2px solid #000000;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.brutalist-avatar {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  border: 4px solid #000000;
+  overflow: hidden;
+}
+
+.brutalist-profile-name {
+  font-weight: 900;
+  font-size: 1.25rem;
+  text-transform: uppercase;
+  color: #000000;
+  text-align: center;
+}
+
+.brutalist-profile-info {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #000000;
+  margin-top: 0.25rem;
+}
+
+/* ===== SECTION DE DÉVELOPPEMENT ===== */
+.brutalist-dev-section {
+  border: 4px solid #000000;
+  background-color: #f5f5f5;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.brutalist-dev-text {
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #000000;
+}
+
+.brutalist-dev-icon {
+  width: 4rem;
+  height: 4rem;
+  border: 4px solid #000000;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem auto 0;
+}
+
+/* ===== GRILLES RESPONSIVE ===== */
+.brutalist-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .brutalist-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .brutalist-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.brutalist-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .brutalist-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ===== UTILITAIRES ===== */
+.brutalist-container {
+  padding: 2rem;
+}
+
+.brutalist-spacing-large {
+  margin-bottom: 2rem;
+}
+
+.brutalist-spacing-medium {
+  margin-bottom: 1.5rem;
+}
+
+.brutalist-text-large {
+  font-size: 2.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #000000;
+  margin-bottom: 1rem;
+}
+
+.brutalist-text-medium {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+.brutalist-text-small {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes brutalist-shine {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.brutalist-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: all 0.6s;
+}
+
+.brutalist-button:hover::before {
+  animation: brutalist-shine 0.6s ease-in-out;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .brutalist-header {
+    padding: 0.5rem 1rem;
+  }
+  
+  .brutalist-title {
+    font-size: 1rem;
+  }
+  
+  .brutalist-container {
+    padding: 1rem;
+  }
+  
+  .brutalist-text-large {
+    font-size: 2rem;
+  }
+  
+  .brutalist-modal {
+    width: 95%;
+    padding: 1rem;
+  }
+  
+  .brutalist-profile-dropdown {
+    width: 16rem;
+    right: 1rem;
+  }
+}
+/* ===== MOBILE FIXES POUR STYLE BRUTALIST NOIR & BLANC ===== */
+@media (max-width: 768px) {
+  /* Réduit le padding global */
+  .brutalist-container {
+    padding: 1rem !important;
+  }
+
+  /* Grilles ↔ une seule colonne */
+  .brutalist-grid-4,
+  .brutalist-grid-3 {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* Cartes et boutons plein écran */
+  .brutalist-card,
+  .brutalist-action-button,
+  .brutalist-medium-button,
+  .brutalist-button {
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  /* Tableau → scroll horizontal si nécessaire */
+  .brutalist-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .brutalist-table th,
+  .brutalist-table td {
+    padding: 0.75rem !important;
+  }
+
+  /* Titres plus petits */
+  .brutalist-title,
+  .brutalist-main-title,
+  .brutalist-card-title {
+    font-size: 1.25rem !important;
+  }
+
+  /* Modals adaptatives */
+  .brutalist-modal {
+    width: 95% !important;
+    padding: 1rem !important;
+  }
+}

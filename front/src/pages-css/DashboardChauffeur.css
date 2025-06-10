@@ -1,0 +1,51 @@
+/* src/pages-css/DashboardChauffeur.css */
+@import "./DashboardAdmin.css";
+
+.center-content {
+  text-align: center;
+}
+
+/* Nouvelle classe pour la ligne Société, pas centrée */
+.brutalist-company {
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: left;
+  margin-top: 0.5rem;
+}
+
+/* Accent indigo pour le bouton */
+.accent-indigo {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Wrapper centré + padding responsive */
+.brutalist-page-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+@media (min-width: 640px) {
+  .brutalist-page-wrapper {
+    padding: 2rem;
+  }
+}
+
+/* Responsive Mobile Fixes */
+@media (max-width: 640px) {
+  .brutalist-welcome-title {
+    font-size: 1.5rem !important;
+  }
+  .brutalist-action-button {
+    width: 100% !important;
+    padding: 1rem !important;
+    font-size: 1rem !important;
+  }
+}
+/* Empêche tout soulignement sur le lien “Voir mes tournées” */
+.brutalist-action-button {
+  text-decoration: none !important;
+}
+.brutalist-action-button:hover {
+  text-decoration: none !important;
+}

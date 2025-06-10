@@ -1,0 +1,37 @@
+/* src/pages-css/DashboardPreVendeur.css */
+/* Importe tes bases brutalist (ajuste le chemin si nécessaire) */
+@import "./DashboardAdmin.css";
+
+/* Centre le contenu des sections */
+.center-content {
+  text-align: center;
+}
+
+/* Accent bleu pour bouton */
+.accent-blue {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Responsive mobile fixes */
+@media (max-width: 640px) {
+  .brutalist-page-wrapper {
+    padding: 1rem !important;
+  }
+  .brutalist-welcome-card,
+  .brutalist-card {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .brutalist-welcome-title {
+    font-size: 1.5rem !important;
+  }
+  .brutalist-card-title {
+    font-size: 1.25rem !important;
+  }
+  .brutalist-action-button {
+    width: 100% !important;
+    padding: 1rem !important;
+    font-size: 1rem !important;
+  }
+}

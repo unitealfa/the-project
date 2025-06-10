@@ -1,53 +1,99 @@
-// front/src/pages/DashboardPreVendeur.tsx
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
+// src/pages/DashboardPreVendeur.tsx
+import React, { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import Header from "../components/Header"
+import "../pages-css/DashboardPreVendeur.css"
+import { CheckCircle, Loader2, AlertCircle, Users as UsersIcon } from "lucide-react"
+
+interface User {
+  nom: string
+  prenom: string
+  depot?: string
+}
 
 export default function DashboardPreVendeur() {
-  const navigate = useNavigate();
-  const raw = localStorage.getItem('user');
-  const u   = raw ? JSON.parse(raw) as { nom:string; prenom:string; depot?: string } : null;
-  if (!u) return null;
+  const navigate = useNavigate()
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    const raw = localStorage.getItem("user")
+    if (!raw) {
+      setError("Utilisateur non trouvé. Veuillez vous reconnecter.")
+      setLoading(false)
+      return
+    }
+    try {
+      const u = JSON.parse(raw) as User
+      setUser(u)
+    } catch {
+      setError("Données utilisateur invalides.")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="brutalist-loading">
+        <div className="brutalist-loading-card">
+          <Loader2 className="animate-spin" />
+          <span className="brutalist-loading-text">Chargement…</span>
+        </div>
+      </div>
+    )
+  }
+  if (error) {
+    return (
+      <div className="brutalist-error">
+        <div className="brutalist-error-card">
+          <AlertCircle />
+          <span>{error}</span>
+        </div>
+      </div>
+    )
+  }
+  if (!user) return null
 
   const handleViewClients = () => {
-    if (!u.depot) {
-      alert('Aucun dépôt associé à votre compte');
-      return;
+    if (!user.depot) {
+      alert("Aucun dépôt associé à votre compte")
+      return
     }
-    navigate('/clients');
-  };
+    navigate("/clients")
+  }
 
   return (
     <>
-      <Header/>
-      <main style={{padding:'2rem',fontFamily:'Arial, sans-serif'}}>
-        <h1>Bienvenue {u.prenom} {u.nom}</h1>
-        <p>Rôle : <strong>Pré-vendeur</strong></p>
+      <Header />
 
-        <section style={{marginTop:'2rem'}}>
-          <h2>🗒️  Itinéraire de prospection</h2>
-          <p style={{opacity:.7}}>Module en développement…</p>
-        </section>
+      <div className="brutalist-page-wrapper">
+        <main>
+          {/* Welcome Section */}
+          <div className="brutalist-welcome-card brutalist-spacing-large center-content">
+            <div className="brutalist-welcome-title">
+              <CheckCircle /> Bonjour {user.prenom} {user.nom}
+            </div>
+            <div className="brutalist-welcome-role">
+              Rôle : Pré-vendeur
+            </div>
+          </div>
 
-        <section style={{marginTop:'2rem'}}>
-          <h2>👥 Clients du dépôt</h2>
-          <button 
-            onClick={handleViewClients}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              marginTop: '1rem'
-            }}
-          >
-            Voir la liste des clients
-          </button>
-        </section>
-      </main>
+          {/* Clients Section */}
+          <section className="brutalist-card brutalist-spacing-large center-content">
+            <h2 className="brutalist-card-title inline-flex items-center gap-2 justify-center">
+              <UsersIcon /> Clients du dépôt
+            </h2>
+            <button
+              className="brutalist-action-button accent-blue"
+              onClick={handleViewClients}
+            >
+              Voir la liste des clients
+            </button>
+          </section>
+        </main>
+      </div>
     </>
-  );
+  )
 }

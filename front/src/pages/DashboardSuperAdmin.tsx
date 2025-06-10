@@ -1,81 +1,92 @@
-import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import Header from "../components/Header";
+// src/pages/DashboardSuperAdmin.tsx
+"use client"
+
+import React, { useEffect, useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
+import Header from "../components/Header"
+import { Loader2, AlertCircle, UserCheck, Building2, Megaphone } from "lucide-react"
+import "../pages-css/DashboardSuperAdmin.css"
 
 interface User {
-  id: string;
-  nom: string;
-  prenom: string;
-  role: string;
+  id: string
+  nom: string
+  prenom: string
+  role: string
 }
 
 export default function DashboardSuperAdmin() {
-  const [user, setUser] = useState<User | null>(null);
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
 
   useEffect(() => {
-    const raw = localStorage.getItem("user");
+    const raw = localStorage.getItem("user")
     if (!raw) {
-      navigate("/", { replace: true });
-      return;
+      setError("Utilisateur non authentifié")
+      setLoading(false)
+      return
     }
-    setUser(JSON.parse(raw));
-  }, [navigate]);
+    try {
+      setUser(JSON.parse(raw))
+    } catch {
+      setError("Données utilisateur invalides")
+    } finally {
+      setLoading(false)
+    }
+  }, [navigate])
 
-  if (!user) return <p>Chargement…</p>;
+  if (loading)
+    return (
+      <div className="brutalist-loading">
+        <div className="brutalist-loading-card">
+          <Loader2 className="animate-spin" />
+          <span className="brutalist-loading-text">Chargement…</span>
+        </div>
+      </div>
+    )
+  if (error)
+    return (
+      <div className="brutalist-error">
+        <div className="brutalist-error-card">
+          <AlertCircle />
+          <span>{error}</span>
+        </div>
+      </div>
+    )
+  if (!user) return null
 
   return (
     <>
       <Header />
-      <div style={{ padding: "2rem", fontFamily: "Arial, sans-serif" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <h1 style={{ fontSize: "2rem", fontWeight: "bold", margin: 0 }}>
-            Bienvenue {user.nom} {user.prenom}
-          </h1>
-        </div>
 
-        <p style={{ marginTop: "0.5rem", fontSize: "1.1rem" }}>
-          Votre rôle est : <strong>{user.role}</strong>
-        </p>
+      <div className="brutalist-page-wrapper">
+        <main>
+          <div className="brutalist-welcome-card">
+            <div className="brutalist-welcome-title">
+              <UserCheck /> Bienvenue {user.prenom} {user.nom}
+            </div>
+            <div className="brutalist-welcome-role">
+              Rôle : {user.role}
+            </div>
+          </div>
 
-        <section
-          style={{
-            marginTop: "2rem",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.75rem",
-          }}
-        >
-          <Link
-            to="/companies"
-            style={{
-              padding: "0.5rem 1rem",
-              color: "#4f46e5",
-              textDecoration: "none",
-              fontWeight: "500",
-            }}
-          >
-            • Voir toutes les entreprises
-          </Link>
-          <Link
-            to="/ads"
-            style={{
-              padding: "0.5rem 1rem",
-              color: "#4f46e5",
-              textDecoration: "none",
-              fontWeight: "500",
-            }}
-          >
-            • Gérer les publicités
-          </Link>
-        </section>
+          <section className="brutalist-navigation-section">
+            <Link to="/companies" className="brutalist-nav-item">
+              <div className="brutalist-nav-content">
+                <Building2 className="w-6 h-6" />
+                <span className="brutalist-nav-text">• Voir toutes les entreprises</span>
+              </div>
+            </Link>
+            <Link to="/ads" className="brutalist-nav-item">
+              <div className="brutalist-nav-content">
+                <Megaphone className="w-6 h-6" />
+                <span className="brutalist-nav-text">• Gérer les publicités</span>
+              </div>
+            </Link>
+          </section>
+        </main>
       </div>
     </>
-  );
+  )
 }

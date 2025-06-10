@@ -1,0 +1,33 @@
+/* src/pages-css/DashboardGestionStock.css */
+@import "DashboardAdmin.css"; /* Importe les styles brutalist de base */
+
+/* Accent vert pour bouton */
+.accent-green {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Centre le contenu des sections lorsque nécessaire */
+.center-content {
+  text-align: center;
+}
+
+/* Responsive mobile fixes */
+@media (max-width: 640px) {
+  .brutalist-page-wrapper {
+    padding: 1rem !important;
+  }
+  .brutalist-welcome-card,
+  .brutalist-card {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .brutalist-card-title {
+    font-size: 1.25rem !important;
+  }
+  .brutalist-action-button {
+    width: 100% !important;
+    padding: 1rem !important;
+    font-size: 1rem !important;
+  }
+}

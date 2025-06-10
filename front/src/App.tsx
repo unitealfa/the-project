@@ -86,6 +86,8 @@ import LoyaltyClient from "./pages/LoyaltyClient";
 import AssignPrevendeurs from "./pages/AssignPrevendeurs";
 import Sidebar from "./components/Sidebar";
 
+import AdminAds from "./pages/AdminAds";
+
 export default function App() {
   const location = useLocation();
   const isLoginPage = location.pathname === "/";
@@ -686,14 +688,23 @@ export default function App() {
               </RequireAuth>
             }
           />
-          <Route
-            path="/ads/edit/:id"
-            element={
-              <RequireAuth allowedRoles={["super admin"]}>
-                <EditAd />
-              </RequireAuth>
-            }
-          />
+            <Route
+              path="/ads/edit/:id"
+              element={
+                <RequireAuth allowedRoles={["super admin"]}>
+                  <EditAd />
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/admin/ads"
+              element={
+                <RequireAuth allowedRoles={["admin"]}>
+                  <AdminAds />
+                </RequireAuth>
+              }
+            />
 
           <Route
             path="/assign-prevendeurs"

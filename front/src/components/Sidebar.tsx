@@ -50,6 +50,7 @@ export default function Sidebar() {
         { label: "Statistiques globales", path: "/admin/stats" },
         { label: "Mes dépôts", path: "/depots" },
         { label: "Liste des clients", path: "/clients" },
+        { label: "Mes publicités", path: "/admin/ads" },
         { label: "Programme Fidélité", path: "/loyalty" },
       ];
       break;

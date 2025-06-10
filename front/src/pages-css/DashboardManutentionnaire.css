@@ -1,0 +1,34 @@
+/* src/pages-css/DashboardManutentionnaire.css */
+@import "./DashboardAdmin.css"; /* importe les styles brutalist de base */
+
+/* Accent bleu pour bouton */
+.accent-blue {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Centre le contenu des sections */
+.center-content {
+  text-align: center;
+}
+
+/* Responsive mobile fixes */
+@media (max-width: 640px) {
+  .brutalist-page-wrapper {
+    padding: 1rem !important;
+  }
+  .brutalist-welcome-card,
+  .brutalist-card {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .brutalist-card-title {
+    font-size: 1.25rem !important;
+  }
+  .brutalist-action-button {
+    width: 100% !important;
+    padding: 1rem !important;
+    font-size: 1rem !important;
+    margin-top: 40% !important;
+  }
+}
