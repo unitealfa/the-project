@@ -94,7 +94,8 @@ const StatsVentes: React.FC = () => {
           <button
             onClick={() => navigate(-1)}
             style={{
-              background: "#4f46e5",
+              background: "#000000",
+              backgroundColor: "#000000",
               color: "white",
               border: "none",
               borderRadius: "0.375rem",

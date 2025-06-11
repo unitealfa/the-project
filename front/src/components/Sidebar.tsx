@@ -146,9 +146,14 @@ export default function Sidebar() {
         {/* Liste des liens */}
         <div className="list">
           {items.map(({ label, path }) => (
-            <div key={label} className="item" onClick={closeSidebar}>
-              <Link to={path}>{label}</Link>
-            </div>
+            <Link
+              key={label}
+              to={path}
+              className="item"
+              onClick={closeSidebar}
+            >
+              {label}
+            </Link>
           ))}
         </div>
       </div>

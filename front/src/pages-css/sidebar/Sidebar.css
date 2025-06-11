@@ -91,8 +91,13 @@
 /* 5.1) Chaque item: 
    contenu sur fond blanc, séparation épaisse, texte noir */
 #sidebar .list .item {
-  padding: 1rem;                 /* 1rem ≃ 16px pour de l’espacement brutalist */
-  border-bottom: 2px solid #000; /* séparation épaisse */
+  display: block;        /* avant c’était sur le div, maintenant sur le a */
+  padding: 1rem;
+  border-bottom: 2px solid #000;
+  text-decoration: none; /* enlève le soulignement */
+  color: #000;
+  font-weight: 700;
+  text-transform: uppercase;
   transition: background 200ms ease, transform 200ms ease;
   display: flex;
   align-items: center;
@@ -119,9 +124,6 @@
 /* 5.4) Hover / actif : fond noir, texte blanc */
 #sidebar .list .item:hover {
   background-color: #000;
-}
-#sidebar .list .item:hover a,
-#sidebar .list .item:hover i {
   color: #fff;
 }
 

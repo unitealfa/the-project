@@ -1,19 +1,20 @@
-// front/src/pages/CompaniesList.tsx
 import React, { useEffect, useState, ChangeEvent } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
+import { PaginationSearch } from '../components/PaginationSearch';
+import '../pages-css/CompaniesList.css';
 
 interface Company {
   _id: string;
   nom_company: string;
-  pfp: string; // ← on ajoute ce champ
+  pfp: string;
   admin: { nom: string; prenom: string; email: string } | null;
 }
 
 export default function CompaniesList() {
   const [list, setList] = useState<Company[]>([]);
   const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState(''); // Pour la barre de recherche
+  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const companiesPerPage = 15;
   const token = localStorage.getItem('token') || '';
@@ -41,249 +42,127 @@ export default function CompaniesList() {
       const err = await res.json();
       alert(err.message || `Erreur ${res.status}`);
     } else {
-      // Supprime de l’état local
       setList(l => l.filter(c => c._id !== id));
-      // Ajuster la pagination si on supprime sur la dernière page
-      const filteredAfterDelete = filteredList.filter(c => c._id !== id);
-      const lastPageAfterDelete = Math.ceil(filteredAfterDelete.length / companiesPerPage);
-      if (currentPage > lastPageAfterDelete) {
-        setCurrentPage(Math.max(lastPageAfterDelete, 1));
-      }
+      const filteredAfter = filteredList.filter(c => c._id !== id);
+      const lastPage = Math.ceil(filteredAfter.length / companiesPerPage);
+      if (currentPage > lastPage) setCurrentPage(Math.max(lastPage, 1));
     }
   };
 
-  // Filtrer par nom_company, admin.nom+prenom ou admin.email
   const filteredList = list.filter(company => {
     const term = searchTerm.toLowerCase().trim();
     if (!term) return true;
-
-    const nomSociete = company.nom_company.toLowerCase();
-    const adminNomPrenom = company.admin
+    const nom = company.nom_company.toLowerCase();
+    const adminName = company.admin
       ? `${company.admin.nom.toLowerCase()} ${company.admin.prenom.toLowerCase()}`
       : '';
-    const adminEmail = company.admin ? company.admin.email.toLowerCase() : '';
-
-    return (
-      nomSociete.includes(term) ||
-      adminNomPrenom.includes(term) ||
-      adminEmail.includes(term)
-    );
+    const adminEmail = company.admin?.email.toLowerCase() || '';
+    return nom.includes(term) || adminName.includes(term) || adminEmail.includes(term);
   });
 
-  // Pagination
-  const indexOfLastCompany = currentPage * companiesPerPage;
-  const indexOfFirstCompany = indexOfLastCompany - companiesPerPage;
-  const currentCompanies = filteredList.slice(indexOfFirstCompany, indexOfLastCompany);
+  const indexLast = currentPage * companiesPerPage;
+  const indexFirst = indexLast - companiesPerPage;
+  const currentCompanies = filteredList.slice(indexFirst, indexLast);
   const totalPages = Math.ceil(filteredList.length / companiesPerPage);
-
-  const goToNextPage = () => {
-    setCurrentPage(prev => Math.min(prev + 1, totalPages));
-  };
-  const goToPrevPage = () => {
-    setCurrentPage(prev => Math.max(prev - 1, 1));
-  };
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
-
   const resetFilter = () => {
     setSearchTerm('');
     setCurrentPage(1);
   };
 
-  if (error) {
-    return (
-      <>
-        <Header />
-        <div style={{ padding: 16, color: 'red' }}>{error}</div>
-      </>
-    );
-  }
-
   return (
     <>
       <Header />
-      <div style={{ padding: 16, fontFamily: 'Arial, sans-serif' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <main className="main">
+
+        <div className="card header-card">
           <h1>Liste des entreprises</h1>
-          <Link
-            to="/create-company"
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#4f46e5',
-              color: '#fff',
-              borderRadius: 4,
-              textDecoration: 'none',
-            }}
-          >
-            ➕ Nouvelle entreprise
+          <Link to="/create-company" className="btn btn-add">
+           Nouvelle entreprise
           </Link>
         </div>
 
-        {/* Barre de recherche + Reset */}
-        <div
-          style={{
-            display: 'flex',
-            gap: '0.5rem',
-            marginTop: '1rem',
-            marginBottom: '1rem',
-            alignItems: 'center',
-          }}
-        >
+        {error && <div className="card error-card">{error}</div>}
+
+        <div className="card search-card">
           <input
             type="text"
-            placeholder="Recherche par Société, Admin ou Email Admin..."
+            placeholder="Recherche Société, Admin ou Email…"
             value={searchTerm}
             onChange={handleSearchChange}
-            style={{
-              flex: 1,
-              padding: '0.5rem',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
           />
           <button
             onClick={resetFilter}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#f3f4f6',
-              color: '#333',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
+            className="btn btn-reset"
             disabled={!searchTerm}
           >
             Réinitialiser
           </button>
         </div>
 
-        {filteredList.length === 0 ? (
-          <p>Aucune entreprise trouvée.</p>
-        ) : (
-          <>
-            <table style={{ width: '100%', marginTop: 16, borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#f3f4f6' }}>
-                  <th style={{ padding: '.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>
-                    Logo
-                  </th>
-                  <th style={{ padding: '.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>
-                    Société
-                  </th>
-                  <th style={{ padding: '.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>
-                    Admin
-                  </th>
-                  <th style={{ padding: '.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>
-                    Email Admin
-                  </th>
-                  <th style={{ padding: '.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentCompanies.map(c => (
-                  <tr key={c._id} style={{ borderBottom: '1px solid #ddd' }}>
-                    {/* Colonne Logo */}
-                    <td style={{ padding: '.75rem' }}>
-                      <img
-                        src={`${apiBase}/${c.pfp}`}
-                        alt={`Logo ${c.nom_company}`}
-                        style={{
-                          width: 40,
-                          height: 40,
-                          objectFit: 'cover',
-                          borderRadius: '4px',
-                          border: '1px solid #ccc',
-                        }}
-                      />
-                    </td>
-
-                    {/* Colonne Société */}
-                    <td style={{ padding: '.75rem' }}>{c.nom_company}</td>
-
-                    {/* Colonne Admin */}
-                    <td style={{ padding: '.75rem' }}>
-                      {c.admin ? `${c.admin.nom} ${c.admin.prenom}` : '—'}
-                    </td>
-
-                    {/* Colonne Email Admin */}
-                    <td style={{ padding: '.75rem' }}>{c.admin?.email ?? '—'}</td>
-
-                    {/* Colonne Actions */}
-                    <td style={{ padding: '.75rem', display: 'flex', gap: 8 }}>
-                      <Link to={`/companies/${c._id}`} style={{ color: '#4f46e5' }}>
-                        Voir
-                      </Link>
-                      <Link to={`/companies/${c._id}/edit`} style={{ color: '#4f46e5' }}>
-                        Modifier
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(c._id)}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: '#e53e3e',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Supprimer
-                      </button>
-                    </td>
+        <div className="card table-card">
+          {filteredList.length === 0 ? (
+            <p>Aucune entreprise trouvée.</p>
+          ) : (
+            <>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Logo</th>
+                    <th>Société</th>
+                    <th>Admin</th>
+                    <th>Email Admin</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {currentCompanies.map(c => (
+                    <tr key={c._id}>
+                      <td>
+                        <img
+                          src={`${apiBase}/${c.pfp}`}
+                          alt={`Logo ${c.nom_company}`}
+                          className="table-avatar"
+                        />
+                      </td>
+                      <td>{c.nom_company}</td>
+                      <td>{c.admin ? `${c.admin.nom} ${c.admin.prenom}` : '—'}</td>
+                      <td>{c.admin?.email ?? '—'}</td>
+                      <td className="cell-actions">
+                        <Link to={`/companies/${c._id}`} className="icon-btn">👁️</Link>
+                        <Link to={`/companies/${c._id}/edit`} className="icon-btn">✏️</Link>
+                        <button
+                          onClick={() => handleDelete(c._id)}
+                          className="icon-btn danger"
+                        >
+                          🗑️
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-            {/* Contrôles de pagination */}
-            {filteredList.length > companiesPerPage && (
-              <div
-                style={{
-                  marginTop: '1rem',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                }}
-              >
-                <button
-                  onClick={goToPrevPage}
-                  disabled={currentPage === 1}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    backgroundColor: currentPage === 1 ? '#ddd' : '#4f46e5',
-                    color: currentPage === 1 ? '#666' : '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  ← Précédent
-                </button>
-                <span style={{ alignSelf: 'center' }}>
-                  Page {currentPage} / {totalPages}
-                </span>
-                <button
-                  onClick={goToNextPage}
-                  disabled={currentPage === totalPages}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    backgroundColor: currentPage === totalPages ? '#ddd' : '#4f46e5',
-                    color: currentPage === totalPages ? '#666' : '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  Suivant →
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+              {filteredList.length > companiesPerPage && (
+                <div className="pagination-controls">
+                  <button onClick={() => setCurrentPage(p => Math.max(p-1,1))} disabled={currentPage===1}>
+                    ← Précédent
+                  </button>
+                  <span>{currentPage} / {totalPages}</span>
+                  <button onClick={() => setCurrentPage(p => Math.min(p+1,totalPages))} disabled={currentPage===totalPages}>
+                    Suivant →
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+      </main>
     </>
   );
 }

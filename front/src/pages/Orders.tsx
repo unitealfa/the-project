@@ -410,7 +410,7 @@ const Orders: React.FC = () => {
               disabled={currentPage === totalPages}
               style={{
                 padding: "0.5rem 1rem",
-                backgroundColor: currentPage === totalPages ? "#ddd" : "#4f46e5",
+                backgroundColor: currentPage === totalPages ? "#ddd" : "#000000",
                 color: currentPage === totalPages ? "#666" : "#fff",
                 border: "none",
                 borderRadius: "4px",

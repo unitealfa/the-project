@@ -1,0 +1,579 @@
+/* Reset & container */
+*,
+:before,
+:after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html,
+body {
+  width: 100%;
+  height: 100%;
+  font-family: Arial, sans-serif;
+  overflow-x: hidden;
+}
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+.mt-20 {
+  margin-top: 5rem;
+}
+.py-8 {
+  padding: 2rem 0;
+}
+.px-4 {
+  padding: 0 1rem;
+}
+
+/* Utilities */
+.flex {
+  display: flex;
+}
+.justify-between {
+  justify-content: space-between;
+}
+.items-center {
+  align-items: center;
+}
+.gap-2 {
+  gap: 0.5rem;
+}
+.mb-4 {
+  margin-bottom: 1rem;
+}
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+.mb-8 {
+  margin-bottom: 2rem;
+}
+
+/* Text */
+.text-3xl {
+  font-size: 1.875rem;
+  margin-left: 0.5rem;
+}
+.font-bold {
+  font-weight: 700;
+}
+.tracking-tight {
+  letter-spacing: -0.025em;
+}
+.text-muted-foreground {
+  color: #6b7280;
+}
+
+/* Button variants */
+.btn-debug,
+.btn-reset {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+.btn-debug {
+  background: #333;
+  color: #fff;
+  margin-left: auto;
+}
+.btn-reset {
+  background: #f3f4f6;
+  color: #333;
+  border: 1px solid #ccc;
+}
+.btn-reset:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-link {
+  background: none;
+  border: none;
+  color: #4f46e5;
+  cursor: pointer;
+  padding: 0;
+}
+.btn-success {
+  background: #10b981;
+  color: #fff;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+/* Alerts */
+.alert-destructive {
+  padding: 1rem;
+  background: #ffe5e5;
+  color: #c62828;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+}
+.alert-success {
+  padding: 1rem;
+  background: #f0fdf4;
+  color: #166534;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+}
+
+/* Debug */
+.debug-pre {
+  background: #f0f0f0;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  overflow: auto;
+  max-height: 200px;
+  font-size: 0.9rem;
+}
+
+/* Search */
+.search-card {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
+}
+.search-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #9ca3af;
+  margin-right: 0.75rem;
+}
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+}
+
+/* PaginationSearch wrapper */
+.container > .pagination-search {
+  margin: 0 0 1rem;
+}
+
+/* Map wrapper */
+.map-wrapper {
+  height: 500px;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  position: relative; /* for positioning the button relative to the map */
+}
+
+/* Center Me button */
+.btn-center {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 500;
+  background: #fff;
+  color: #000;
+  border: 3px solid #000;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  box-shadow: 3px 3px 0 #000;
+  cursor: pointer;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+}
+.btn-center:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 #000;
+}
+.btn-center:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Table */
+.table-wrapper {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.data-table th,
+.data-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+.data-table thead {
+  background: #f9fafb;
+}
+.data-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* Cell styling */
+.cell-avatar .table-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #ccc;
+}
+.cell-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.icon-btn {
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  color: #4b5563;
+}
+.icon-btn.danger {
+  color: #dc2626;
+}
+.no-data {
+  text-align: center;
+  padding: 1rem;
+  color: #999;
+}
+
+/* Pagination controls */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.pagination-controls button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+.pagination-controls button:disabled {
+  background: #ddd;
+  cursor: not-allowed;
+}
+.pagination-controls span {
+  align-self: center;
+}
+
+/* Dialogs */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.dialog-box {
+  background: #fff;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  width: 20rem;
+}
+.dialog-box h2 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.dialog-box p {
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+.dialog-actions button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+}
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+  border: none;
+}
+
+/* Titre et header au-dessus de la carte */
+.container > h1,
+.flex.justify-between.items-center {
+  position: relative;
+  z-index: 100;
+}
+
+/* Faire passer la carte en dessous */
+.map-wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+/* Sidebar */
+#sidebar,
+.toggle-btn {
+  z-index: 200 !important;
+}
+
+/* Pop-ups / modals */
+.dialog-backdrop {
+  z-index: 300 !important;
+}
+
+/* Tablet */
+@media screen and (min-width: 641px) and (max-width: 1024px) {
+  .container {
+    padding: 0 1rem;
+  }
+  .flex.justify-between.items-center.mb-4 {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+  .pagination-controls button {
+    padding: 0.4rem 0.75rem;
+  }
+}
+
+/* Mobile */
+@media screen and (max-width: 640px) {
+  .container {
+    padding: 0 0.5rem !important;
+    overflow-x: hidden;
+  }
+  .flex.justify-between.items-center.mb-4 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .search-card {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .btn-reset {
+    width: 100%;
+  }
+  .container > .pagination-search {
+    margin: 0 0 1rem;
+  }
+  .table-wrapper {
+    width: 100% !important;
+    overflow-x: auto !important;
+  }
+  .data-table {
+    width: auto !important;
+    min-width: 0 !important;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem 0.75rem !important;
+    white-space: normal !important;
+    font-size: 0.875rem;
+  }
+  .cell-actions {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  .cell-actions button {
+    flex: 1 1 30%;
+    min-width: 0;
+    white-space: nowrap;
+  }
+  .pagination-controls {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  .pagination-controls span {
+    margin: 0.5rem 0 !important;
+  }
+  /* Carte en mobile */
+  .map-wrapper {
+    height: 250px;
+    width: 100% !important;
+  }
+  .map-wrapper .leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+/* ————— MOBILE (≤ 640px) ————— */
+@media screen and (max-width: 640px) {
+  /* Container full width + réduire padding */
+  .container {
+    padding: 0 0.5rem !important;
+    overflow-x: hidden;
+  }
+
+  /* Titre + Debug : empile */
+  .flex.justify-between.items-center.mb-4 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  /* Carte : réduire hauteur */
+  .map-wrapper {
+    height: 250px;
+    width: 100% !important;
+  }
+  .map-wrapper .leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Barre de recherche : colonne */
+  .search-card {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Bouton "Réinitialiser" plein écran */
+  .btn-reset {
+    width: 100%;
+  }
+
+  /* Table : forcer scroll intérieur */
+  .table-wrapper {
+    overflow-x: auto !important;
+  }
+  .data-table {
+    width: auto !important;
+    min-width: 100% !important;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem 0.75rem !important;
+    white-space: normal !important;
+    font-size: 0.875rem;
+  }
+
+  /* Cellules actions : wrap et 3 points */
+  .cell-actions {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  .cell-actions button {
+    flex: 1 1 48%;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  /* Pagination empilée */
+  .pagination-controls {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  .pagination-controls span {
+    margin: 0.5rem 0 !important;
+  }
+}
+
+/* Popup client sur la carte */
+.popup-content {
+  text-align: center;
+  padding: 0.5rem;
+}
+/* Image de profil dans le popup */
+.popup-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #000;       /* style “brutalist” comme la sidebar */
+  box-shadow: 3px 3px 0 #000;  /* ombre épaisse */
+  margin-bottom: 0.5rem;
+}
+.popup-content img.popup-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #000;
+  box-shadow: 3px 3px 0 #000;
+  margin-bottom: 0.5rem;
+}
+.popup-content .btn-link,
+.popup-content .btn-success {
+  display: block;
+  width: fit-content;
+  margin: 0.25rem auto;
+  padding: 0.25rem 0.5rem;
+  background: #fff;
+  color: #000;
+  border: 3px solid #000;
+  box-shadow: 3px 3px 0 #000;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.popup-content .btn-success {
+  background: #000;
+  color: #fff;
+}
+.popup-content .btn-link:hover,
+.popup-content .btn-success:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 #000;
+}
+.itinerary {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: .375rem;
+  background: #f9fafb;
+}
+.itinerary h2 {
+  margin-bottom: .5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.itinerary ol {
+  padding-left: 1.25rem;
+}
+.itinerary li {
+  margin-bottom: .25rem;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 5rem); /* Adjust 5rem to match header height */
+}
+
+.map-wrapper {
+  flex: 1;
+  min-height: 0; /* Prevent internal scrolling */
+}
+
+.map-wrapper .leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+/* cadre “brutalist” autour de la map */
+.map-wrapper {
+  border: 4px solid #000;      /* contour épais noir */
+  box-shadow: 5px 5px 0 #000;   /* ombre longue */
+  border-radius: 0.5rem;        /* coins arrondis */
+  overflow: hidden;             /* pour que la leaflet-container suive le radius */
+}
+
+/* s’assure que la map prend tout l’espace sans débordement */
+.map-wrapper .leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: inherit;
+}
+

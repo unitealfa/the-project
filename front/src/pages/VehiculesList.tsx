@@ -1,459 +1,244 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import Header from '../components/Header';
 import { PaginationSearch } from '../components/PaginationSearch';
-import axios from 'axios';
 import { API_URL } from '../constants';
+import {
+  Plus,
+  Search,
+  Eye,
+  Edit,
+  Trash2,
+  Car as CarIcon,
+  MoreHorizontal,
+} from 'lucide-react';
+import '../pages-css/VehiculesList.css';
 
-// Types
 interface Vehicule {
   _id: string;
   make: string;
   model: string;
   year: string;
   license_plate: string;
-  chauffeur_id: {
-    _id: string;
-    nom: string;
-    prenom: string;
-    email: string;
-  };
-  livreur_id: {
-    _id: string;
-    nom: string;
-    prenom: string;
-    email: string;
-  };
-  depot_id: {
-    _id: string;
-    nom_depot: string;
-  };
+  chauffeur_id?: { nom: string; prenom: string };
+  livreur_id?:  { nom: string; prenom: string };
 }
 
-interface User {
-  id: string;
-  nom: string;
-  prenom: string;
-  email: string;
-  role: string;
-  company?: string | null;
-  companyName?: string | null;
-  depot?: string | null;
-}
-
-interface LocationState {
-  message?: string;
-}
+interface LocationState { message?: string }
 
 const VehiculesList: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const locationState = location.state as LocationState;
-  
+  const { state } = useLocation() as { state: LocationState };
+
   const [vehicules, setVehicules] = useState<Vehicule[]>([]);
-  const [filteredVehicules, setFilteredVehicules] = useState<Vehicule[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(locationState?.message || null);
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
-  const [deletingVehicle, setDeletingVehicle] = useState<string | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filtered, setFiltered] = useState<Vehicule[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string|null>(null);
+  const [success, setSuccess] = useState<string|null>(state?.message || null);
+  const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [toDelete, setToDelete] = useState<string|null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
 
-  // Fonction pour afficher les informations de débogage
-  const showDebugInfo = async () => {
-    const userJson = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    
-    if (userJson) {
-      const user = JSON.parse(userJson);
-      let debugData = {
-        role: user.role,
-        depot: user.depot,
-        id: user.id,
-        tokenExists: !!token,
-        vehicules: []
-      };
-      
-      // Récupérer la liste des véhicules avec leurs dépôts pour le débogage
-      if (token) {
-        try {
-          const response = await axios.get(`${API_URL}/vehicles`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          
-          debugData.vehicules = response.data.map((v: any) => ({
-            id: v._id,
-            make: v.make,
-            model: v.model,
-            depot_id: v.depot_id?._id || v.depot_id
-          }));
-        } catch (error) {
-          console.error("Erreur lors de la récupération des véhicules pour le debug:", error);
-        }
-      }
-      
-      setDebugInfo(JSON.stringify(debugData, null, 2));
-    } else {
-      setDebugInfo("Aucun utilisateur trouvé dans localStorage");
-    }
-    
-    // Masquer les infos après 30 secondes
-    setTimeout(() => {
-      setDebugInfo(null);
-    }, 30000);
-  };
-
-  const handleDeleteVehicle = async (vehicleId: string) => {
-    try {
-      // Si on est dans l'étape de confirmation
-      if (confirmDelete === vehicleId) {
-        setDeletingVehicle(vehicleId);
-        
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setError("Session expirée. Veuillez vous reconnecter.");
-          setDeletingVehicle(null);
-          setConfirmDelete(null);
-          return;
-        }
-        
-        await axios.delete(`${API_URL}/vehicles/${vehicleId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
-        // Mise à jour de la liste des véhicules sans rechargement de page
-        setVehicules(vehicules.filter(v => v._id !== vehicleId));
-        setSuccessMessage('Véhicule supprimé avec succès');
-        setDeletingVehicle(null);
-        setConfirmDelete(null);
-        
-        // Effacer le message après 3 secondes
-        setTimeout(() => {
-          setSuccessMessage(null);
-        }, 3000);
-      } else {
-        // Première étape: demander confirmation
-        setConfirmDelete(vehicleId);
-        
-        // Annuler la confirmation après 5 secondes sans action
-        setTimeout(() => {
-          setConfirmDelete(prev => prev === vehicleId ? null : prev);
-        }, 5000);
-      }
-    } catch (err: any) {
-      console.error('Erreur lors de la suppression du véhicule:', err);
-      
-      if (err.response && err.response.status === 403) {
-        setError("Vous n'avez pas les autorisations nécessaires pour supprimer ce véhicule.");
-      } else {
-        setError('Impossible de supprimer le véhicule. Veuillez réessayer plus tard.');
-      }
-      
-      setDeletingVehicle(null);
-      setConfirmDelete(null);
-    }
-  };
-
-  // Vérifier l'utilisateur et son rôle au chargement
+  // Chargement initial
   useEffect(() => {
-    if (locationState?.message) {
-      // Effacer le message après 3 secondes
-      const timer = setTimeout(() => {
-        setSuccessMessage(null);
-        navigate(location.pathname, { replace: true, state: {} });
-      }, 3000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [locationState, navigate, location.pathname]);
-  
-  useEffect(() => {
-    const checkUser = () => {
-      const userJson = localStorage.getItem('user');
-      if (!userJson) {
-        navigate('/', { replace: true });
-        return null;
-      }
-      
-      const user: User = JSON.parse(userJson);
-      if (user.role !== 'Administrateur des ventes' && user.role !== 'Admin' && user.role !== 'Super Admin') {
-        setError("Vous n'avez pas les autorisations nécessaires pour accéder à cette page.");
-        setLoading(false);
-        return null;
-      }
-      
-      return user;
-    };
-    
-    const fetchVehicules = async () => {
-      const user = checkUser();
-      if (!user) return;
-      
+    (async () => {
       try {
         const token = localStorage.getItem('token');
-        if (!token) {
-          setError("Session expirée. Veuillez vous reconnecter.");
-          setLoading(false);
-          return;
-        }
-        
-        const response = await axios.get(`${API_URL}/vehicles`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const res = await axios.get<Vehicule[]>(`${API_URL}/vehicles`, {
+          headers:{ Authorization:`Bearer ${token}` }
         });
-        
-        setVehicules(response.data);
-        setLoading(false);
-      } catch (err: any) {
-        console.error('Erreur lors du chargement des véhicules:', err);
-        
-        if (err.response && err.response.status === 403) {
-          setError("Vous n'avez pas les autorisations nécessaires pour accéder à la liste des véhicules.");
-        } else {
-          setError('Impossible de charger les véhicules. Veuillez réessayer plus tard.');
-        }
-        
+        setVehicules(res.data);
+      } catch (e:any) {
+        setError(
+          e.response?.status === 403
+            ? "Vous n'avez pas l'autorisation."
+            : "Erreur de chargement."
+        );
+      } finally {
         setLoading(false);
       }
-    };
+    })();
+  }, []);
 
-    fetchVehicules();
-  }, [navigate]);
-
+  // Filtre
   useEffect(() => {
-    // Filtrer les véhicules en fonction du terme de recherche
-    const filtered = vehicules.filter(vehicule => 
-      vehicule.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicule.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicule.license_plate.toLowerCase().includes(searchTerm.toLowerCase())
+    setFiltered(
+      vehicules.filter(v =>
+        v.make.toLowerCase().includes(search.toLowerCase()) ||
+        v.model.toLowerCase().includes(search.toLowerCase()) ||
+        v.license_plate.toLowerCase().includes(search.toLowerCase())
+      )
     );
-    setFilteredVehicules(filtered);
-    setCurrentPage(1); // Réinitialiser la page courante lors d'une nouvelle recherche
-  }, [searchTerm, vehicules]);
+    setCurrentPage(1);
+  }, [search, vehicules]);
 
-  // Calculer les véhicules à afficher pour la page courante
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredVehicules.slice(indexOfFirstItem, indexOfLastItem);
+  // Suppression
+  const handleDelete = async (id: string) => {
+    setDeleting(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/vehicles/${id}`, {
+        headers:{ Authorization:`Bearer ${token}` }
+      });
+      setVehicules(v => v.filter(x => x._id !== id));
+      setSuccess("Véhicule supprimé avec succès.");
+      setTimeout(()=>setSuccess(null),3000);
+    } catch {
+      setError("Impossible de supprimer.");
+      setTimeout(()=>setError(null),3000);
+    } finally {
+      setDeleting(false);
+      setToDelete(null);
+    }
+  };
+
+  const toggleActionMenu = (id: string) => {
+    setOpenActionMenu(openActionMenu === id ? null : id);
+  };
+
+  const goDetail = (id: string) => {
+    setOpenActionMenu(null);
+    navigate(`/admin-ventes/vehicules/${id}`);
+  };
 
   if (loading) {
     return (
       <>
         <Header />
-        <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-          <h1>Liste des Véhicules</h1>
-          <p>Chargement en cours...</p>
-        </main>
+        <div className="container mx-auto py-8 px-4">
+          <p>Chargement en cours…</p>
+        </div>
       </>
     );
   }
 
+  // Pagination slice
+  const start = (currentPage - 1) * itemsPerPage;
+  const pageItems = filtered.slice(start, start + itemsPerPage);
+
   return (
     <>
       <Header />
-      <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h1>Liste des Véhicules</h1>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button 
-              onClick={showDebugInfo}
-              style={{ 
-                padding: '8px 12px', 
-                backgroundColor: '#333', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '4px', 
-                cursor: 'pointer', 
-                fontSize: '0.8rem' 
-              }}
-            >
-              Debug Info
-            </button>
-            <Link to="/admin-ventes/vehicules/ajouter">
-              <button 
-                style={{ 
-                  padding: '10px 15px', 
-                  backgroundColor: '#4CAF50', 
-                  color: 'white', 
-                  border: 'none', 
-                  borderRadius: '4px', 
-                  cursor: 'pointer', 
-                  fontWeight: 'bold' 
-                }}
-              >
-                + Ajouter un véhicule
-              </button>
-            </Link>
+
+      {/* main avec marge-top pour ne pas coller le header */}
+      <main className="container mx-auto py-8 px-4 mt-20">
+
+        {/* Titre + bouton Ajouter */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Gestion des Véhicules</h1>
+            <p className="text-muted-foreground">
+              Gérez votre flotte et ses assignations
+            </p>
           </div>
+          <Link to="/admin-ventes/vehicules/ajouter">
+            <button className="inline-flex items-center gap-2 px-5 py-2 bg-black text-white rounded-md shadow-sm">
+              <Plus className="h-4 w-4"/> Ajouter un véhicule
+            </button>
+          </Link>
         </div>
 
-        {debugInfo && (
-          <pre style={{ 
-            backgroundColor: '#f0f0f0', 
-            padding: '1rem', 
-            borderRadius: '4px', 
-            marginBottom: '1rem',
-            overflow: 'auto',
-            maxHeight: '200px',
-            fontSize: '0.9rem'
-          }}>
-            {debugInfo}
-          </pre>
-        )}
+        {/* Messages */}
+        {error  && <div className="alert-destructive">{error}</div>}
+        {success && <div className="alert-success">{success}</div>}
 
-        {error && (
-          <div style={{ 
-            padding: '10px 15px', 
-            backgroundColor: '#ffebee', 
-            color: '#c62828', 
-            borderRadius: '4px', 
-            marginBottom: '1rem' 
-          }}>
-            {error}
-            <button 
-              onClick={() => window.location.reload()}
-              style={{ 
-                marginLeft: '10px', 
-                padding: '5px 10px', 
-                backgroundColor: '#c62828', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '4px', 
-                cursor: 'pointer' 
-              }}
+        {/* Barre de recherche */}
+
+        {/* PaginationSearch au-dessus du tableau */}
+        <div className="mb-4">
+          <PaginationSearch
+            totalItems={filtered.length}
+            itemsPerPage={itemsPerPage}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            searchTerm={search}
+            onSearchChange={setSearch}
+            placeholder="Rechercher un véhicule..."
+          />
+        </div>
+
+        {/* Tableau */}
+        <div className="table-wrapper mb-6">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Véhicule</th>
+                <th>Plaque</th>
+                <th>Chauffeur</th>
+                <th>Livreur</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pageItems.map(v => (
+                <tr key={v._id}>
+                  <td className="cell-vehicle">
+                    <CarIcon className="cell-icon"/>
+                    <div>
+                      <div className="cell-title">{v.make} {v.model}</div>
+                      <div className="cell-sub">Année {v.year}</div>
+                    </div>
+                  </td>
+                  <td><span className="badge">{v.license_plate}</span></td>
+                  <td>
+                    {v.chauffeur_id
+                      ? `${v.chauffeur_id.prenom} ${v.chauffeur_id.nom}`
+                      : <span className="text-gray">Non assigné</span>}
+                  </td>
+                  <td>
+                    {v.livreur_id
+                      ? `${v.livreur_id.prenom} ${v.livreur_id.nom}`
+                      : <span className="text-gray">Non assigné</span>}
+                  </td>
+                  <td className="cell-actions">
+                    {/* Desktop */}
+                    <div className="desktop-actions">
+                      <button onClick={() => goDetail(v._id)}><Eye /></button>
+                      <button onClick={() => navigate(`/admin-ventes/vehicules/${v._id}/modifier`)}><Edit /></button>
+                      <button className="text-red" onClick={() => setToDelete(v._id)}><Trash2 /></button>
+                    </div>
+                    {/* Mobile */}
+                    <div className="mobile-actions">
+                      <button className="ellipsis-btn" onClick={() => toggleActionMenu(v._id)}>⋯</button>
+                      {openActionMenu === v._id && (
+                        <div className="action-menu">
+                          <button onClick={() => goDetail(v._id)}>Voir</button>
+                          <button onClick={() => navigate(`/admin-ventes/vehicules/${v._id}/modifier`)}>Modifier</button>
+                          <button onClick={() => setToDelete(v._id)}>Supprimer</button>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </main>
+
+      {/* Dialog suppression */}
+      <div className={toDelete ? 'dialog-backdrop' : 'hidden'}>
+        <div className="dialog-box">
+          <h2>Confirmer la suppression</h2>
+          <p>Cette action est irréversible.</p>
+          <div className="dialog-actions">
+            <button onClick={()=>setToDelete(null)}>Annuler</button>
+            <button
+              onClick={() => toDelete && handleDelete(toDelete)}
+              disabled={deleting}
+              className="btn-danger"
             >
-              Réessayer
+              {deleting ? 'Suppression…' : 'Supprimer'}
             </button>
           </div>
-        )}
-        
-        {successMessage && (
-          <div style={{ 
-            padding: '10px 15px', 
-            backgroundColor: '#e8f5e9', 
-            color: '#2e7d32', 
-            borderRadius: '4px', 
-            marginBottom: '1rem' 
-          }}>
-            {successMessage}
-          </div>
-        )}
-
-        <PaginationSearch
-          totalItems={filteredVehicules.length}
-          itemsPerPage={itemsPerPage}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          placeholder="Rechercher un véhicule..."
-        />
-
-        {!error && vehicules.length === 0 ? (
-          <p>Aucun véhicule trouvé dans ce dépôt.</p>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#f2f2f2' }}>
-                  <th style={{ padding: '12px 15px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Marque</th>
-                  <th style={{ padding: '12px 15px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Modèle</th>
-                  <th style={{ padding: '12px 15px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Année</th>
-                  <th style={{ padding: '12px 15px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Plaque d'immatriculation</th>
-                  <th style={{ padding: '12px 15px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Chauffeur</th>
-                  <th style={{ padding: '12px 15px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Livreur</th>
-                  <th style={{ padding: '12px 15px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.map((vehicule) => (
-                  <tr key={vehicule._id} style={{ borderBottom: '1px solid #ddd' }}>
-                    <td style={{ padding: '12px 15px' }}>{vehicule.make}</td>
-                    <td style={{ padding: '12px 15px' }}>{vehicule.model}</td>
-                    <td style={{ padding: '12px 15px' }}>{vehicule.year}</td>
-                    <td style={{ padding: '12px 15px' }}>{vehicule.license_plate}</td>
-                    <td style={{ padding: '12px 15px' }}>
-                      {vehicule.chauffeur_id ? `${vehicule.chauffeur_id.prenom} ${vehicule.chauffeur_id.nom}` : 'Non assigné'}
-                    </td>
-                    <td style={{ padding: '12px 15px' }}>
-                      {vehicule.livreur_id ? `${vehicule.livreur_id.prenom} ${vehicule.livreur_id.nom}` : 'Non assigné'}
-                    </td>
-                    <td style={{ padding: '12px 15px' }}>
-                      <Link to={`/admin-ventes/vehicules/${vehicule._id}`}>
-                        <button style={{ 
-                            padding: '6px 12px', 
-                            backgroundColor: '#2196F3', 
-                            color: 'white', 
-                            border: 'none', 
-                            borderRadius: '4px', 
-                            cursor: 'pointer', 
-                            marginRight: '5px' 
-                          }}>
-                          Détails
-                        </button>
-                      </Link>
-                      <Link to={`/admin-ventes/vehicules/${vehicule._id}/modifier`}>
-                        <button style={{ 
-                            padding: '6px 12px', 
-                            backgroundColor: '#FF9800', 
-                            color: 'white', 
-                            border: 'none', 
-                            borderRadius: '4px', 
-                            cursor: 'pointer', 
-                            marginRight: '5px' 
-                          }}>
-                          Modifier
-                        </button>
-                      </Link>
-                      {confirmDelete === vehicule._id ? (
-                        <button 
-                          onClick={() => handleDeleteVehicle(vehicule._id)}
-                          disabled={deletingVehicle === vehicule._id}
-                          style={{ 
-                            padding: '6px 12px', 
-                            backgroundColor: '#f44336', 
-                            color: 'white', 
-                            border: 'none', 
-                            borderRadius: '4px', 
-                            cursor: deletingVehicle === vehicule._id ? 'not-allowed' : 'pointer',
-                            opacity: deletingVehicle === vehicule._id ? 0.7 : 1
-                          }}
-                        >
-                          {deletingVehicle === vehicule._id ? 'Suppression...' : 'Confirmer'}
-                        </button>
-                      ) : (
-                        <button 
-                          onClick={() => handleDeleteVehicle(vehicule._id)}
-                          style={{ 
-                            padding: '6px 12px', 
-                            backgroundColor: '#f44336', 
-                            color: 'white', 
-                            border: 'none', 
-                            borderRadius: '4px', 
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Supprimer
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </main>
+        </div>
+      </div>
     </>
   );
 };
 
-export default VehiculesList; 
+export default VehiculesList;

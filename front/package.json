@@ -17,6 +17,7 @@
     "jspdf": "^3.0.1",
     "jszip": "^3.10.1",
     "leaflet": "^1.9.4",
+    "leaflet-defaulticon-compatibility": "^0.1.2",
     "lucide-react": "^0.511.0",
     "postprocessing": "^6.37.3",
     "react": "^19.0.0",
