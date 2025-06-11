@@ -88,7 +88,9 @@ export default function Header() {
       const form = new FormData();
       form.append("pfp", croppedFile);
       const token = localStorage.getItem("token") || "";
-      const endpoint = `/clients/${user.id}/pfp`;
+      const endpoint = user.role.toLowerCase().includes("client")
+        ? `/clients/${user.id}/pfp`
+        : `/api/teams/members/${user.id}/pfp`;
       const res = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
@@ -144,7 +146,7 @@ export default function Header() {
             <div
               className="brutalist-popup__avatar"
               onClick={() => setShowProfile(true)}
-              style={{ width: 45, height: 45, cursor: "pointer"} }
+              style={{ width: 45, height: 45, cursor: "pointer" }}
             >
               <img
                 src={pfpSrc}

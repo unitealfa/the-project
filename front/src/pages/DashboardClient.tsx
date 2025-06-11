@@ -114,16 +114,6 @@ export default function DashboardClient() {
             </CardContent>
           </Card>
         )}
-        {companyIds.length > 0 && hasAds === false && (
-          <Card className="brutalist-status-card brutalist-status-warning">
-            <CardContent className="brutalist-status-content">
-              <AlertCircle className="brutalist-status-icon" />
-              <span className="brutalist-status-text">
-                Aucune publicité disponible pour vos entreprises.
-              </span>
-            </CardContent>
-          </Card>
-        )}
         {hasAds && <AdvertisementFrame companyIds={companyIds} />}
 
         {/* Actions */}

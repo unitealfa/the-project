@@ -210,7 +210,9 @@ body {
   background-color: #fff;
   box-shadow: 8px 8px 0 #000;
   margin-bottom: 2rem;
-  overflow: hidden;
+  position: relative;
+  overflow: visible; /* Do not truncate content */
+  z-index: 10;       /* Display priority */
 }
 @media (max-width: 640px) {
   .ad-container {

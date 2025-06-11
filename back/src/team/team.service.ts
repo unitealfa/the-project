@@ -169,11 +169,13 @@ export class TeamService {
   }
 
   async updateOwnPfp(memberId: string, pfpPath: string) {
-    const member = await this.userModel.findById(memberId);
-    if (!member) throw new NotFoundException("Membre introuvable");
-    member.pfp = pfpPath;
-    await member.save();
-    const { password, ...safe } = member.toObject();
+    const updated = await this.userModel.findByIdAndUpdate(
+      memberId,
+      { pfp: pfpPath },
+      { new: true, runValidators: false }
+    );
+    if (!updated) throw new NotFoundException("Membre introuvable");
+    const { password, ...safe } = updated.toObject();
     return safe;
   }
 
@@ -181,12 +183,17 @@ export class TeamService {
     const member = await this.userModel.findById(memberId);
     if (!member) throw new NotFoundException("Membre introuvable");
 
-    await this.guardDepot(member.depot.toString(), adminId);
+    await this.guardDepot(member.depot?.toString() || "", adminId);
 
-    member.pfp = pfpPath;
-    await member.save();
+    const updated = await this.userModel.findByIdAndUpdate(
+      memberId,
+      { pfp: pfpPath },
+      { new: true, runValidators: false }
+    );
 
-    const { password, ...safe } = member.toObject();
+    if (!updated) throw new NotFoundException("Membre introuvable");
+
+    const { password, ...safe } = updated.toObject();
     return safe;
   }
 }
