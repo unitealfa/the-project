@@ -1,0 +1,57 @@
+/* ---------- Layout général ---------- */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.page-container      { background:#f3f4f6; min-height:100vh; padding:2rem; overflow:visible !important; }
+.content-container   { max-width:72rem; margin:0 auto; }
+.page-title          { font-size:1.875rem; font-weight:700; margin-bottom:2rem; color:#000; }
+
+/* ---------- Loader ---------- */
+.loading-container   { display:flex; justify-content:center; align-items:center; padding:3rem 0; }
+.loading-spinner     { width:2rem; height:2rem; border:4px solid #000; border-top-color:transparent; border-radius:9999px; animation:spin 1s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-text        { margin-left:1rem; font-weight:700; color:#000; }
+
+/* ---------- Empty state ---------- */
+.empty-state         { background:#fff; border:4px solid #000; padding:2rem; text-align:center; }
+.empty-state-title   { font-size:1.25rem; font-weight:700; margin-bottom:1rem; }
+.empty-state-text    { color:#000; }
+
+/* ---------- Grille ---------- */
+.ads-grid            { display:grid; gap:1.5rem; }
+@media (min-width:768px){ .ads-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (min-width:1024px){ .ads-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+
+/* ---------- Carte ---------- */
+.ad-card             { background:#fff; border:4px solid #000; padding:1rem; display:flex; flex-direction:column; }
+
+/* Header */
+.ad-card-header      { display:flex; justify-content:space-between; align-items:center; padding-bottom:.5rem; border-bottom:2px solid #000; margin-bottom:1rem; }
+.ad-type             { display:flex; align-items:center; gap:.5rem; }
+.ad-type-icon        { width:1.25rem; height:1.25rem; color:#000; }
+.ad-type-text        { font-weight:700; color:#000; }
+.ad-number           { font-weight:700; color:#000; }
+
+/* Media */
+.media-container     { margin-bottom:1rem; }
+.media-preview       { aspect-ratio:16/9; background:#e5e7eb; display:flex; align-items:center; justify-content:center; border:2px solid #000; }
+.media-preview-img   { width:100%; height:100%; object-fit:cover; }
+.video-container     { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#d1d5db; }
+.video-element       { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+
+/* Timer + barre */
+.timer-container     { background:#000; color:#fff; padding:.75rem; }
+.timer-header        { display:flex; justify-content:space-between; align-items:center; margin-bottom:.5rem; font-weight:700; }
+.timer-label         { display:flex; align-items:center; gap:.5rem; }
+.timer-icon          { width:1rem; height:1rem; }
+.timer-text          { font-size:.875rem; text-transform:uppercase; }
+.timer-value         { font-weight:700; }
+
+.progress-container  { width:100%; height:.5rem; background:#374151; border-radius:2px; overflow:hidden; }
+.progress-bar        { height:100%; transition:width 1s linear; }
+.progress-bar-green  { background:#22c55e; }
+.progress-bar-yellow { background:#eab308; }
+.progress-bar-red    { background:#ef4444; }
