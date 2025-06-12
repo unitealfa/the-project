@@ -33,6 +33,12 @@ interface Client {
   localisation?: { coordonnees?: { latitude: number; longitude: number } };
 }
 
+interface Depot {
+  _id: string;
+  nom_depot: string;
+  // …other fields if needed
+}
+
 export default function ClientsList() {
   const navigate = useNavigate();
   const location = useLocation() as { state?: { message?: string }; search: string };
@@ -43,6 +49,7 @@ export default function ClientsList() {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [debugInfo, setDebugInfo] = useState<string | null>(debugMessage);
+  const [depotsList, setDepotsList] = useState<Depot[]>([]);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -79,9 +86,32 @@ export default function ClientsList() {
   useEffect(() => {
     const url = depot ? `/clients?depot=${depot}` : `/clients`;
     apiFetch(url)
-      .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); })
+      .then(r => {
+        if (!r.ok) throw new Error(`${r.status}`);
+        return r.json();
+      })
       .then((all: Client[]) => {
-        setClients(all); // Removed filtering by company
+        const companyId = user?.company;
+
+        // Filter clients with valid depots for the company
+        let filtered = all.filter(c => {
+          const depotsPourCetteEntreprise = c.affectations
+            .filter(a => a.entreprise === companyId)
+            .map(a => a.depot)
+            .filter(Boolean); // Ensure depot is not empty
+          return depotsPourCetteEntreprise.length > 0;
+        });
+
+        // Restrict to the current depot if defined
+        if (depot) {
+          filtered = filtered.filter(c =>
+            c.affectations.some(a =>
+              a.entreprise === companyId && a.depot === depot
+            )
+          );
+        }
+
+        setClients(filtered);
       })
       .catch(e => setError(e.message));
   }, [depot, user?.company, user?.role]);
@@ -169,6 +199,24 @@ export default function ClientsList() {
     setTimeout(() => setDebugInfo(null), 30000);
   };
 
+  // Chargement des dépôts
+  useEffect(() => {
+    const companyId = user?.company;
+    if (!companyId) return;
+
+    apiFetch(`/depots?entreprise=${companyId}`)
+      .then(r => {
+        if (!r.ok) throw new Error(`${r.status}`);
+        return r.json();
+      })
+      .then((allDepots: Depot[]) => {
+        setDepotsList(allDepots);
+      })
+      .catch(e => {
+        console.error("Erreur chargement dépôts :", e);
+      });
+  }, [user?.company]);
+
   // Filtre + pagination
   const filtered = clients.filter(c => {
     const t = searchTerm.toLowerCase().trim();
@@ -206,9 +254,22 @@ export default function ClientsList() {
     <>
       <Header />
       <main className="container mt-20 py-8 px-4">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4"style={{ marginTop: '20px' }}>
           <h1 className="text-3xl font-bold">Liste de vos clients</h1>
-          {/* ...existing code for debug or other buttons... */}
+                    {(user?.role === "responsable depot" || user?.role === "admin") && (
+            <button
+              onClick={() => navigate("/clients/add")}
+              style={{
+                padding: ".5rem 1rem",
+                background: "#000000",
+                color: "#fff",
+                border: "none",
+                borderRadius: 8,
+              }}
+            >
+              + Ajouter un client
+            </button>
+          )}
         </div>
 
         {user?.role === "Pré-vendeur" ? (
@@ -306,6 +367,7 @@ export default function ClientsList() {
                     <th>Email</th>
                     <th>Gérant</th>
                     <th>Téléphone</th>
+                    {user?.role === "admin" && <th>Dépôts</th>}
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -323,6 +385,17 @@ export default function ClientsList() {
                       <td>{c.email}</td>
                       <td>{c.contact.nom_gerant}</td>
                       <td>{c.contact.telephone}</td>
+                      {user?.role === "admin" && (
+                        <td>
+                          {c.affectations
+                            .filter(a => a.entreprise === user.company && !!a.depot)
+                            .map(a => {
+                              const dep = depotsList.find(d => d._id === a.depot);
+                              return dep ? dep.nom_depot : a.depot;
+                            })
+                            .join(", ")}
+                        </td>
+                      )}
                       <td className="cell-actions">
                         <button onClick={() => navigate(`/clients/${c._id}`)} className="icon-btn">👁️</button>
                         {user?.role === "responsable depot" && (
@@ -336,7 +409,7 @@ export default function ClientsList() {
                   ))}
                   {pageItems.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="no-data">Aucun client trouvé.</td>
+                      <td colSpan={7} className="no-data">Aucun client trouvé.</td> {/* Updated colspan */}
                     </tr>
                   )}
                 </tbody>

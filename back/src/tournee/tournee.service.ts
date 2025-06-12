@@ -28,6 +28,7 @@ interface Stop {
   stop_id: string;
   orders: OrderWithClient[];
   products: OrderItem[];
+  client_name?: string;
 }
 
 interface VehicleSolution {
@@ -38,6 +39,11 @@ interface VehicleSolution {
     quantity: number;
     prix_detail: number;
   }[];
+    make?: string;
+  model?: string;
+  license_plate?: string;
+  chauffeur?: { nom: string; prenom: string } | null;
+  livreur?: { nom: string; prenom: string } | null;
 }
 
 interface TourneeSolution {
@@ -191,6 +197,17 @@ export class TourneeService {
       _id: { $in: tournee.orderIds }
     }).lean() as OrderWithClient[];
 
+        // Charger les détails des véhicules utilisés dans la tournée
+    const vehicleDocs = await this.vehicleModel
+      .find({ _id: { $in: tournee.vehicles } })
+      .populate('chauffeur_id', 'nom prenom')
+      .populate('livreur_id', 'nom prenom')
+      .lean();
+    const vehicleMap = vehicleDocs.reduce((acc, v) => {
+      acc[v._id.toString()] = v;
+      return acc;
+    }, {} as Record<string, any>);
+
     this.logger.debug('Commandes trouvées pour la tournée:', {
       count: orders.length,
       orderIds: orders.map(o => o._id),
@@ -214,23 +231,28 @@ export class TourneeService {
       return acc;
     }, {} as Record<string, OrderWithClient[]>);
 
-    this.logger.debug('Commandes par client:', {
-      clientIds: Object.keys(ordersByClient),
-      counts: Object.entries(ordersByClient).map(([clientId, orders]) => ({
-        clientId,
-        count: orders.length,
-        orderIds: orders.map(o => o._id),
-        totalProducts: orders.reduce((sum, order) => 
-          sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0)
-      }))
-    });
-
-    // Ajouter les commandes à la solution
+          // Ajouter les commandes à la solution
     if (tournee.solution) {
       const solution = tournee.solution as TourneeSolution;
       if (solution.date1) {
         Object.keys(solution.date1).forEach(vehicleId => {
           const vehicle = solution.date1[vehicleId];
+
+          // Enrich vehicle information from the database
+          const vehInfo = vehicleMap[vehicleId];
+          if (vehInfo) {
+            vehicle.make = vehInfo.make;
+            vehicle.model = vehInfo.model;
+            vehicle.license_plate = vehInfo.license_plate;
+            vehicle.chauffeur = vehInfo.chauffeur_id
+              ? { nom: vehInfo.chauffeur_id.nom, prenom: vehInfo.chauffeur_id.prenom }
+              : null;
+            vehicle.livreur = vehInfo.livreur_id
+              ? { nom: vehInfo.livreur_id.nom, prenom: vehInfo.livreur_id.prenom }
+              : null;
+          }
+
+          // Adapt ordered_stops and products_summary
           vehicle.ordered_stops = vehicle.ordered_stops.map(stop => {
             if (stop.stop_id.startsWith('end_')) return stop;
 
@@ -249,11 +271,13 @@ export class TourneeService {
                 quantity: p.quantity
               }))
             });
+            const clientName = clientOrders[0]?.nom_client || '';
 
             return {
               ...stop,
               orders: clientOrders,
-              products: products
+              products: products,
+              client_name: clientName
             };
           });
 
