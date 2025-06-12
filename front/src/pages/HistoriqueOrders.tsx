@@ -212,7 +212,6 @@ export default function HistoriqueOrders() {
                 <th style={{ border: "1px solid #ddd", padding: 8 }}>Total</th>
                 <th style={{ border: "1px solid #ddd", padding: 8 }}>Nombre d'articles</th>
                 <th style={{ border: "1px solid #ddd", padding: 8 }}>État de livraison</th>
-                <th style={{ border: "1px solid #ddd", padding: 8 }}>État de chargement</th>
                 <th style={{ border: "1px solid #ddd", padding: 8 }}>Action</th>
               </tr>
             </thead>
@@ -253,17 +252,6 @@ export default function HistoriqueOrders() {
                       fontSize: '0.875rem'
                     }}>
                       {getStatusText(order.etat_livraison)}
-                    </span>
-                  </td>
-                  <td style={{ border: "1px solid #ddd", padding: 8 }}>
-                    <span style={{
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '9999px',
-                      backgroundColor: getLoadingStatusColor(order.statut_chargement),
-                      color: 'white',
-                      fontSize: '0.875rem'
-                    }}>
-                      {getLoadingStatusText(order.statut_chargement)}
                     </span>
                   </td>
                   <td style={{ border: "1px solid #ddd", padding: 8 }}>
