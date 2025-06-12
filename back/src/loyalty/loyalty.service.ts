@@ -215,7 +215,7 @@ export class LoyaltyService {
     );
     if (!reward) return { every: 0, current: undefined };
     const client = await this.clientModel.findById(clientId).lean<Client>();
-    const current = client?.points_since_last_repeat?.[rewardId];
+    const current = client?.points_since_last_repeat?.[rewardId] ?? 0;
     return { every: reward.every, current };
   }
 
