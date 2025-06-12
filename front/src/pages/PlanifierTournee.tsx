@@ -185,8 +185,148 @@ const PlanifierTournee: React.FC = () => {
   };
 
   const handlePlanifier = async () => {
-    /* … votre logique VRP … */
-    alert("Tournée planifiée !");
+    // Add comment: More actions
+    if (!depotId) return;
+    const today = new Date().toISOString().slice(0, 10);
+
+     // --- Vérifications préalables ------------------------------------
+    if (
+      !depotCoords ||
+      isNaN(depotCoords.latitude) ||
+      isNaN(depotCoords.longitude) ||
+      (depotCoords.latitude === 0 && depotCoords.longitude === 0)
+    ) {
+      alert("Coordonnées du dépôt manquantes ou invalides.");
+      return;
+    }
+
+    for (const cl of clients) {
+      if (
+        cl.latitude == null ||
+        cl.longitude == null ||
+        isNaN(cl.latitude) ||
+        isNaN(cl.longitude) ||
+        (cl.latitude === 0 && cl.longitude === 0)
+      ) {
+        alert(
+          `Coordonnées manquantes ou invalides pour le client ${cl.nom_client}.`
+        );
+        return;
+      }
+    }
+
+    if (!fleet.length) {
+      alert("Aucun véhicule disponible pour la tournée.");
+      return;
+    }
+    const totalWeight = clients.reduce((sum, c) => sum + c.totalWeight, 0);
+    const totalCapacity = fleet.reduce((sum, v) => sum + v.capacity, 0);
+    if (totalCapacity < totalWeight) {
+      alert(
+        "Capacité totale de la flotte insuffisante pour livrer toutes les commandes."
+      );
+      return;
+    }
+
+
+    // --- Construction du payload VRP ---
+    const stops = clients.map((cl) => ({
+      id: cl._id,
+      name: cl.nom_client,
+      location: { latitude: cl.latitude, longitude: cl.longitude },
+      duration: 10,
+      load: cl.totalWeight,
+      types: null,
+      priority: null,
+      time_windows: null,
+    }));
+
+    const fleetPayload = fleet.map((v) => ({
+      id: v.id,
+      start_location: {
+        latitude: v.start_location.latitude,
+        longitude: v.start_location.longitude,
+      },
+      end_location: {
+        latitude: v.end_location.latitude,
+        longitude: v.end_location.longitude,
+      },
+      shift: v.shift,
+      capacity: v.capacity,
+      types: null,
+      min_stops: null,
+      max_stops: null,
+      breaks: null,
+      off_days: null,
+    }));
+
+    const payload = {
+      depotId,
+      date_interval: { start: `${today}T08:00:00`, end: `${today}T16:00:00` },
+      stops,
+      fleet: fleetPayload,
+    };
+
+    console.log("▶️ Envoi payload à notre backend :", payload);
+
+    try {
+      // 1) Envoi au backend
+      const res = await apiFetch(`/tournees/planifier`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      console.log("✅ Backend VRP a répondu :", data);
+
+      // 2) Récupère tous les clientIds planifiés (hors end_…)
+      const plannedClientIds: string[] = Object.values(data.solution.date1)
+        .flatMap((driverOut: any) =>
+          driverOut.ordered_stops.map((s: any) => s.stop_id)
+        )
+        .filter((id: string) => !id.startsWith("end_"));
+
+      // 3) Pour chaque clientId, patch toutes ses commandes pour confirmed = true
+      await Promise.all(
+        plannedClientIds.flatMap((clientId) =>
+          orders
+            .filter((o) => o.clientId === clientId)
+            .map((order) =>
+              apiFetch(`/api/orders/${order._id}/confirm`, {
+                method: "PATCH",
+              })
+            )
+        )
+      );
+
+      // 4) Mets à jour l’UI en retirant les commandes/clients planifiés
+      setOrders((prev) =>
+        prev.filter((o) => !plannedClientIds.includes(o.clientId))
+      );
+      setClients((prev) =>
+        prev.filter((c) => !plannedClientIds.includes(c._id))
+      );
+
+      // 5) Fermeture de la modale et notification
+      setShowFleetModal(false);
+      alert("Tournée planifiée et commandes confirmées !");
+
+      // 6) Téléchargement de la réponse pour debug/test
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "tournee-reponse-backend.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("❌ Erreur appel backend VRP :", err);
+      alert("Erreur lors de l’appel au backend VRP : " + err);
+    }
   };
 
   if (loading) return <p>Chargement…</p>;

@@ -81,13 +81,7 @@ export default function ClientsList() {
     apiFetch(url)
       .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); })
       .then((all: Client[]) => {
-        if (user?.role === "Admin" && user.company) {
-          setClients(all.filter(c =>
-            c.affectations.some(a => a.entreprise === user.company)
-          ));
-        } else {
-          setClients(all);
-        }
+        setClients(all); // Removed filtering by company
       })
       .catch(e => setError(e.message));
   }, [depot, user?.company, user?.role]);
@@ -349,14 +343,6 @@ export default function ClientsList() {
               </table>
             </div>
 
-            {/* PaginationControls si nécessaire */}
-            {filtered.length > itemsPerPage && (
-              <div className="pagination-controls">
-                <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>← Précédent</button>
-                <span>{currentPage} / {totalPages}</span>
-                <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>Suivant →</button>
-              </div>
-            )}
           </>
         )}
 
