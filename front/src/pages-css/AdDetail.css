@@ -1,0 +1,182 @@
+/* =============== Layout général =============== */
+.detail-page {
+  background: #f3f4f6;
+  min-height: 100vh;
+}
+
+.detail-container {
+  max-width: 48rem;
+  margin: 3rem auto;
+  padding: 0 1rem;
+}
+
+/* =============== Carte principale =============== */
+.detail-card {
+  background: #fff;
+  border: 4px solid #000;
+  box-shadow: 6px 6px 0 #000;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- header de la carte ---------- */
+.detail-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #000;
+  padding: 1rem;
+}
+
+.detail-type {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.detail-type-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #000;
+}
+
+.detail-type-text {
+  font-weight: 700;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.detail-id {
+  font-weight: 700;
+  color: #000;
+}
+
+/* ---------- media ---------- */
+.detail-media {
+  max-width: 28rem;          /* ≃ 450 px – adapte si besoin */
+  margin: 0 auto;
+
+  border: 2px solid #000;
+  aspect-ratio: 16 / 9;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.detail-media img,
+.detail-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---------- meta ---------- */
+.detail-meta {
+  list-style: none;
+  padding: 1.25rem 1rem;
+  margin: 0;
+  border-top: 2px dashed #000;
+  border-bottom: 2px dashed #000;
+}
+
+.detail-meta li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+}
+
+.label {
+  font-weight: 600;
+  color: #000;
+}
+
+/* ---------- actions ---------- */
+.detail-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.btn {
+  cursor: pointer;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  transition: background-color 0.2s;
+  box-shadow: 0 4px 4px -1px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary {
+  background: #000;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #1f2937;
+}
+
+.btn-secondary {
+  border: 2px solid #000;
+  background: #fff;
+}
+
+.btn-secondary:hover {
+  background: #f3f4f6;
+}
+
+/* =============== Loader & erreurs =============== */
+.detail-loading,
+.detail-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  font-weight: 700;
+}
+
+.spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #000;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* === wrapper du média pour garder les grosses bordures noires ===== */
+.ad-preview {
+  border: 4px solid #000;
+  padding: 0.75rem;
+  background: #fff;
+  max-width: 640px; /* largeur maxi sur desktop */
+  margin: 1.25rem 0;
+}
+
+/* === média : on montre TOUT sans rognage =========================== */
+.ad-media {
+  width: 100%; /* prend toute la largeur dispo */
+  height: auto; /* conserve le ratio d’origine */
+  max-height: 80vh; /* ne dépasse jamais la hauteur de l’écran */
+  object-fit: contain; /* AUCUN crop : l’image est entière */
+  display: block;
+  background: #f3f4f6; /* gris clair derrière pour vidéo transparente */
+}
+
+/* =============== Responsive tweaks =============== */
+@media (max-width: 640px) {
+  .detail-container {
+    margin: 2rem 0;
+  }
+  .detail-actions {
+    flex-direction: column;
+  }
+  .btn {
+    width: 100%;
+  }
+}

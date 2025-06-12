@@ -2,15 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { apiFetch } from '../utils/api';
+import '../pages-css/EditAd.css'; // Import CSS
 
 interface Company { _id: string; nom_company: string; }
 interface Ad {
   _id: string;
-  company: string;
+  company: { _id: string; nom_company: string } | string;
   type: 'image' | 'video';
   duration?: number;
   filePath: string;
-  expiresAt: string; // Add expiresAt property
+  expiresAt: string;
 }
 
 export default function EditAd() {
@@ -21,6 +22,11 @@ export default function EditAd() {
   const [duration, setDuration] = useState<number | undefined>(5); // Default duration for images
   const [file, setFile] = useState<File | null>(null);
   const [expiresAt, setExpiresAt] = useState('');
+  const [filePath, setFilePath] = useState('');
+  const [preview, setPreview] = useState('');
+  const [currentUrl, setCurrentUrl] = useState(''); // Media already saved
+  const [previewNew, setPreviewNew] = useState(''); // Freshly chosen media
+  const baseUrl = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
 
   const minDate = React.useMemo(() => {
@@ -41,9 +47,13 @@ export default function EditAd() {
     apiFetch(`/ads/${id}`)
       .then(r => r.json())
       .then((ad: Ad) => {
-        setCompany(ad.company);
+        const compId = typeof ad.company === 'object' ? ad.company._id : ad.company;
+        setCompany(compId);
         setType(ad.type);
-        setDuration(ad.duration ?? (ad.type === 'image' ? 5 : undefined)); // Handle duration for existing ads
+        setDuration(ad.duration ?? (ad.type === 'image' ? 5 : undefined));
+        setExpiresAt(ad.expiresAt.split('T')[0]);
+        setFilePath(ad.filePath);
+        setCurrentUrl(`${baseUrl}/${ad.filePath}`); // Add current URL
       })
       .catch(console.error);
   }, [id]);
@@ -61,6 +71,22 @@ export default function EditAd() {
     }
   }, [type, file]);
 
+  useEffect(() => {
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPreview(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    setPreview(filePath ? `${baseUrl}/${filePath}` : '');
+  }, [file, filePath]);
+
+  useEffect(() => {
+    // Cleanup for previewNew
+    return () => {
+      if (previewNew) URL.revokeObjectURL(previewNew);
+    };
+  }, [previewNew]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id) return;
@@ -72,9 +98,12 @@ export default function EditAd() {
     fd.append('duration', duration?.toString() ?? ''); // Always send duration
     fd.append('expiresAt', expiresAt);
 
-    const res = await apiFetch(`/ads/${id}`, {
+    const res = await fetch(`${baseUrl}/ads/${id}`, {
       method: 'PATCH',
       body: fd,
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
     });
 
     if (res.ok) navigate(`/ads/${id}`);
@@ -84,7 +113,7 @@ export default function EditAd() {
   return (
     <>
       <Header />
-      <form onSubmit={submit} style={{ padding: '1rem', fontFamily: 'Arial, sans-serif' }}>
+      <form onSubmit={submit} className="edit-wrapper">
         <h1>Modifier la publicité</h1>
         <label>
           Entreprise:
@@ -109,9 +138,41 @@ export default function EditAd() {
           <input
             type="file"
             accept="image/*,video/*"
-            onChange={e => setFile(e.target.files?.[0] || null)}
+            onChange={e => {
+              const f = e.target.files?.[0] || null;
+              setFile(f);
+              setPreviewNew(f ? URL.createObjectURL(f) : ""); // Immediate preview
+            }}
           />
         </label>
+
+        {/* ---- APERÇUS -------------------------------------------------- */}
+        {currentUrl && (
+          <div className="preview-grid">
+            {/* média ACTUEL toujours affiché */}
+            <figure>
+              <figcaption>Actuel</figcaption>
+              {type === "image" ? (
+                <img src={currentUrl} alt="Actuel" />
+              ) : (
+                <video src={currentUrl} controls />
+              )}
+            </figure>
+
+            {/* média NOUVEAU : rendu UNIQUEMENT si previewNew existe */}
+            {previewNew && (
+              <figure>
+                <figcaption>Nouveau</figcaption>
+                {type === "image" ? (
+                  <img src={previewNew} alt="Nouveau" />
+                ) : (
+                  <video src={previewNew} controls />
+                )}
+              </figure>
+            )}
+          </div>
+        )}
+
         <br/>
         {type === 'image' ? (
           <label>
@@ -138,7 +199,7 @@ export default function EditAd() {
           )
         )}
         <br />
-        <label>
+        <label className="date-field">
           Date de fin :
           <input
             type="date"
@@ -146,12 +207,25 @@ export default function EditAd() {
             min={minDate}
             onChange={e => setExpiresAt(e.target.value)}
             required
-            style={{ marginLeft: '0.5rem' }}
           />
+          <span className="hint">
+            (actuelle :{" "}
+            {new Date(currentUrl ? expiresAt : "").toLocaleDateString()})
+          </span>
         </label>
         <br/>
-        <button type="submit">Enregistrer</button>{' '}
-        <button type="button" onClick={() => navigate(-1)}>Annuler</button>
+        <div className="btn-row">
+          <button className="btn btn-primary" type="submit">
+            Enregistrer
+          </button>
+          <button
+            className="btn btn-secondary"
+            type="button"
+            onClick={() => navigate(-1)}
+          >
+            Annuler
+          </button>
+        </div>
       </form>
     </>
   );

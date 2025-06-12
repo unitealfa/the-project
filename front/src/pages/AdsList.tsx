@@ -1,100 +1,144 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
-import { apiFetch } from '../utils/api';
+/* eslint-disable jsx-a11y/alt-text */
+"use client";
+
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ImageIcon, Video, Store, BadgeX } from "lucide-react";
+import Header from "../components/Header";
+import { apiFetch } from "../utils/api";
+import "../pages-css/AdsList.css";          // ← nouveau fichier de style
 
 interface Ad {
-  _id: string;
-  company: { _id: string; nom_company: string } | string | null;
-  filePath: string;
-  type: 'image' | 'video';
+  _id:       string;
+  company:   { _id: string; nom_company: string } | string | null;
+  filePath:  string;
+  type:      "image" | "video";
   duration?: number;
   createdAt: string;
   expiresAt: string;
 }
 
-const baseUrl = import.meta.env.VITE_API_URL; // e.g., "http://localhost:5000"
+const baseUrl = import.meta.env.VITE_API_URL || "";
 
 export default function AdsList() {
   const [ads, setAds] = useState<Ad[]>([]);
-  const navigate = useNavigate();
+  const navigate      = useNavigate();
 
+  /* ─── chargement ─── */
   useEffect(() => {
-    apiFetch('/ads')
-      .then(res => res.json())
-      .then(data => setAds(data))
-      .catch(err => {
-        console.error(err);
-        setAds([]);
-      });
+    apiFetch("/ads")
+      .then(r => r.json())
+      .then(setAds)
+      .catch(() => setAds([]));
   }, []);
 
+  /* ─── suppression ─── */
   const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer cette publicité ?')) return;
-    await apiFetch(`/ads/${id}`, { method: 'DELETE' });
+    if (!confirm("Supprimer cette publicité ?")) return;
+    await apiFetch(`/ads/${id}`, { method: "DELETE" });
     setAds(curr => curr.filter(a => a._id !== id));
   };
 
+  /* ─── helper statut / couleur ─── */
+  const getStatus = (expires: string) => {
+    return new Date(expires) > new Date() ? "En cours" : "Expirée";
+  };
+
   return (
-    <>
+    <div className="page-container">
       <Header />
-      <div style={{ padding: '1rem', fontFamily: 'Arial, sans-serif' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <h1>Publicités</h1>
-          <Link to="/ads/add" className="btn-primary">
+
+      <main className="content-container">
+        <div className="page-title-wrap">
+          <h1 className="page-title">PUBLICITÉS</h1>
+          <Link to="/ads/add" className="btn btn-primary">
             ➕ Nouvelle pub
           </Link>
         </div>
-        {ads.length === 0 && <p>Aucune publicité.</p>}
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {ads.map(ad => {
-            // Safe company name extraction
-            let companyName: string;
-            if (ad.company && typeof ad.company === 'object') {
-              companyName = ad.company.nom_company ?? 'Inconnue';
-            } else if (typeof ad.company === 'string') {
-              companyName = ad.company;
-            } else {
-              companyName = 'Inconnue';
-            }
 
-            const now = new Date();
-            const expires = new Date(ad.expiresAt);
-            const status = expires > now ? 'En cours' : 'Expirée';
+        {ads.length === 0 && (
+          <p className="no-ads-msg">Aucune publicité enregistrée.</p>
+        )}
+
+        {/* grille responsive */}
+        <div className="ads-grid">
+          {ads.map((ad, idx) => {
+            /* nom de la société */
+            const companyName =
+              typeof ad.company === "object"
+                ? ad.company?.nom_company ?? "Inconnue"
+                : ad.company ?? "Inconnue";
+
+            const status  = getStatus(ad.expiresAt);
+            const expired = status === "Expirée";
 
             return (
-              <li key={ad._id} style={{ margin: '1rem 0' }}>
-                <p>
-                  <strong>Entreprise :</strong> {companyName}
-                </p>
-                <p>
-                  <strong>Statut :</strong> {status}
-                </p>
+              <div key={ad._id} className="ad-card">
+                {/* bandeau haut */}
+                <header className="ad-card-header">
+                  <div className="ad-type">
+                    {ad.type === "image" ? (
+                      <ImageIcon className="ad-type-icon" />
+                    ) : (
+                      <Video className="ad-type-icon" />
+                    )}
+                    <span className="ad-type-text">
+                      {ad.type === "image" ? "IMAGE" : "VIDÉO"}
+                    </span>
+                  </div>
 
-                {ad.type === 'image' ? (
-                  <img
-                    src={`${baseUrl}/${ad.filePath}`}
-                    alt="pub"
-                    style={{ maxWidth: '200px' }}
-                  />
-                ) : (
-                  <video
-                    src={`${baseUrl}/${ad.filePath}`}
-                    controls
-                    style={{ maxWidth: '200px' }}
-                  />
-                )}
+                  <span className="ad-number">#{String(idx + 1).padStart(2, "0")}</span>
+                </header>
 
-                <div style={{ marginTop: '0.5rem' }}>
-                  <button onClick={() => navigate(`/ads/${ad._id}`)}>Voir</button>{' '}
-                  <button onClick={() => navigate(`/ads/edit/${ad._id}`)}>Modifier</button>{' '}
-                  <button onClick={() => handleDelete(ad._id)}>Supprimer</button>
+                {/* aperçu média */}
+                <div className="media-container">
+                  {ad.type === "image" ? (
+                    <img
+                      src={`${baseUrl}/${ad.filePath}`}
+                      className="media-img"
+                      onError={e => {
+                        (e.target as HTMLImageElement).src = "/placeholder.svg";
+                      }}
+                    />
+                  ) : (
+                    <video
+                      src={`${baseUrl}/${ad.filePath}`}
+                      className="media-video"
+                      controls
+                    />
+                  )}
                 </div>
-              </li>
+
+                {/* infos entreprise & statut */}
+                <div className="ad-meta">
+                  <span className="meta-item">
+                    <Store className="meta-icon" /> {companyName}
+                  </span>
+                  <span className={"meta-item " + (expired ? "expired" : "running")}>
+                    <BadgeX className="meta-icon" /> {status}
+                  </span>
+                </div>
+
+                {/* actions */}
+                <div className="ad-actions">
+                  <button className="btn btn-primary btn-sm"
+                          onClick={() => navigate(`/ads/${ad._id}`)}>
+                    Voir
+                  </button>
+                  <button className="btn btn-secondary btn-sm"
+                          onClick={() => navigate(`/ads/edit/${ad._id}`)}>
+                    Modifier
+                  </button>
+                  <button className="btn btn-danger btn-sm"
+                          onClick={() => handleDelete(ad._id)}>
+                    Supprimer
+                  </button>
+                </div>
+              </div>
             );
           })}
-        </ul>
-      </div>
-    </>
+        </div>
+      </main>
+    </div>
   );
 }

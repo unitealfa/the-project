@@ -1,0 +1,78 @@
+/* === CONTAINERS GÉNÉRAUX (identiques aux autres pages) === */
+.page-container       { background:#f3f4f6; min-height:100vh; }
+.content-container    { max-width:80rem; margin:0 auto; padding:2rem 1rem; }
+.page-title-wrap      { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; }
+.page-title           { font-size:1.875rem; font-weight:700; border-bottom:2px solid #000; padding-bottom:0.5rem; }
+
+/* === BOUTONS RÉUTILISABLES === */
+.btn           { cursor:pointer; font-size:.875rem; border-radius:.25rem; transition:background-color .2s; }
+.btn-primary   { background:#000; color:#fff; padding:.5rem 1rem; }
+.btn-primary:hover { background:#1f2937; }
+.btn-secondary { border:2px solid #000; background:#000000; padding:.5rem 1rem; }
+.btn-secondary:hover { background:#f3f4f6; }
+.btn-danger    { border:2px solid #000; background:#fff; padding:.5rem 1rem; color:#b91c1c; }
+.btn-danger:hover { background:#fee2e2; }
+.btn-sm        { padding:.25rem .75rem; font-size:.75rem; }
+
+/* === SI AUCUNE PUB === */
+.no-ads-msg { font-style:italic; color:#6b7280; }
+
+/* === GRILLE === */
+.ads-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(17rem,1fr)); gap:1.5rem; }
+
+/* === CARTE PUB === */
+.ad-card        { background:#fff; border:4px solid #000; box-shadow:4px 4px 0 #000; padding:1rem; display:flex; flex-direction:column; gap:1rem; }
+
+/* header */
+.ad-card-header { display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #000; padding-bottom:.5rem; }
+.ad-type        { display:flex; align-items:center; gap:.5rem; }
+.ad-type-icon   { width:1.25rem; height:1.25rem; color:#000; }
+.ad-type-text   { font-weight:700; color:#000; text-transform:uppercase; }
+.ad-number      { font-weight:700; color:#000; }
+
+/* média */
+.media-container { border:2px solid #000; aspect-ratio:16/9; background:#e5e7eb; overflow:hidden; position:relative; }
+.media-img       { width:100%; height:100%; object-fit:cover; }
+.media-video     { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#000; }
+
+/* métadonnées */
+.ad-meta      { display:flex; justify-content:space-between; gap:.5rem; flex-wrap:wrap; }
+.meta-item    { display:flex; align-items:center; gap:.25rem; font-size:.875rem; font-weight:600; }
+.meta-icon    { width:1rem; height:1rem; }
+.running      { color:#16a34a; }
+.expired      { color:#b91c1c; }
+
+/* actions */
+.ad-actions   { display:grid; grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:.5rem; width:100%; margin-top:auto; }
+/* ==== Correctifs d’alignement des actions ==== */
+.ad-card           { display:flex; flex-direction:column; }   /* (déjà présent ? pas grave) */
+.ad-actions        {
+  margin-top:auto;            
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(90px,1fr));
+  gap:.5rem;
+  width:100%;            
+}
+
+/* ==== Bouton “➕ Nouvelle pub” ==== */
+.page-title-wrap .btn-primary{
+  white-space:nowrap;                                  
+  max-width:12rem;                         
+}
+
+/* ==== Adaptations mobile (≤ 640 px) ==== */
+@media (max-width:640px){
+  .page-title-wrap{
+    flex-direction:column;
+    align-items:stretch;       
+    gap:1rem;
+  }
+  .page-title-wrap .btn-primary{
+    width:100%;                        
+    max-width:100%;
+  }
+  .ad-actions{
+    flex-wrap:wrap;             
+    justify-content:flex-start;
+  }
+}

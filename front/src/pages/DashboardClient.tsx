@@ -226,6 +226,16 @@ function AdvertisementFrame({ companyIds }: { companyIds: string[] }) {
     if (ads) setIdx((i) => (i + 1) % ads.length);
   };
 
+    // Auto advance to the next ad after its `duration` (default 5s)
+  useEffect(() => {
+    if (!ads || ads.length === 0) return;
+    const dur = ads[idx].duration ?? 5;
+    const timer = setTimeout(() => {
+      setIdx((i) => (i + 1) % ads.length);
+    }, dur * 1000);
+    return () => clearTimeout(timer);
+  }, [ads, idx]);
+
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     setTouchEnd(null);
     setTouchStart(e.touches[0].clientX);
