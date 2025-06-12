@@ -217,8 +217,6 @@ body {
 @media (max-width: 640px) {
   .ad-container {
     margin-bottom: 1rem !important;
-    display: block;
-    width: 100% !important; /* container plein écran pour le swipe */
   }
 }
 
@@ -276,8 +274,6 @@ body {
   position: relative;
   display: flex;
   align-items: center;
-  /* supprime le style inline ou ad.color et force ta gradient */
-  background: linear-gradient(to right, #ec4899, #f97316) !important;
 }
 
 /* Calque décoratif */
@@ -310,10 +306,7 @@ body {
   transition: all 0.2s ease;
 }
 .ad-nav-button:hover {
-  transform: none !important;
-}
-.ad-nav-button:focus {
-  outline: none;
+  transform: scale(1.1);
 }
 .ad-nav-left {
   left: 0.5rem;
@@ -400,16 +393,16 @@ body {
 /* Média adaptatif */
 .ad-media-wrapper {
   width: 100%;
-  height: 100%;
-  display: block;    /* s’assure que le wrapper prend toute la place */
+  display: flex;
+  justify-content: center;
   margin-bottom: 1rem;
 }
 .ad-media {
-  width: 100% !important;
-  height: 100% !important;
+  max-width: 100%;
+  height: auto;
   border: 4px solid #000;
   background: #fff;
-  object-fit: cover; /* remplit sans déformer, en recadrant si besoin */
+  object-fit: contain; /* Adjusted for better video adaptation */
 }
 @media (min-width: 768px) {
   .ad-media {
@@ -539,177 +532,5 @@ body {
 @media (max-width: 640px) {
   .ad-nav-button {
     display: none !important;
-  }
-}
-
-/* === 1) On vire le fond gradient et les décorations étoiles === */
-.ad-slide {
-  background: none !important;
-}
-.ad-background {
-  display: none !important;
-}
-
-/* === 2) On supprime padding & bordure blanche autour du media === */
-.ad-content {
-  padding: 0 !important;
-  background: none !important;
-}
-
-.ad-media-wrapper {
-  width: 100% !important;
-  height: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  background: none !important;
-}
-
-.ad-media {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;    /* ou `contain` si tu veux tout voir sans recadrage */
-  border: none !important;
-  background: none !important;
-}
-
-/* === 1) Container : largeur pleine, hauteur auto selon le media === */
-.ad-container {
-  display: block;
-  width: 100% !important;      /* plus de 100vw */
-  margin: 0 auto 2rem !important;
-  padding: 0 !important;
-  border: 4px solid #000 !important;
-  box-shadow: 8px 8px 0 #000 !important;
-  overflow: hidden !important;
-  position: relative !important;
-}
-
-/* === 2) La slide et le content restent auto-height === */
-.ad-slide,
-.ad-content {
-  display: block !important;
-  padding: 0 !important;
-  height: auto !important;
-}
-
-/* === 3) Le média se redimensionne selon la largeur dispo === */
-.ad-media-wrapper {
-  width: 100% !important;
-  height: auto !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.ad-media {
-  display: block !important;
-  width: 100% !important;
-  height: auto !important;
-  object-fit: contain !important; /* préserve ratio, tout est visible */
-  border: none !important;
-  background: none !important;
-}
-
-/* === 4) Suppression max-height sur desktop s’il en reste === */
-@media (min-width: 768px) {
-  .ad-media {
-    max-height: none !important;
-  }
-}
-
-/* === 1) Annule tout height:100% forcé === */
-.ad-media-wrapper,
-.ad-media {
-  height: auto !important;
-}
-
-/* === 2) Ne recadre plus, on voit tout le media === */
-.ad-media {
-  object-fit: contain !important;
-}
-
-/* === 3) Assure-toi que la slide et le content aient une hauteur auto === */
-.ad-slide,
-.ad-content {
-  height: auto !important;
-}
-
-/* === FORCER UN LAYOUT BLOCK ET HAUTEUR AUTO === */
-.ad-container {
-  /* plein écran en largeur */
-  width: 100vw !important;
-  margin-left: calc((100vw - 100%) * -0.5) !important;
-  margin-right: calc((100vw - 100%) * -0.5) !important;
-  padding: 0 !important;
-  border: 4px solid #000 !important;
-  box-shadow: 8px 8px 0 #000 !important;
-  overflow: visible !important;
-  position: relative !important;
-}
-
-.ad-slide {
-  /* plus de flex : on passe en block */
-  display: block !important;
-  background: none !important; /* gradient désactivé */
-  padding: 0 !important;
-  position: relative !important;
-  height: auto !important;
-}
-
-.ad-content {
-  display: block !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  height: auto !important;
-}
-
-.ad-media-wrapper {
-  display: block !important;
-  width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  height: auto !important;
-}
-
-.ad-media {
-  display: block !important;
-  width: 100% !important;
-  height: auto !important;
-  object-fit: contain !important;  /* garde le ratio et affiche tout */
-  border: none !important;
-  background: none !important;
-}
-/* =========================================================== */
-/*  Restriction de largeur maximale de la pub selon l’appareil  */
-/* =========================================================== */
-.ad-container {
-  width: 100% !important;
-  max-width: 800px !important;   /* bureau */
-  margin: 0 auto 2rem !important;
-}
-
-@media (max-width: 1024px) {
-  .ad-container {
-    max-width: 600px !important; /* tablette */
-  }
-}
-
-@media (max-width: 640px) {
-  .ad-container {
-    max-width: 100% !important;  /* mobile : prend tout l’espace disponible */
-  }
-}
-/* === Desktop (>=1025px) : limiter la hauteur de la pub === */
-@media (min-width: 1025px) {
-  .ad-media-wrapper {
-    max-height: 70vh !important;   /* au plus 70% de la hauteur de la fenêtre */
-    overflow: hidden !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-  }
-  .ad-media {
-    max-height: 100% !important;   /* épouse la hauteur du wrapper */
-    width: auto !important;        /* conserve le ratio natif */
-    object-fit: contain !important;
   }
 }

@@ -13,6 +13,8 @@ interface Ad {
 export default function AdvertisementFrame({ companyIds }: { companyIds: string[] }) {
   const [ads, setAds] = useState<Ad[]>([]);
   const [index, setIndex] = useState(0);
+  const [aspectRatio, setAspectRatio] = useState<string>("16/9");
+  const [isPortrait, setIsPortrait] = useState<boolean>(false);
   const baseUrl = import.meta.env.VITE_API_URL;  // e.g. http://localhost:5000
 
   // 1) Load ads for all companies
@@ -67,13 +69,27 @@ useEffect(() => {
     trackMouse: true, // Enable mouse drag
   });
 
+  // Au rendu du média, on lit ses dimensions naturelles
+  const onImgLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { naturalWidth: w, naturalHeight: h } = e.currentTarget;
+    setAspectRatio(`${w}/${h}`);
+    setIsPortrait(h > w);
+  };
+  const onVideoMeta = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const video = e.currentTarget;
+    setAspectRatio(`${video.videoWidth}/${video.videoHeight}`);
+    setIsPortrait(video.videoHeight > video.videoWidth);
+  };
+
   // 3) Return nothing if no ads
   if (ads.length === 0) return null;
 
   const ad = ads[index];
+  const mediaUrl = `${baseUrl}/${ad.filePath}`;
   return (
     <div
       {...handlers}
+      className="ad-container"
       style={{
         maxWidth: 300,
         margin: '1rem auto',
@@ -81,22 +97,27 @@ useEffect(() => {
         position: 'relative',
       }}
     >
-      {ad.type === 'image' ? (
-        <img
-          src={`${baseUrl}/${ad.filePath}`}
-          alt="publicité"
-          style={{ width: '100%', borderRadius: 8 }}
-        />
-      ) : (
-        <video
-          src={`${baseUrl}/${ad.filePath}`}
-          autoPlay
-          muted
-          loop
-          playsInline
-          style={{ width: '100%', borderRadius: 8 }}
-        />
-      )}
+      {/* on retire tout aspect-ratio fixe en CSS, et on l’applique ici */}
+      <div className={`ad-media-wrapper ${isPortrait ? "portrait" : "landscape"}`} style={{ aspectRatio }}>
+        {ad.type === 'video' ? (
+          <video
+            src={mediaUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="ad-media"
+            onLoadedMetadata={onVideoMeta}
+          />
+        ) : (
+          <img
+            src={mediaUrl}
+            alt="publicité"
+            className="ad-media"
+            onLoad={onImgLoad}
+          />
+        )}
+      </div>
 
       {/* Indicator dots */}
       <div

@@ -20,9 +20,10 @@ import {
   PieChart,
 } from "lucide-react";
 import "../pages-css/DashboardAdminVentes.css";
+import { apiFetch } from "../utils/api";
 
 interface Vehicle {
-  id: string;
+  _id: string;
   make: string;
   model: string;
   year: string;
@@ -30,12 +31,6 @@ interface Vehicle {
   chauffeur: { nom: string; prenom: string };
   livreur: { nom: string; prenom: string };
 }
-
-const mockVehicles: Vehicle[] = [
-  { id: "1", make: "Mercedes", model: "Sprinter", year: "2023", license_plate: "AB-123-CD", chauffeur: { nom: "Dupont", prenom: "Jean" }, livreur: { nom: "Martin", prenom: "Pierre" } },
-  { id: "2", make: "Ford",    model: "Transit",  year: "2022", license_plate: "EF-456-GH", chauffeur: { nom: "Bernard", prenom: "Marie" }, livreur: { nom: "Durand", prenom: "Paul" } },
-  { id: "3", make: "Iveco",   model: "Daily",    year: "2024", license_plate: "IJ-789-KL", chauffeur: { nom: "Moreau",  prenom: "Sophie" }, livreur: { nom: "Leroy", prenom: "Marc" } },
-];
 
 const utilisateurConnecte = {
   nomDepot: "Dépôt Central",
@@ -46,24 +41,70 @@ export default function DashboardAdminVentes() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [error, setError] = useState<string>("");
+  const rawUser = localStorage.getItem("user");
+  const user = rawUser ? JSON.parse(rawUser) : null;
+  // Nouveau : récupère directement le nom du dépôt
+  const depotName = user?.nomDepot || utilisateurConnecte.nomDepot || user?.depot || "";
 
-  const user = {
-    nom: "Azzedine",
-    prenom: "B.",
-    company: "LogiTech Solutions",
-    role: "Admin Ventes",
-    depot: utilisateurConnecte.nomDepot,
-  };
+  if (!user) {
+    return (
+      <div className="brutalist-container">
+        <p className="brutalist-text-medium">
+          Utilisateur non trouvé. Veuillez vous reconnecter.
+        </p>
+      </div>
+    );
+  }
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  const loadVehicles = async () => {
+    if (!user?.depot) {
+      setError("Aucun dépôt associé à votre compte");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const res = await apiFetch(`/vehicles?depot=${encodeURIComponent(user.depot!)}`);
+      const result = await res.json();
+
+      // 1) Récupère array quel que soit le format
+      const rawList: any[] = Array.isArray(result)
+        ? result
+        : Array.isArray(result.vehicles)
+          ? result.vehicles
+          : [];
+
+      // 2) Normalise chauffeur_id ↔ chauffeur, et livreur_id ↔ livreur
+      const list: Vehicle[] = rawList.map(v => ({
+        _id          : v._id,
+        make         : v.make,
+        model        : v.model,
+        year         : v.year,
+        license_plate: v.license_plate,
+        chauffeur    : v.chauffeur ?? v.chauffeur_id!,
+        livreur      : v.livreur ?? v.livreur_id!,
+      }));
+
+      // 3) Filtre ceux qui ont bien chauffeur ET livreur
+      const withPersonnel = list.filter(v => v.chauffeur && v.livreur);
+      setVehicles(withPersonnel);
+    } catch (e: any) {
+      setError(e.message || "Erreur chargement véhicules");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleOpenModal = () => {
     setIsModalOpen(true);
-    setLoading(true);
-    setTimeout(() => setLoading(false), 1000);
+    loadVehicles();
   };
 
   return (
@@ -85,7 +126,7 @@ export default function DashboardAdminVentes() {
               </div>
               <div className="brutalist-user-info">
                 <Building className="w-5 h-5 mr-2" />
-                <span className="font-bold">{user.depot}</span>
+                <span className="font-bold">{depotName}</span>
               </div>
             </div>
           </div>
@@ -194,6 +235,11 @@ export default function DashboardAdminVentes() {
                   <div className="animate-spin inline-block w-6 h-6 border-2 border-black border-t-transparent rounded-full" />
                   <p className="brutalist-text-medium uppercase mt-2">Chargement...</p>
                 </div>
+              ) : error ? (
+                <div className="text-center p-6">
+                  <AlertCircle className="w-6 h-6 text-red-800 mx-auto" />
+                  <p className="brutalist-text-medium uppercase mt-2">{error}</p>
+                </div>
               ) : (
                 <table className="brutalist-table">
                   <thead>
@@ -210,11 +256,20 @@ export default function DashboardAdminVentes() {
                     </tr>
                   </thead>
                   <tbody>
-                    {mockVehicles.map((v) => (
-                      <tr key={v.id} className="hover:bg-gray-50">
-                        <td className="p-4 font-bold">{v.make} {v.model} <span>({v.license_plate})</span></td>
-                        <td className="p-4 font-bold">{v.chauffeur.prenom} {v.chauffeur.nom}</td>
-                        <td className="p-4 font-bold">{v.livreur.prenom} {v.livreur.nom}</td>
+                    {vehicles.length === 0 && !loading && !error && (
+                      <tr><td colSpan={3} className="text-center p-8">Aucun véhicule disponible</td></tr>
+                    )}
+                    {vehicles.map(v => (
+                      <tr key={v._id} className="hover:bg-gray-50">
+                        <td data-label="Véhicule" className="p-4 font-bold">
+                          {v.make} {v.model} <span>({v.license_plate})</span>
+                        </td>
+                        <td data-label="Chauffeur" className="p-4 font-bold">
+                          {`${v.chauffeur.prenom} ${v.chauffeur.nom}`}
+                        </td>
+                        <td data-label="Livreur" className="p-4 font-bold">
+                          {`${v.livreur.prenom} ${v.livreur.nom}`}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

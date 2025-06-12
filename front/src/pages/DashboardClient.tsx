@@ -167,6 +167,9 @@ function AdvertisementFrame({ companyIds }: { companyIds: string[] }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [idx, setIdx] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const minSwipeDistance = 50;
 
   const navigate = useNavigate();
 
@@ -216,6 +219,42 @@ function AdvertisementFrame({ companyIds }: { companyIds: string[] }) {
     return items;
   }, [idx, ads?.length]);
 
+  const prev = () => {
+    if (ads) setIdx((i) => (i - 1 + ads.length) % ads.length);
+  };
+  const next = () => {
+    if (ads) setIdx((i) => (i + 1) % ads.length);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    setTouchEnd(null);
+    setTouchStart(e.touches[0].clientX);
+  };
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    setTouchEnd(e.touches[0].clientX);
+  };
+  const handleTouchEnd = () => {
+    if (touchStart !== null && touchEnd !== null) {
+      const distance = touchStart - touchEnd;
+      if (distance > minSwipeDistance) next();
+      if (distance < -minSwipeDistance) prev();
+    }
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
+
+  const base = import.meta.env.VITE_API_URL || "";
+  const mediaUrl = ads && ads[idx].filePath.startsWith("http")
+    ? ads[idx].filePath
+    : ads ? `${base}/${ads[idx].filePath}` : "";
+
+  const backgroundStyle = ads && ads[idx].color
+    ? { background: ads[idx].color }
+    : { background: "linear-gradient(to right, #ec4899, #f97316)" };
+
+  let IconComponent = Sparkles;
+  if (ads && ads[idx].iconType === "Star") IconComponent = Star;
+
   if (loading) {
     return (
       <Card className="brutalist-status-card brutalist-status-loading">
@@ -240,22 +279,6 @@ function AdvertisementFrame({ companyIds }: { companyIds: string[] }) {
     return null;
   }
 
-  const ad = ads[idx];
-  const prev = () => setIdx((i) => (i - 1 + ads.length) % ads.length);
-  const next = () => setIdx((i) => (i + 1) % ads.length);
-
-  const base = import.meta.env.VITE_API_URL || "";
-  const mediaUrl = ad.filePath.startsWith("http")
-    ? ad.filePath
-    : `${base}/${ad.filePath}`;
-
-  const backgroundStyle = ad.color
-    ? { background: ad.color }
-    : { background: "linear-gradient(to right, #ec4899, #f97316)" };
-
-  let IconComponent = Sparkles;
-  if (ad.iconType === "Star") IconComponent = Star;
-
   return (
     <div className="ad-container">
       <div className="ad-header">
@@ -278,7 +301,13 @@ function AdvertisementFrame({ companyIds }: { companyIds: string[] }) {
         </div>
       </div>
 
-      <div className="ad-slide" style={backgroundStyle}>
+      <div
+        className="ad-slide"
+        style={backgroundStyle}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <div className="ad-background">
           {decoItems.map((item, i) => (
             <div
@@ -296,17 +325,18 @@ function AdvertisementFrame({ companyIds }: { companyIds: string[] }) {
           ))}
         </div>
 
+        {/* ← bouton desktop */}
         <button className="ad-nav-button ad-nav-left" onClick={prev}>
           <ChevronLeft className="w-5 h-5" />
         </button>
 
         <div className="ad-content">
           <div className="ad-text">
-            {ad.title && <h2 className="ad-title">{ad.title}</h2>}
-            {ad.description && <p className="ad-desc">{ad.description}</p>}
+            {ads[idx].title && <h2 className="ad-title">{ads[idx].title}</h2>}
+            {ads[idx].description && <p className="ad-desc">{ads[idx].description}</p>}
 
             <div className="ad-media-wrapper">
-              {ad.type === "video" ? (
+              {ads[idx].type === "video" ? (
                 <video
                   src={mediaUrl}
                   autoPlay
@@ -318,7 +348,7 @@ function AdvertisementFrame({ companyIds }: { companyIds: string[] }) {
               ) : (
                 <img
                   src={mediaUrl}
-                  alt={ad.title || "Publicité"}
+                  alt={ads[idx].title || "Publicité"}
                   className="ad-media"
                 />
               )}
@@ -327,10 +357,10 @@ function AdvertisementFrame({ companyIds }: { companyIds: string[] }) {
 
           </div>
 
-          {ad.discount && (
+          {ads[idx].discount && (
             <div className="ad-promo">
               <div className="ad-promo-inner">
-                <span className="ad-promo-discount">{ad.discount}</span>
+                <span className="ad-promo-discount">{ads[idx].discount}</span>
               </div>
               <div className="ad-star-badge">
                 <Star className="w-4 h-4 text-black" />
