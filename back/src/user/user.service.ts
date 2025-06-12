@@ -27,4 +27,13 @@ export class UserService {
   async findAll() {
     return this.userModel.find().select('-password').exec();
   }
+  
+  async getSuperAdminPhone() {
+    const doc = await this.userModel
+      .findOne({ role: 'Super Admin' })
+      .select('num')
+      .exec();
+    if (!doc) throw new NotFoundException('Super admin introuvable');
+    return doc.num;
+  }
 }

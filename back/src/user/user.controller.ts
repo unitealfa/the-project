@@ -58,4 +58,10 @@ export class UserController {
       throw error;
     }
   }
+  
+  @Get('super-admin-phone')
+  async superAdminPhone() {
+    const num = await this.userSvc.getSuperAdminPhone();
+    return { num };
+  }
 }

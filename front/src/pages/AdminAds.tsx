@@ -14,18 +14,26 @@ interface Ad {
   duration?:  number;            // (optionnel)
 }
 
-/* Téléphone affiché quand on n’a aucune pub */
-const SUPER_ADMIN_PHONE = "06 00 00 00 00";
 
 /* Durée max qu’on veut représenter pour la jauge (30 j) */
 const MAX_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
 
 export default function AdminAds() {
+  /* ─────────────── state ─────────────── */
   const [ads,     setAds]     = useState<Ad[]>([]);
   const [timers,  setTimers]  = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [phone,   setPhone]   = useState<string>("06 00 00 00 00"); // valeur par défaut
 
   const baseUrl = import.meta.env.VITE_API_URL || "";
+
+    /* ─────────────── Récupération du numéro du super admin ─────────────── */
+  useEffect(() => {
+    apiFetch('/user/super-admin-phone')
+      .then(r => r.json())
+      .then(({ num }) => setPhone(num))
+      .catch(console.error);
+  }, []);
 
   /* ───────────────────────── 1. CHARGEMENT ───────────────────────── */
   useEffect(() => {
@@ -110,8 +118,8 @@ export default function AdminAds() {
           <div className="empty-state">
             <h3 className="empty-state-title">Aucune publicité pour le moment</h3>
             <p className="empty-state-text">
-              Pour afficher une pub à vos clients, consultez le super admin au{" "}
-              <strong>{SUPER_ADMIN_PHONE}</strong>.
+              Pour afficher une pub à vos clients, consultez au{" "}
+              <strong>{phone}</strong>.
             </p>
           </div>
         )}
