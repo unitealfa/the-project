@@ -8,6 +8,10 @@
     "Open Sans", "Helvetica Neue", sans-serif;
 }
 
+html, body {
+  overflow-x: hidden;          /* barres de scroll horizontales interdites  */
+}
+
 .container {
   max-width: 1280px;
   margin: 0 auto;
@@ -382,6 +386,8 @@
   margin-top: 0.5rem;
   font-size: 0.875rem;
   font-weight: 700;
+  max-width: 4rem;             /* empêche le label de dépasser à 100 %       */
+  white-space: nowrap;
 }
 
 .tiers-legend {
@@ -396,8 +402,8 @@
 
 .tiers-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 1rem;
+  gap: .75rem;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); /* responsive */
   min-width: max-content;
   margin-top: 0.3rem;
 }
@@ -414,6 +420,7 @@
   align-items: center;
   transition: all 0.3s;
   opacity: 0.6;
+  min-width: 0; /* permet aux items de rétrécir sans élargir la grille */
 }
 
 .tier-item.active {
@@ -997,24 +1004,53 @@
   margin: 0;
 }
 
-/* === Utilitaires === */
-.icon-full {
-  width: 100%;
-  height: 100%;
+/* ---------------------------------------------------- */
+/* 1.  CONTAINER GLOBAL – on neutralise tout débordement */
+.loyalty-client,
+html, body {
+  overflow-x: hidden;          /* barres de scroll horizontales interdites  */
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
+/* ---------------------------------------------------- */
+/* 2.  LA GRILLE DES PALIERS – responsive 100 % largeur */
+.tiers-legend { 
+  margin: 0;  
+  padding: 0 1rem 1rem; 
+}
+.tiers-grid {
+  display: grid;
+  gap: .75rem;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); /* responsive */
+}
+.tier-item { 
+  min-width: 0; /* permet aux items de rétrécir sans élargir la grille */
 }
 
-@media (min-width: 640px) {
-  .container {
-    padding: 2rem;
+/* ---------------------------------------------------- */
+/* 3.  INDICATEUR DE POURCENTAGE – ne pas sortir de l’écran */
+.percentage-indicator {
+  transform: translateX(-50%);
+  max-width: 4rem;             /* empêche le label de dépasser à 100 %       */
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------- */
+/* 4.  DÉCORATIONS (blobs, cercles) – dimensions adaptatives */
+@media (max-width: 640px) {
+  .bg-blob-1, .bg-blob-2 {        /* bulles de fond plus petites           */
+    width: 18rem;
+    height: 18rem;
+  }
+
+  .progress-section,
+  .recap-section,
+  .spending-section,
+  .rewards-section {
+    margin-left: 1rem;           /* sections encadrées : marges réduites   */
+    margin-right: 1rem;
+  }
+
+  .page-title {
+    margin-left: 1rem !important;
   }
 }
