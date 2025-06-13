@@ -1,0 +1,1020 @@
+/* === Styles généraux === */
+.loyalty-client {
+  background: linear-gradient(to bottom right, #f7f8fc, #e5e7eb);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+    "Open Sans", "Helvetica Neue", sans-serif;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  position: relative;
+  z-index: 10;
+}
+
+/* === Éléments d'arrière-plan === */
+.background-elements {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bg-blob {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.1;
+  filter: blur(3rem);
+}
+
+.bg-blob-1 {
+  top: 0;
+  right: 0;
+  width: 24rem;
+  height: 24rem;
+  background-color: #8e88f7;
+  transform: translate(50%, -50%);
+}
+
+.bg-blob-2 {
+  bottom: 0;
+  left: 0;
+  width: 24rem;
+  height: 24rem;
+  background-color: #ffd1c5;
+  transform: translate(-50%, 50%);
+}
+
+.bg-star {
+  position: absolute;
+  background-color: black;
+  opacity: 0.05;
+  border-radius: 50%;
+  animation: pulse 3s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.05;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.1;
+  }
+}
+
+/* === Titre de page === */
+.page-title {
+  position: relative;
+  margin-bottom: 3rem;
+}
+
+.title-decoration {
+  position: absolute;
+  top: -1.5rem;
+  left: -1.5rem;
+  width: 6rem;
+  height: 6rem;
+  background-color: black;
+  opacity: 0.05;
+  border-radius: 50%;
+  filter: blur(0.5rem);
+}
+
+.page-title h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(to right, black, #4b4b4b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  position: relative;
+  z-index: 1;
+  margin: 0;
+}
+
+.title-underline {
+  width: 8rem;
+  height: 0.5rem;
+  background: linear-gradient(to right, black, #4b4b4b);
+  border-radius: 9999px;
+  margin-top: 0.5rem;
+}
+
+/* === Bloc D - Récap === */
+.recap-section {
+  text-align: center;
+  padding: 2rem 0;
+  position: relative;
+  margin-bottom: 2.5rem;
+}
+
+.decorative-line {
+  position: absolute;
+  left: 50%;
+  width: 8rem;
+  height: 0.25rem;
+  background: linear-gradient(to right, transparent, black, transparent);
+  transform: translateX(-50%);
+}
+
+.decorative-line-top {
+  top: 0;
+}
+
+.decorative-line-bottom {
+  bottom: 0;
+}
+
+.recap-card {
+  background-color: white;
+  border: 4px solid black;
+  border-radius: 0.75rem;
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+  padding: 1.5rem;
+  max-width: 28rem;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.decorative-circle {
+  position: absolute;
+  background-color: black;
+  opacity: 0.05;
+  border-radius: 50%;
+}
+
+.decorative-circle-1 {
+  top: 0;
+  right: 0;
+  width: 6rem;
+  height: 6rem;
+  transform: translate(50%, -50%);
+}
+
+.decorative-circle-2 {
+  bottom: 0;
+  left: 0;
+  width: 6rem;
+  height: 6rem;
+  transform: translate(-50%, 50%);
+}
+
+.star-icon-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.star-icon-bg {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: linear-gradient(to bottom right, black, #4b4b4b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.star-icon {
+  width: 2rem;
+  height: 2rem;
+  color: white;
+}
+
+.points-total {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.highlighted-points {
+  color: black;
+  position: relative;
+}
+
+.highlight-underline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0.25rem;
+  background-color: #000000;
+}
+
+.points-message {
+  color: #4b4b4b;
+  margin-bottom: 1rem;
+}
+
+.progress-stars {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-top: 1rem;
+}
+
+.progress-star {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #d1d5db;
+  transition: all 0.3s;
+}
+
+.progress-star.filled {
+  color: black;
+  fill: black;
+}
+
+/* === Bloc A - Barre de progression principale === */
+.progress-section {
+  background-color: white;
+  border: 4px solid black;
+  border-radius: 0.75rem;
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 2.5rem;
+}
+
+.points-counter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.counter-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.counter-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: linear-gradient(to bottom right, black, #4b4b4b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.counter-icon-svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: white;
+}
+
+.counter-label {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0;
+}
+
+.counter-value {
+  font-size: 1.875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+
+.counter-right {
+  text-align: right;
+}
+
+.counter-value-small {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.main-progress-container {
+  position: relative;
+  margin-bottom: 2.5rem;
+}
+
+.progress-bar-3d {
+  height: 1.5rem;
+  background: linear-gradient(to right, #e5e7eb, #d1d5db);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 2px solid black;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #1f2937, black);
+  border-radius: 0.75rem;
+  transition: width 1s ease-out;
+  width: 0;
+  position: relative;
+}
+
+.progress-fill.animated {
+  transition: width 1s ease-out;
+}
+
+.progress-shine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 33%;
+  background-color: white;
+  opacity: 0.2;
+}
+
+.tier-markers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1.5rem;
+  pointer-events: none;
+}
+
+.tier-marker {
+  position: absolute;
+  top: 0;
+  height: 1.5rem;
+  transition: all 0.3s;
+}
+
+.tier-marker.active {
+  transform: scale(1.5);
+}
+
+.position-indicator {
+  position: absolute;
+  top: 0;
+  height: 2.5rem;
+  width: 1rem;
+  background-color: black;
+  border-radius: 9999px;
+  transform: translate(-50%, -25%);
+  border: 2px solid white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: left 1s ease-out, opacity 0.5s ease-out;
+  opacity: 0;
+}
+
+.position-indicator.visible {
+  opacity: 1;
+}
+
+.percentage-indicator {
+  position: absolute;
+  top: 100%;
+  transform: translateX(-50%);
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.tiers-legend {
+  padding-bottom: 1rem;
+  margin: 0 -1rem;
+  padding: 0 1rem;
+}
+
+.tiers-legend::-webkit-scrollbar {
+  display: none;
+}
+
+.tiers-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+  min-width: max-content;
+  margin-top: 0.3rem;
+}
+
+@media (min-width: 640px) {
+  .tiers-grid {
+    min-width: 0;
+  }
+}
+
+.tier-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.3s;
+  opacity: 0.6;
+}
+
+.tier-item.active {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+.tier-item.passed {
+  opacity: 0.9;
+}
+
+.tier-icon-container {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  transition: all 0.3s;
+  border: 2px solid #d1d5db;
+}
+
+.tier-item.passed .tier-icon-container {
+  border: 2px solid black;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tier-item.next .tier-icon-container {
+  border: 2px dashed black;
+  background-color: white;
+  animation: pulse 2s infinite;
+}
+
+.tier-image-container {
+  position: relative;
+  width: 2rem;
+  height: 2rem;
+}
+
+.tier-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.25rem;
+  object-fit: cover;
+}
+
+.tier-image.grayscale {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+
+.checkmark {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  width: 1rem;
+  height: 1rem;
+  background-color: black;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+}
+
+.tier-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #9ca3af;
+}
+
+.tier-icon.active {
+  color: black;
+}
+
+.tier-text {
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.tier-text.active {
+  transform: scale(1.1);
+}
+
+.tier-points {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0 0 0.125rem 0;
+}
+
+.tier-points.active {
+  font-weight: 700;
+}
+
+.tier-reward {
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.tier-reward.passed {
+  font-weight: 600;
+}
+
+.tier-reward.active {
+  color: black;
+}
+
+.active-indicator {
+  width: 100%;
+  height: 0.25rem;
+  background-color: black;
+  border-radius: 9999px;
+  margin-top: 0.5rem;
+  animation: pulse 2s infinite;
+}
+
+/* === Bloc B - Récompenses répétitives === */
+.rewards-section {
+  position: relative;
+  margin-bottom: 2.5rem;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.section-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: linear-gradient(to bottom right, #000000, #000000);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.section-icon-svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.section-title h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.section-line {
+  flex-grow: 1;
+  height: 0.125rem;
+  background: linear-gradient(to right, #000000, transparent);
+}
+
+.rewards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .rewards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .rewards-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.reward-card {
+  background-color: white;
+  border: 4px solid black;
+  border-radius: 0.75rem;
+  box-shadow: 5px 5px 0px 0px rgba(0, 0, 0, 1);
+  padding: 1rem;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.reward-card:hover {
+  transform: translateY(-0.5rem);
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.reward-decoration {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  opacity: 0.1;
+  transform: translate(50%, -50%);
+}
+
+.reward-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 0.5rem;
+}
+
+.reward-badge {
+  background-color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 2px solid black;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.completion-badge {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+  border: 2px solid black;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.completion-badge.complete {
+  background-color: #b8f7d0;
+}
+
+.reward-image-container {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  margin: 1rem 0;
+}
+
+.reward-image-wrapper {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  border: 4px solid black;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.reward-image-wrapper.complete {
+  border-color: #b8f7d0;
+  animation: pulse 2s infinite;
+}
+
+.reward-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reward-image.grayscale {
+  filter: grayscale(1);
+  opacity: 0.7;
+}
+
+.reward-badge-icon {
+  position: absolute;
+  bottom: -0.5rem;
+  right: -0.5rem;
+  background-color: white;
+  border-radius: 50%;
+  padding: 0.25rem;
+  border: 2px solid black;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.reward-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #fdba74;
+}
+
+.reward-content {
+  position: relative;
+  z-index: 1;
+}
+
+.reward-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 0.75rem 0;
+}
+
+.reward-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.reward-progress-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.reward-progress-value {
+  font-size: 0.875rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.reward-progress-bar {
+  height: 1.5rem;
+  background: linear-gradient(to right, #e5e7eb, #d1d5db);
+  border-radius: 9999px;
+  overflow: hidden;
+  border: 2px solid black;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.reward-progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #fdba74, #f97316);
+  border-radius: 9999px;
+  transition: width 0.5s ease-in-out;
+  position: relative;
+}
+
+.reward-progress-shine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 33%;
+  background-color: white;
+  opacity: 0.2;
+}
+
+.reward-progress-milestone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0.25rem;
+  background-color: white;
+  opacity: 0.7;
+}
+
+/* === Bloc C - Progression dépenses === */
+.spending-section {
+  background: linear-gradient(to right, #b8f7d0, #86efac);
+  border: 4px solid black;
+  border-radius: 0.75rem;
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 2.5rem;
+}
+
+.spending-decoration-1 {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10rem;
+  height: 10rem;
+  background-color: white;
+  opacity: 0.1;
+  border-radius: 50%;
+  transform: translate(50%, -50%);
+}
+
+.spending-decoration-2 {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 8rem;
+  height: 8rem;
+  background-color: black;
+  opacity: 0.05;
+  border-radius: 50%;
+  transform: translate(-50%, 50%);
+}
+
+.spending-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.spending-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: linear-gradient(to bottom right, #22c55e, #16a34a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.spending-icon-svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.spending-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.spending-card {
+  background-color: white;
+  border: 2px solid black;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.spending-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.spending-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.spending-percentage {
+  font-size: 0.875rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.spending-progress-container {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.spending-progress-bar {
+  height: 1.5rem;
+  background: linear-gradient(to right, #e5e7eb, #d1d5db);
+  border-radius: 9999px;
+  overflow: hidden;
+  border: 2px solid black;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.spending-progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #22c55e, #16a34a);
+  border-radius: 9999px;
+  transition: width 1s ease-out;
+  width: 0;
+  position: relative;
+}
+
+.spending-progress-fill.animated {
+  transition: width 1s ease-out;
+}
+
+.spending-progress-shine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 33%;
+  background-color: white;
+  opacity: 0.2;
+}
+
+.spending-milestone {
+  position: absolute;
+  top: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: white;
+  transform: translateY(-50%);
+  opacity: 0.3;
+}
+
+.spending-milestone.reached {
+  opacity: 0.7;
+}
+
+.spending-target-marker {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 1.5rem;
+  width: 0.5rem;
+  background-color: black;
+  border-radius: 9999px;
+  transform: translateX(50%);
+}
+
+.spending-values {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.spending-current {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.spending-currency {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background-color: #22c55e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.75rem;
+}
+
+.spending-amount {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.spending-target {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.spending-target-label {
+  color: #6b7280;
+  margin: 0;
+}
+
+.spending-target-value {
+  font-weight: 700;
+  margin: 0;
+}
+
+.spending-message {
+  background-color: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(4px);
+  border: 2px solid black;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.spending-message p {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* === Utilitaires === */
+.icon-full {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 2rem;
+  }
+}

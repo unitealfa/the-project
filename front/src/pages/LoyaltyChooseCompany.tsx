@@ -1,56 +1,68 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
+"use client";
 
-interface Company { _id: string; nom_company: string; pfp?: string; }
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
+import "../pages-css/LoyaltyChooseCompany.css";
+
+interface Company {
+  _id: string;
+  nom_company: string;
+  pfp?: string;
+}
 
 export default function LoyaltyChooseCompany() {
   const [companies, setCompanies] = useState<Company[]>([]);
-  const api = import.meta.env.VITE_API_URL;
-  const token = localStorage.getItem('token') || '';
-  const navigate = useNavigate();
+  const api   = import.meta.env.VITE_API_URL || "";
+  const token = localStorage.getItem("token") || "";
+  const nav   = useNavigate();
 
+  /* ─── Récupération des sociétés affiliées ─── */
   useEffect(() => {
     fetch(`${api}/loyalty/available`, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     })
-      .then(res => res.json())
-      .then((data: Company[]) => {
-        setCompanies(data);
-      })
+      .then((r) => r.json())
+      .then(setCompanies)
       .catch(console.error);
   }, [api, token]);
 
+  /* ─── RENDER ─── */
   return (
-    <>
+    <div className="page-container">
       <Header />
-      <main style={{ padding: '2rem' }}>
-        <h1>Mes Programmes Fidélité</h1>
-        {companies.length === 0 && (
+
+      <main className="content-container">
+        <h1 className="page-title">MES PROGRAMMES FIDÉLITÉ</h1>
+
+        {companies.length === 0 ? (
           <p>Vous n’êtes affilié à aucun programme actif.</p>
+        ) : (
+          <div className="companies-grid">
+            {companies.map((c) => (
+              <div
+                key={c._id}
+                className="company-card"
+                onClick={() => nav(`/loyalty-client/${c._id}`)}
+              >
+                {/* Logo ou placeholder */}
+                <div className="company-logo">
+                  {c.pfp ? (
+                    <img src={`${api}/${c.pfp}`} alt={c.nom_company} />
+                  ) : (
+                    <span className="company-placeholder">🏢</span>
+                  )}
+                </div>
+
+                {/* Nom */}
+                <p className="company-name">
+                  {c.nom_company || "Sans nom"}
+                </p>
+              </div>
+            ))}
+          </div>
         )}
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          {companies.map(c => (
-            <div
-              key={c._id}
-              onClick={() => navigate(`/loyalty-client/${c._id}`)}
-              style={{
-                cursor: 'pointer',
-                border: '1px solid #ccc',
-                padding: '1rem',
-                textAlign: 'center',
-                width: 150
-              }}
-            >
-              {c.pfp
-                ? <img src={`${api}/${c.pfp}`} alt={c.nom_company} style={{ width: '100%', height: 'auto' }} />
-                : <div style={{ width: '100%', height: 80, background: '#eee' }} />
-              }
-              <p style={{ marginTop: 8 }}>{c.nom_company || 'Sans nom'}</p>
-            </div>
-          ))}
-        </div>
       </main>
-    </>
+    </div>
   );
 }
