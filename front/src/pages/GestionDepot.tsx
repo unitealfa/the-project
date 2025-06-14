@@ -1,9 +1,10 @@
-// front/src/pages/GestionDepot.tsx
+// src/pages/GestionDepot.tsx
 import React, { useEffect, useState, ChangeEvent } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 import Header from "../components/Header";
+import "../pages-css/GestionDepot.css";
 
 interface Disponibilite {
   depot_id: string;
@@ -32,359 +33,276 @@ export default function GestionDepot() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
 
-  // États pour la recherche et le filtre
   const [searchName, setSearchName] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
 
+  const [qtyPopup, setQtyPopup] = useState<{
+    visible: boolean;
+    product: Product | null;
+    direction: "+" | "-" | null;
+    amount: number;
+  }>({ visible: false, product: null, direction: null, amount: 0 });
+
   useEffect(() => {
     if (!depotId) return;
-
-    const fetchData = async () => {
+    (async () => {
       try {
         const res = await axios.get(`/api/products/by-depot/${depotId}`);
-        if (Array.isArray(res.data)) {
-          setProducts(res.data);
-        }
+        if (Array.isArray(res.data)) setProducts(res.data);
       } catch (err) {
-        setError("Erreur lors du chargement des produits");
         console.error(err);
+        setError("Erreur lors du chargement des produits");
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchData();
+    })();
   }, [depotId]);
 
   const handleDelete = async (productId: string) => {
-    if (!window.confirm("Supprimer ce produit de ce dépôt ?")) return;
-    try {
-      const product = products.find((p) => p._id === productId);
-      if (!product) return;
-
-      const updatedDispo = product.disponibilite.filter(
-        (d) => d.depot_id !== depotId
-      );
-      await axios.put(`/api/products/${productId}`, {
-        disponibilite: updatedDispo,
-      });
-
-      const updated = await axios.get(`/api/products/by-depot/${depotId}`);
-      setProducts(updated.data);
-    } catch (err) {
-      console.error("Erreur lors de la suppression", err);
-    }
+    if (!confirm("Supprimer ce produit de ce dépôt ?")) return;
+    const prod = products.find(p => p._id === productId);
+    if (!prod) return;
+    const updatedDispo = prod.disponibilite.filter(d => d.depot_id !== depotId);
+    await axios.put(`/api/products/${productId}`, { disponibilite: updatedDispo });
+    const fresh = await axios.get(`/api/products/by-depot/${depotId}`);
+    setProducts(fresh.data);
   };
 
-  // Extraire la liste des catégories uniques
-  const categories = Array.from(
-    new Set(products.map((p) => p.categorie))
-  ).sort();
-
-  // Appliquer le filtrage par nom et catégorie
-  const filteredProducts = products.filter((product) => {
-    const matchesName = product.nom_product
-      .toLowerCase()
-      .includes(searchName.toLowerCase().trim());
-    const matchesCategory =
-      selectedCategory === "" || product.categorie === selectedCategory;
-    return matchesName && matchesCategory;
+  const categories = Array.from(new Set(products.map(p => p.categorie))).sort();
+  const filteredProducts = products.filter(p => {
+    const nm = p.nom_product.toLowerCase().includes(searchName.toLowerCase());
+    const ct = !selectedCategory || p.categorie === selectedCategory;
+    return nm && ct;
   });
 
-  const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setSearchName(e.target.value);
-  };
-
-  const handleCategoryChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCategory(e.target.value);
-  };
-
-  const resetFilters = () => {
-    setSearchName("");
-    setSelectedCategory("");
-  };
-
-  const handleExcelUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const onExcelUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
-
     setUploadError(null);
     setUploadSuccess(null);
-
     try {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(new Uint8Array(data), { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const json: ExcelRow[] = XLSX.utils.sheet_to_json(ws);
+      if (!json.length) { setUploadError("Fichier vide"); return; }
+      if (!("nom_product" in json[0] && "quantite" in json[0])) {
+        setUploadError("Colonnes requises manquantes"); return;
+      }
+      let ok = 0, err = 0;
+      for (const row of json) {
+        const prod = products.find(p =>
+          p.nom_product.toLowerCase() === row.nom_product.toLowerCase()
+        );
+        if (!prod) { err++; continue; }
+        const dispo = prod.disponibilite.find(d => d.depot_id === depotId);
+        const base = dispo?.quantite || 0;
+        const newQty = base + Number(row.quantite);
         try {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json<ExcelRow>(worksheet);
-
-          console.log("Données Excel lues:", jsonData);
-
-          // Vérifier que les colonnes requises sont présentes
-          if (jsonData.length === 0) {
-            setUploadError("Le fichier Excel est vide");
-            return;
-          }
-
-          const firstRow = jsonData[0];
-          if (!('nom_product' in firstRow) || !('quantite' in firstRow)) {
-            setUploadError("Le fichier Excel doit contenir les colonnes 'nom_product' et 'quantite'");
-            return;
-          }
-
-          let updatedCount = 0;
-          let errorCount = 0;
-
-          // Mettre à jour le stock pour chaque produit
-          for (const row of jsonData) {
-            console.log("Traitement du produit:", row.nom_product);
-            const product = products.find(p => p.nom_product.toLowerCase() === row.nom_product.toLowerCase());
-            
-            if (product) {
-              console.log("Produit trouvé:", product._id);
-              try {
-                // Trouver la quantité actuelle du produit dans ce dépôt
-                const currentDispo = product.disponibilite.find(d => d.depot_id === depotId);
-                const currentQuantity = currentDispo?.quantite || 0;
-                const newQuantity = currentQuantity + parseInt(row.quantite.toString());
-
-                const response = await axios.put(`/api/products/${product._id}/depot/${depotId}`, {
-                  quantite: newQuantity
-                });
-                console.log("Réponse de mise à jour:", response.data);
-                updatedCount++;
-              } catch (err) {
-                console.error(`Erreur lors de la mise à jour du produit ${row.nom_product}:`, err);
-                errorCount++;
-              }
-            } else {
-              console.log("Produit non trouvé:", row.nom_product);
-              errorCount++;
-            }
-          }
-
-          // Rafraîchir la liste des produits
-          const updated = await axios.get(`/api/products/by-depot/${depotId}`);
-          setProducts(updated.data);
-          
-          if (updatedCount > 0) {
-            setUploadSuccess(`${updatedCount} produits mis à jour avec succès${errorCount > 0 ? `, ${errorCount} erreurs` : ''}`);
-          } else {
-            setUploadError("Aucun produit n'a pu être mis à jour");
-          }
-        } catch (err) {
-          console.error("Erreur lors du traitement du fichier Excel:", err);
-          setUploadError("Erreur lors du traitement du fichier Excel");
+          await axios.put(`/api/products/${prod._id}/depot/${depotId}`, { quantite: newQty });
+          ok++;
+        } catch {
+          err++;
         }
-      };
-      reader.readAsArrayBuffer(file);
-    } catch (err) {
-      console.error("Erreur lors de la lecture du fichier:", err);
-      setUploadError("Erreur lors de la lecture du fichier");
+      }
+      const fresh = await axios.get(`/api/products/by-depot/${depotId}`);
+      setProducts(fresh.data);
+      setUploadSuccess(`${ok} mis à jour${err ? `, ${err} erreurs` : ""}`);
+    } catch (e) {
+      console.error(e);
+      setUploadError("Erreur traitement Excel");
     }
   };
 
-  if (loading) return <p>Chargement…</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  const openQtyPopup = (product: Product) => {
+    setQtyPopup({ visible: true, product, direction: null, amount: 0 });
+  };
+
+  const applyQuantity = async () => {
+    const { product, direction, amount } = qtyPopup;
+    if (!product || !direction) return;
+    if (amount <= 0) { alert("Saisissez un nombre > 0"); return; }
+    const dispo = product.disponibilite.find(d => d.depot_id === depotId);
+    const oldQty = dispo?.quantite || 0;
+    const newQty = oldQty + (direction === "+" ? amount : -amount);
+    if (newQty < 0) { alert("Quantité ne peut pas être négative"); return; }
+    if (
+      !confirm(
+        `Vous allez ${direction === "+" ? "ajouter" : "retirer"} ${amount} à “${product.nom_product}”.\n` +
+        `Ancienne : ${oldQty} → Nouvelle : ${newQty}\nConfirmer ?`
+      )
+    ) return;
+    await axios.put(
+      `/api/products/${product._id}/depot/${depotId}`,
+      { quantite: newQty }
+    );
+    const fresh = await axios.get(`/api/products/by-depot/${depotId}`);
+    setProducts(fresh.data);
+    setQtyPopup({ visible: false, product: null, direction: null, amount: 0 });
+  };
 
   return (
     <>
-    <Header />
-    <div
-      style={{
-        padding: "2rem",
-        fontFamily: "Arial, sans-serif",
-        maxWidth: "900px",
-        margin: "auto",
-      }}
-    >
-      <h2>Produits de votre dépôt</h2>
+      <Header />
+      <div className="gd-page">
+        <h2 className="gd-title-card">Produits de votre dépôt</h2>
 
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
-        <button
-          onClick={() => navigate(`/add-product?depot=${depotId}`)}
-          style={{
-            padding: "0.5rem 1rem",
-            fontSize: "1rem",
-          }}
-        >
-          ➕ Ajouter un nouveau produit
-        </button>
-
-        <div style={{ position: "relative" }}>
+        <div className="gd-controls">
+          <button
+            type="button"
+            className="gd-btn gd-btn-control"
+            onClick={() => navigate(`/add-product?depot=${depotId}`)}
+          >
+             Ajouter un produit
+          </button>
           <input
             type="file"
             accept=".xlsx,.xls"
-            onChange={handleExcelUpload}
-            style={{ display: "none" }}
             id="excel-upload"
+            onChange={onExcelUpload}
+            style={{ display: "none" }}
           />
-          <label
-            htmlFor="excel-upload"
-            style={{
-              display: "inline-block",
-              padding: "0.5rem 1rem",
-              backgroundColor: "#4f46e5",
-              color: "#fff",
-              borderRadius: "4px",
-              cursor: "pointer",
-            }}
-          >
-            📊 Mettre à jour le stock via Excel
+          <label htmlFor="excel-upload" className="gd-btn gd-btn-control">
+            Mise à jour via Excel
           </label>
         </div>
+
+        {uploadError && <p className="gd-error">{uploadError}</p>}
+        {uploadSuccess && <p className="gd-success">{uploadSuccess}</p>}
+        {loading && <p>Chargement…</p>}
+        {error && <p className="gd-error">{error}</p>}
+
+        {!loading && !error && (
+          <>
+            <div className="gd-filter">
+              <input
+                placeholder="Rechercher..."
+                value={searchName}
+                onChange={e => setSearchName(e.target.value)}
+              />
+              <select
+                value={selectedCategory}
+                onChange={e => setSelectedCategory(e.target.value)}
+              >
+                <option value="">Toutes catégories</option>
+                {categories.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="gd-btn gd-btn-filter"
+                onClick={() => { setSearchName(""); setSelectedCategory(""); }}
+              >
+                Réinitialiser
+              </button>
+            </div>
+
+            <div className="gd-table-wrap">
+              <table className="gd-table">
+                <thead>
+                  <tr>
+                    <th>Nom</th>
+                    <th>Catégorie</th>
+                    <th>Quantité</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProducts.map(p => {
+                    const dispo = p.disponibilite.find(d => d.depot_id === depotId);
+                    return (
+                      <tr key={p._id}>
+                        <td>{p.nom_product}</td>
+                        <td>{p.categorie}</td>
+                        <td className="gd-qty-cell">
+                          {dispo?.quantite ?? 0}
+                          <button
+                            type="button"
+                            className="gd-btn gd-btn-qty"
+                            onClick={() => openQtyPopup(p)}
+                          >
+                            ± Quantité
+                          </button>
+                        </td>
+                        <td className="gd-actions">
+                          <button
+                            type="button"
+                            className="gd-btn gd-btn-action"
+                            onClick={() => navigate(`/product-detail/${p._id}`)}
+                          >
+                            Détails
+                          </button>
+                          <button
+                            type="button"
+                            className="gd-btn gd-btn-action"
+                            onClick={() => navigate(`/product-edit/${p._id}?fromDepot=${depotId}`)}
+                          >
+                            Modifier
+                          </button>
+                          <button
+                            type="button"
+                            className="gd-btn gd-btn-action"
+                            onClick={() => handleDelete(p._id)}
+                          >
+                            Supprimer
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {qtyPopup.visible && qtyPopup.product && (
+          <div className="gd-popup-overlay">
+            <div className="gd-popup">
+              <h3>Modifier "{qtyPopup.product.nom_product}"</h3>
+              <div className="gd-popup-dir">
+                <button
+                  className={qtyPopup.direction === "+" ? "selected" : ""}
+                  onClick={() => setQtyPopup(q => ({ ...q, direction: "+" }))}
+                >
+                  +
+                </button>
+                <button
+                  className={qtyPopup.direction === "-" ? "selected" : ""}
+                  onClick={() => setQtyPopup(q => ({ ...q, direction: "-" }))}
+                >
+                  −
+                </button>
+              </div>
+              <div className="gd-popup-input">
+                <input
+                  type="number"
+                  min={0}
+                  value={qtyPopup.amount}
+                  onChange={e => setQtyPopup(q => ({ ...q, amount: Number(e.target.value) }))}
+                  placeholder="0"
+                />
+              </div>
+              <div className="gd-popup-actions">
+                <button
+                  type="button"
+                  className="gd-btn gd-btn-popup-action"
+                  onClick={applyQuantity}
+                >
+                  Sauvegarder
+                </button>
+                <button
+                  type="button"
+                  className="gd-btn gd-btn-popup-action"
+                  onClick={() => setQtyPopup({ visible: false, product: null, direction: null, amount: 0 })}
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-
-      {uploadError && (
-        <div style={{ color: "red", marginBottom: "1rem" }}>{uploadError}</div>
-      )}
-      {uploadSuccess && (
-        <div style={{ color: "green", marginBottom: "1rem" }}>{uploadSuccess}</div>
-      )}
-
-      {/* Barre de recherche par nom et filtre par catégorie */}
-      <div
-        style={{
-          display: "flex",
-          gap: "0.5rem",
-          marginBottom: "1rem",
-          alignItems: "center",
-        }}
-      >
-        <input
-          type="text"
-          placeholder="Rechercher par nom..."
-          value={searchName}
-          onChange={handleNameChange}
-          style={{
-            flex: 1,
-            padding: "0.5rem",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-          }}
-        />
-        <select
-          value={selectedCategory}
-          onChange={handleCategoryChange}
-          style={{
-            padding: "0.5rem",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            background: "#fff",
-          }}
-        >
-          <option value="">Toutes catégories</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
-        <button
-          onClick={resetFilters}
-          style={{
-            padding: "0.5rem 1rem",
-            backgroundColor: "#f3f4f6",
-            color: "#333",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
-          disabled={!searchName && !selectedCategory}
-        >
-          Réinitialiser
-        </button>
-      </div>
-
-      {filteredProducts.length === 0 ? (
-        <p>Aucun produit trouvé dans ce dépôt.</p>
-      ) : (
-        <table
-          border={1}
-          cellPadding={10}
-          cellSpacing={0}
-          style={{ width: "100%" }}
-        >
-          <thead>
-            <tr>
-              <th>Nom</th>
-              <th>Catégorie</th>
-              <th>Quantité</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredProducts.map((product) => {
-              const dispo = product.disponibilite.find(
-                (d) => d.depot_id === depotId
-              );
-              return (
-                <tr key={product._id}>
-                  <td>{product.nom_product}</td>
-                  <td>{product.categorie}</td>
-                  <td>
-                    <form
-                      onSubmit={async (e) => {
-                        e.preventDefault();
-                        const quantiteInput = (
-                          e.currentTarget.elements.namedItem(
-                            "quantite"
-                          ) as HTMLInputElement
-                        ).value;
-                        try {
-                          await axios.put(
-                            `/api/products/${product._id}/depot/${depotId}`,
-                            {
-                              quantite: parseInt(quantiteInput),
-                            }
-                          );
-                          const updated = await axios.get(
-                            `/api/products/by-depot/${depotId}`
-                          );
-                          setProducts(updated.data);
-                        } catch (err) {
-                          console.error("Erreur maj quantité", err);
-                          alert("Erreur lors de la mise à jour");
-                        }
-                      }}
-                    >
-                      <input
-                        type="number"
-                        name="quantite"
-                        defaultValue={dispo?.quantite ?? 0}
-                        style={{ width: "60px" }}
-                      />
-                      <button type="submit">💾</button>
-                    </form>
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => navigate(`/product-detail/${product._id}`)}
-                    >
-                      Détails
-                    </button>{" "}
-                    <button
-                      onClick={() =>
-                        navigate(
-                          `/product-edit/${product._id}?fromDepot=${depotId}`
-                        )
-                      }
-                    >
-                      Modifier
-                    </button>{" "}
-                    <button onClick={() => handleDelete(product._id)}>
-                      Supprimer
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
-    </div>
     </>
   );
 }
