@@ -1,0 +1,138 @@
+/* =============== PAGE ================= */
+.dt-page {
+  padding: 2rem 1rem 3rem;
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+/* ======= TITRE « cartouche » ======= */
+.dt-title-card {
+  display: inline-block;
+  background: #fff;
+  border: 4px solid #000;
+  padding: 1.25rem 1.75rem;
+  box-shadow: 6px 6px 0 #000;
+  margin-bottom: 2rem;
+}
+.dt-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #000;
+}
+
+/* ======= BOUTON AJOUTER ======= */
+.dt-btn-add {
+  display: block;           /* bloc = toujours à la ligne */
+  margin: 1rem 0 2.5rem;    /* 1rem au-dessus, 2.5rem en-dessous */
+  padding: .6rem 1.4rem;
+  font-size: .9rem;
+  font-weight: 700;
+  background: #fff;
+  color: #000;
+  border: 4px solid #000;
+  box-shadow: 4px 4px 0 #000;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+}
+.dt-btn-add:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: 8px 8px 0 #000;
+}
+
+/* ======= TABLE ======= */
+.dt-table-wrap {
+  overflow-x: auto;
+}
+.dt-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;  /* limite le débordement horizontal */
+}
+.dt-table th,
+.dt-table td {
+  padding: .6rem .5rem;
+  border-bottom: 1px solid #000;
+}
+.dt-table th {
+  background: #fff;
+  border-top: 4px solid #000;
+  border-bottom: 4px solid #000;
+  font-weight: 700;
+  text-align: left;
+}
+.dt-table tr:first-child td { border-top: 4px solid #000; }
+.dt-table tr:last-child  td { border-bottom: 4px solid #000; }
+
+/* ======= AVATAR ======= */
+.dt-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #000;
+}
+
+/* ======= ACTIONS ======= */
+.dt-actions {
+  white-space: nowrap;  /* empêche le wrap sur desktop */
+}
+.dt-actions button {
+  margin-right: .4rem;
+  padding: .25rem .7rem;
+  font-size: .8rem;
+  background: #fff;
+  color: #000;
+  border: 2px solid #000;
+  cursor: pointer;
+}
+.dt-actions button:hover { background: #f3f4f6; }
+.dt-actions .danger {
+  background: #000;
+  color: #fff;
+}
+.dt-actions .danger:hover { background: #333; }
+
+/* ======= UTILITAIRES ======= */
+.dt-error   { color: #dc2626; font-weight: 600; margin-bottom: 1rem; }
+.dt-loading { font-style: italic; }
+.dt-empty   { text-align: center; padding: 1rem 0; font-style: italic; }
+
+/* ======= RESPONSIVE MOBILE ======= */
+@media (max-width: 520px) {
+
+  /* 1️⃣ on force un min-width pour activer le scroll */
+  .dt-table { min-width: 500px; }
+
+  /* 2️⃣ actions empilées sur mobile */
+  .dt-actions { white-space: normal; }
+  .dt-actions button {
+    display: block;
+    width: 100%;
+    margin: .25rem 0;
+  }
+  .dt-table-wrap {
+  overflow-x: auto;
+  margin-right: -20rem;
+  overflow-y: auto;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+}
+
+/* ====== RESPONSIVE MOBILE ====== */
+@media (max-width: 520px) {
+  .et-table {
+    min-width: 600px; /* Garantit suffisamment d’espace pour le tableau */
+  }
+
+  .et-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .et-actions button {
+    display: block;
+    width: 100%;
+    margin: 0.25rem 0;
+  }
+}

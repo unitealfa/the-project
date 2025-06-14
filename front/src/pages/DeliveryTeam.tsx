@@ -1,26 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import Header from '../components/Header';
-import { PaginationSearch } from '../components/PaginationSearch';
-import { apiFetch } from '../utils/api';
+// front/src/pages/DeliveryTeam.tsx
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import Header from "../components/Header";
+import { PaginationSearch } from "../components/PaginationSearch";
+import { apiFetch } from "../utils/api";
+import "../pages-css/DeliveryTeam.css";
 
 interface Member { _id: string; nom: string; prenom: string; role: string; pfp: string }
 interface Depot  { _id: string; nom_depot: string }
 
 export default function DeliveryTeam() {
-  const { depotId = '' } = useParams<{ depotId: string }>();
-  const nav = useNavigate();
-  const loc = useLocation();
-  const [members, setMembers] = useState<Member[]>([]);
-  const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
-  const [depot, setDepot] = useState<Depot | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  const user = JSON.parse(localStorage.getItem('user') || '{}') as { role: string };
+  const { depotId = "" } = useParams<{ depotId: string }>();
+  const nav               = useNavigate();
+  const loc               = useLocation();
+  const [members, setMembers]           = useState<Member[]>([]);
+  const [filtered, setFiltered]         = useState<Member[]>([]);
+  const [depot,    setDepot]            = useState<Depot | null>(null);
+  const [loading,  setLoading]          = useState(true);
+  const [error,    setError]            = useState("");
+  const [search,   setSearch]           = useState("");
+  const [page,     setPage]             = useState(1);
+  const perPage                          = 10;
+  const user = JSON.parse(localStorage.getItem("user") || "{}") as { role:string };
 
   useEffect(() => {
     let cancel = false;
@@ -29,16 +32,16 @@ export default function DeliveryTeam() {
       try {
         const [dRes, tRes] = await Promise.all([
           apiFetch(`/api/depots/${depotId}`),
-          apiFetch(`/api/teams/${depotId}?role=livraison`),
+          apiFetch(`/api/teams/${depotId}?role=livraison`)
         ]);
         if (cancel) return;
         setDepot(await dRes.json());
-        const payload = await tRes.json();
-        const membersData = Array.isArray(payload) ? payload : payload.livraison ?? [];
-        setMembers(membersData);
-        setFilteredMembers(membersData);
+        const raw = await tRes.json();
+        const list: Member[] = Array.isArray(raw) ? raw : raw.livraison ?? [];
+        setMembers(list);
+        setFiltered(list);
       } catch {
-        if (!cancel) setError('Impossible de charger');
+        if (!cancel) setError("Impossible de charger");
       } finally {
         if (!cancel) setLoading(false);
       }
@@ -47,116 +50,101 @@ export default function DeliveryTeam() {
   }, [depotId, loc.key]);
 
   useEffect(() => {
-    // Filtrer les membres en fonction du terme de recherche
-    const filtered = members.filter(member => 
-      member.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.role.toLowerCase().includes(searchTerm.toLowerCase())
+    const f = members.filter(m =>
+      `${m.nom} ${m.prenom} ${m.role}`.toLowerCase().includes(search.toLowerCase())
     );
-    setFilteredMembers(filtered);
-    setCurrentPage(1); // Réinitialiser la page courante lors d'une nouvelle recherche
-  }, [searchTerm, members]);
+    setFiltered(f);
+    setPage(1);
+  }, [search, members]);
 
-  // Calculer les membres à afficher pour la page courante
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredMembers.slice(indexOfFirstItem, indexOfLastItem);
+  const iLast  = page * perPage;
+  const iFirst = iLast - perPage;
+  const slice  = filtered.slice(iFirst, iLast);
 
-  const handleDelete = async (memberId: string) => {
-    if (!window.confirm('Supprimer ce membre ?')) return;
+  const del = async (id:string) => {
+    if (!confirm("Supprimer ce membre ?")) return;
     try {
-      await apiFetch(`/api/teams/members/${memberId}`, { method: 'DELETE' });
-      setMembers(members => members.filter(m => m._id !== memberId));
-    } catch {
-      setError('Erreur lors de la suppression');
-    }
+      await apiFetch(`/api/teams/members/${id}`, { method:"DELETE" });
+      setMembers(l => l.filter(m => m._id !== id));
+    } catch { setError("Erreur lors de la suppression"); }
   };
 
   return (
     <>
       <Header />
-      <div style={{ padding:'1rem', fontFamily:'Arial, sans-serif' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <h1 style={{ margin:0 }}>
-            Équipe Livraison {depot ? `du dépôt « ${depot.nom_depot} »` : ''}
+      <div className="dt-page">
+
+        {/* TITRE */}
+        <div className="dt-title-card">
+          <h1 className="dt-title">
+            Équipe Livraison
+            {depot && <> du dépôt « {depot.nom_depot} »</>}
           </h1>
-          {user.role === 'responsable depot' && (
-            <button onClick={() => nav(`/teams/${depotId}/livraison/add`)}
-                    style={{ padding:'.5rem 1rem', background:'#4f46e5', color:'#fff', border:'none', borderRadius:8 }}>
-              + Ajouter un membre
-            </button>
-          )}
         </div>
-        {error && <p style={{ color:'red' }}>{error}</p>}
+
+        {/* BOUTON TOUJOURS EN DESSOUS */}
+        {user.role === "responsable depot" && (
+          <button
+            className="dt-btn-add"
+            onClick={() => nav(`/teams/${depotId}/livraison/add`)}
+          >
+            + Ajouter un membre
+          </button>
+        )}
+
+        {error && <p className="dt-error">{error}</p>}
         {loading ? (
-          <p>Chargement…</p>
+          <p className="dt-loading">Chargement…</p>
         ) : (
           <>
             <PaginationSearch
-              totalItems={filteredMembers.length}
-              itemsPerPage={itemsPerPage}
-              currentPage={currentPage}
-              onPageChange={setCurrentPage}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              placeholder="Rechercher un membre..."
+              totalItems    ={filtered.length}
+              itemsPerPage  ={perPage}
+              currentPage   ={page}
+              onPageChange  ={setPage}
+              searchTerm    ={search}
+              onSearchChange={setSearch}
+              placeholder   ="Rechercher un membre…"
             />
-            <table style={{ width:'100%', borderCollapse:'collapse', marginTop:'1rem' }}>
-              <thead>
-                <tr>
-                  {['Photo', 'Nom','Prénom','Rôle','Actions'].map(h => (
-                    <th key={h} style={{ padding:'.5rem', borderBottom:'1px solid #ccc', textAlign:'left' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.map(m => (
-                  <tr key={m._id}>
-                    <td style={{ padding:'.5rem 0' }}>
-                      <img
-                        src={`${import.meta.env.VITE_API_URL}/${m.pfp}`}
-                        alt={`Profil de ${m.nom} ${m.prenom}`}
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: '50%',
-                          objectFit: 'cover',
-                          border: '1px solid #ccc',
-                        }}
-                      />
-                    </td>
-                    <td style={{ padding:'.5rem 0' }}>{m.nom}</td>
-                    <td style={{ padding:'.5rem 0' }}>{m.prenom}</td>
-                    <td style={{ padding:'.5rem 0' }}>{m.role}</td>
-                    <td>
-                      <button
-                        style={{ marginRight:8 }}
-                        onClick={() => nav(`/teams/members/${m._id}/detail-delivery`)}
-                      >
-                        Détails
-                      </button>
-                      <button
-                        style={{ marginRight:8 }}
-                        onClick={() => nav(`/teams/members/${m._id}/edit-delivery`)}
-                      >
-                        Éditer
-                      </button>
-                      {(user.role === 'admin' || user.role === 'responsable depot') && (
-                        <button
-                          style={{ color:'#fff', background:'#dc2626', border:'none', borderRadius:4, padding:'0.25rem 0.75rem' }}
-                          onClick={() => handleDelete(m._id)}
-                        >
-                          Supprimer
-                        </button>
-                      )}
-                    </td>
+
+            <div className="et-table-wrap">
+              <table className="et-table">
+                <thead>
+                  <tr>
+                    {["Photo","Nom","Prénom","Rôle","Actions"].map(h => (
+                      <th key={h}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-                {currentItems.length === 0 && (
-                  <tr><td colSpan={5} style={{ padding:'.75rem', fontStyle:'italic' }}>Aucun membre trouvé</td></tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {slice.length ? slice.map(m => (
+                    <tr key={m._id}>
+                      <td>
+                        <img
+                          className="dt-avatar"
+                          src={`${import.meta.env.VITE_API_URL}/${m.pfp}`}
+                          alt={`Profil de ${m.nom} ${m.prenom}`}
+                        />
+                      </td>
+                      <td>{m.nom}</td>
+                      <td>{m.prenom}</td>
+                      <td>{m.role}</td>
+                      <td className="dt-actions">
+                        <button onClick={()=>nav(`/teams/members/${m._id}/detail-delivery`)}>Détails</button>
+                        <button onClick={()=>nav(`/teams/members/${m._id}/edit-delivery`)}>Éditer</button>
+                        {(user.role === "admin" || user.role === "responsable depot") && (
+                          <button className="danger" onClick={()=>del(m._id)}>Supprimer</button>
+                        )}
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={5} className="dt-empty">Aucun membre trouvé</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </>
         )}
       </div>
