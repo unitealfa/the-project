@@ -6,6 +6,7 @@ import { orderService } from "@/services/orderService";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { Pencil, Trash2, ShoppingCart } from "lucide-react";
+import "./Cart.css";
 
 interface Product {
   _id: string;
@@ -192,655 +193,322 @@ export default function Cart() {
   return (
     <>
       <Header />
-      <main
-        style={{
-          display: "flex",
-          gap: "3rem",
-          background: "#fafafa",
-          minHeight: "100vh",
-          padding: "2rem",
-          alignItems: "flex-start",
-          flexWrap: "nowrap",
-        }}
-      >
-        {cart.length === 0 ? (
-          <div
-            style={{
-              flex: 1,
-              textAlign: "center",
-              padding: "4rem 2rem",
-              background: "#ffffff",
-              borderRadius: 12,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-            }}
-          >
-            <h2 style={{ fontSize: "1.8rem", color: "#333", marginBottom: "1.5rem" }}>
-              Votre panier est vide
-            </h2>
-            <button
-              onClick={() => navigate("/productclient")}
-              style={{
-                padding: "0.9rem 1.8rem",
-                background: "#1a1a1a",
-                color: "white",
-                border: "none",
-                borderRadius: 24,
-                fontWeight: 600,
-                fontSize: "1rem",
-                cursor: "pointer",
-                transition: "background 0.2s, transform 0.15s",
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.background = "#333";
-                e.currentTarget.style.transform = "scale(1.03)";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.background = "#1a1a1a";
-                e.currentTarget.style.transform = "none";
-              }}
-            >
-              Continuer mes achats
-            </button>
-          </div>
-        ) : (
-          <div
-            style={{
-              display: "flex",
-              gap: "3rem",
-              width: "100%",
-              alignItems: "flex-start",
-            }}
-          >
-            <section
-              style={{
-                flex: 2,
-                background: "#fff",
-                borderRadius: 12,
-                padding: "2.5rem 2rem",
-                minWidth: 0,
-                display: "flex",
-                flexDirection: "column",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                boxSizing: "border-box",
-              }}
-            >
-              <h2
-                style={{
-                  margin: 0,
-                  color: "#1a1a1a",
-                  fontSize: "1.3rem",
-                  fontWeight: 700,
-                  marginBottom: "2rem",
-                  textTransform: "uppercase",
-                  letterSpacing: "2px",
-                }}
-              >
-                Votre panier
-              </h2>
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  background: "transparent",
-                  fontSize: "1rem",
-                  color: "#1a1a1a",
-                  marginBottom: "2rem",
-                }}
-              >
-                <thead>
-                  <tr
-                    style={{
-                      borderBottom: "2px solid #f3f4f6",
-                      color: "#888",
-                      fontWeight: 500,
-                      fontSize: "0.98rem",
-                      letterSpacing: "1px",
-                    }}
-                  >
-                    <th
-                      style={{
-                        textAlign: "left",
-                        padding: "0 0 1rem 0",
-                        fontWeight: 500,
-                      }}
-                    >
-                      Produit
-                    </th>
-                    <th
-                      style={{
-                        textAlign: "center",
-                        padding: "0 0 1rem 0",
-                        fontWeight: 500,
-                      }}
-                    >
-                      Prix
-                    </th>
-                    <th
-                      style={{
-                        textAlign: "center",
-                        padding: "0 0 1rem 0",
-                        fontWeight: 500,
-                      }}
-                    >
-                      Qté
-                    </th>
-                    <th
-                      style={{
-                        textAlign: "center",
-                        padding: "0 0 1rem 0",
-                        fontWeight: 500,
-                      }}
-                    >
-                      Total
-                    </th>
-                    <th
-                      style={{
-                        textAlign: "center",
-                        padding: "0 0 1rem 0",
-                        fontWeight: 500,
-                      }}
-                    ></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cart.map(
-                    (item) =>
-                      item.product && (
-                        <tr
-                          key={item._id}
-                          style={{
-                            borderBottom: "1px solid #f3f4f6",
-                            height: 90,
-                          }}
-                        >
-                          {/* Produit */}
-                          <td
-                            style={{
-                              padding: "1.2rem 0",
-                              verticalAlign: "middle",
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "1.2rem",
-                              }}
-                            >
-                              {item.product.images &&
-                                item.product.images.length > 0 && (
-                                  <img
-                                    src={item.product.images[0]}
-                                    alt={item.product.nom_product}
-                                    style={{
-                                      width: 64,
-                                      height: 64,
-                                      objectFit: "cover",
-                                      borderRadius: 8,
-                                      background: "#f8fafc",
-                                      border: "1px solid #f3f4f6",
-                                    }}
-                                  />
-                                )}
-                              <div style={{ minWidth: 0 }}>
-                                <div
-                                  style={{
-                                    fontWeight: 700,
-                                    fontSize: "1.08rem",
-                                    marginBottom: 2,
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    maxWidth: 180,
-                                  }}
-                                >
-                                  {item.product.nom_product}
-                                </div>
-                                <div
-                                  style={{
-                                    color: "#aaa",
-                                    fontSize: "0.95rem",
-                                    fontWeight: 400,
-                                  }}
-                                >
-                                  {item.product.prix_detail.toFixed(2)} € / unité
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          {/* Prix unitaire */}
-                          <td style={{ textAlign: "center", fontWeight: 500 }}>
-                            {item.product.prix_detail.toFixed(2)} €
-                          </td>
-                          {/* Quantité */}
-                          <td style={{ textAlign: "center" }}>
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: ".5rem",
-                              }}
-                            >
-                              <button
-                                onClick={() =>
-                                  handleQuantityChange(
-                                    item.productId,
-                                    item.quantity - 1
-                                  )
-                                }
-                                disabled={item.quantity <= 1}
-                                style={{
-                                  width: 32,
-                                  height: 32,
-                                  borderRadius: "50%",
-                                  border: "none",
-                                  background: "#f3f4f6",
-                                  color: "#1a1a1a",
-                                  fontSize: 18,
-                                  cursor:
-                                    item.quantity <= 1
-                                      ? "not-allowed"
-                                      : "pointer",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  transition: "background 0.2s, transform 0.15s",
-                                }}
-                                onMouseOver={(e) =>
-                                  (e.currentTarget.style.background = "#e5e7eb")
-                                }
-                                onMouseOut={(e) =>
-                                  (e.currentTarget.style.background = "#f3f4f6")
-                                }
-                              >
-                                –
-                              </button>
-                              <span
-                                style={{
-                                  minWidth: 32,
-                                  textAlign: "center",
-                                  fontWeight: 600,
-                                  fontSize: "1.08rem",
-                                }}
-                              >
-                                {item.quantity}
-                              </span>
-                              <button
-                                onClick={() =>
-                                  handleQuantityChange(
-                                    item.productId,
-                                    item.quantity + 1
-                                  )
-                                }
-                                style={{
-                                  width: 32,
-                                  height: 32,
-                                  borderRadius: "50%",
-                                  border: "none",
-                                  background: "#f3f4f6",
-                                  color: "#1a1a1a",
-                                  fontSize: 18,
-                                  cursor: "pointer",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  transition: "background 0.2s, transform 0.15s",
-                                }}
-                                onMouseOver={(e) =>
-                                  (e.currentTarget.style.background = "#e5e7eb")
-                                }
-                                onMouseOut={(e) =>
-                                  (e.currentTarget.style.background = "#f3f4f6")
-                                }
-                              >
-                                +
-                              </button>
-                            </div>
-                          </td>
-                          {/* Total */}
-                          <td style={{ textAlign: "center", fontWeight: 700 }}>
-                            {(item.product.prix_detail * item.quantity).toFixed(
-                              2
-                            )}{" "}
-                            €
-                          </td>
-                          {/* Supprimer */}
-                          <td style={{ textAlign: "center" }}>
-                            <button
-                              onClick={() => handleRemoveItem(item.productId)}
-                              style={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: "50%",
-                                border: "none",
-                                background: "#f3f4f6",
-                                color: "#dc2626",
-                                fontSize: 18,
-                                cursor: "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                transition: "background 0.2s, transform 0.15s",
-                              }}
-                              onMouseOver={(e) => {
-                                e.currentTarget.style.background = "#fee2e2";
-                                e.currentTarget.style.color = "#b91c1c";
-                                e.currentTarget.style.transform = "scale(1.1)";
-                              }}
-                              onMouseOut={(e) => {
-                                e.currentTarget.style.background = "#f3f4f6";
-                                e.currentTarget.style.color = "#dc2626";
-                                e.currentTarget.style.transform = "none";
-                              }}
-                              title="Supprimer"
-                            >
-                              <Trash2 size={20} />
-                            </button>
-                          </td>
-                        </tr>
-                      )
-                  )}
-                </tbody>
-              </table>
-            </section>
-            {/* Colonne droite : récapitulatif */}
-            <aside
-              style={{
-                flex: 1,
-                background: "#fbeeee",
-                borderRadius: 12,
-                padding: "2.5rem 2rem",
-                minWidth: 320,
-                maxWidth: 400,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                boxSizing: "border-box",
-                justifyContent: "flex-start",
-                boxShadow: "none",
-              }}
-            >
-              <h3
-                style={{
-                  color: "#1a1a1a",
-                  fontWeight: 700,
-                  fontSize: "1.1rem",
-                  letterSpacing: "1px",
-                  textTransform: "uppercase",
-                  margin: 0,
-                  marginBottom: "2.5rem",
-                  borderBottom: "2px solid #1a1a1a",
-                  width: "100%",
-                  paddingBottom: "0.5rem",
-                  textAlign: "left",
-                }}
-              >
-                Récapitulatif
-              </h3>
-              <div style={{ width: "100%", marginBottom: "2.5rem" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontWeight: 600,
-                    fontSize: "1.15rem",
-                    color: "#1a1a1a",
-                    marginBottom: 8,
-                  }}
-                >
-                  <span>Total</span>
-                  <span>{total.toFixed(2)} €</span>
-                </div>
-                <div
-                  style={{ color: "#888", fontSize: "0.98rem", marginBottom: 18 }}
-                >
-                  Taxes incluses. Livraison calculée à l'étape suivante.
-                </div>
-              </div>
-              <button
-                onClick={() => setShowModal(true)}
-                style={{
-                  width: "100%",
-                  padding: "1.1rem 0",
-                  background: "#1a1a1a",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 24,
-                  fontWeight: 700,
-                  fontSize: "1.15rem",
-                  letterSpacing: "1px",
-                  cursor: "pointer",
-                  marginBottom: "1.5rem",
-                  transition: "background 0.2s, transform 0.15s",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: ".7rem",
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = "#333";
-                  e.currentTarget.style.transform = "scale(1.03)";
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = "#1a1a1a";
-                  e.currentTarget.style.transform = "none";
-                }}
-              >
-                <ShoppingCart size={22} style={{ marginBottom: -2 }} /> Valider la
-                commande
-              </button>
-              <button
-                onClick={handleClearCart}
-                style={{
-                  width: "100%",
-                  padding: "1.1rem 0",
-                  background: "#fff0f0",
-                  color: "#dc2626",
-                  border: "1.5px solid #fecaca",
-                  borderRadius: 24,
-                  fontWeight: 700,
-                  fontSize: "1.08rem",
-                  letterSpacing: "1px",
-                  cursor: "pointer",
-                  transition:
-                    "background 0.2s, color 0.2s, border 0.2s, transform 0.15s",
-                  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: ".7rem",
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = "#fee2e2";
-                  e.currentTarget.style.color = "#dc2626";
-                  e.currentTarget.style.borderColor = "#fca5a5";
-                  e.currentTarget.style.transform = "scale(1.03)";
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = "#fff0f0";
-                  e.currentTarget.style.color = "#dc2626";
-                  e.currentTarget.style.borderColor = "#fecaca";
-                  e.currentTarget.style.transform = "none";
-                }}
-              >
-                <Trash2 size={20} style={{ marginBottom: -2 }} /> Vider le panier
-              </button>
+      <main className="cart-container">
+        {/* Colonne gauche : produits */}
+        <section className="cart-products">
+          <h2>Votre panier</h2>
+          {cart.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "3rem 0" }}>
+              <p style={{ fontSize: "1.2rem", color: "#666", margin: 0 }}>
+                Votre panier est vide
+              </p>
               <button
                 onClick={() => navigate("/productclient")}
-                style={{
-                  width: "100%",
-                  padding: "1.1rem 0",
-                  background: "#fff",
-                  color: "#4f46e5",
-                  border: "2px solid #4f46e5",
-                  borderRadius: 24,
-                  fontWeight: 700,
-                  fontSize: "1.08rem",
-                  letterSpacing: "1px",
-                  cursor: "pointer",
-                  marginTop: "1.2rem",
-                  transition:
-                    "background 0.2s, color 0.2s, border 0.2s, transform 0.15s",
-                  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: ".7rem",
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = "#f3f4f6";
-                  e.currentTarget.style.color = "#4338ca";
-                  e.currentTarget.style.borderColor = "#4338ca";
-                  e.currentTarget.style.transform = "scale(1.03)";
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = "#fff";
-                  e.currentTarget.style.color = "#4f46e5";
-                  e.currentTarget.style.borderColor = "#4f46e5";
-                  e.currentTarget.style.transform = "none";
-                }}
+                className="cart-summary action-btn primary-btn"
               >
-                Continuer les achats
+                Continuer mes achats
               </button>
-            </aside>
+            </div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Produit</th>
+                  <th>Prix</th>
+                  <th>Qté</th>
+                  <th>Total</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {cart.map(
+                  (item) =>
+                    item.product && (
+                      <tr key={item._id}>
+                        {/* Produit */}
+                        <td>
+                          <div className="product-info">
+                            {item.product.images &&
+                              item.product.images.length > 0 && (
+                                <img
+                                  src={item.product.images[0]}
+                                  alt={item.product.nom_product}
+                                />
+                              )}
+                            <div className="product-details">
+                              <div className="product-name">
+                                {item.product.nom_product}
+                              </div>
+                              <div className="product-price">
+                                {item.product.prix_detail.toFixed(2)} € / unité
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        {/* Prix unitaire */}
+                        <td>{item.product.prix_detail.toFixed(2)} €</td>
+                        {/* Quantité */}
+                        <td>
+                          <div className="quantity-controls">
+                            <button
+                              onClick={() =>
+                                handleQuantityChange(
+                                  item.productId,
+                                  item.quantity - 1
+                                )
+                              }
+                              disabled={item.quantity <= 1}
+                              className="quantity-btn"
+                            >
+                              –
+                            </button>
+                            <span className="quantity-value">
+                              {item.quantity}
+                            </span>
+                            <button
+                              onClick={() =>
+                                handleQuantityChange(
+                                  item.productId,
+                                  item.quantity + 1
+                                )
+                              }
+                              className="quantity-btn"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </td>
+                        {/* Total */}
+                        <td>
+                          {(item.product.prix_detail * item.quantity).toFixed(2)} €
+                        </td>
+                        {/* Supprimer */}
+                        <td>
+                          <button
+                            onClick={() => handleRemoveItem(item.productId)}
+                            className="delete-btn"
+                            title="Supprimer"
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                )}
+              </tbody>
+            </table>
+          )}
+        </section>
+        {/* Colonne droite : récapitulatif */}
+        <aside className="cart-summary">
+          <h3>Récapitulatif</h3>
+          <div className="total-section">
+            <div className="total-row">
+              <span>Total</span>
+              <span>{total.toFixed(2)} €</span>
+            </div>
+            <div className="taxes-note">
+              Taxes incluses. Livraison calculée à l'étape suivante.
+            </div>
           </div>
-        )}
+          <button
+            onClick={() => setShowModal(true)}
+            className="action-btn primary-btn"
+          >
+            <ShoppingCart size={22} style={{ marginBottom: -2 }} /> Valider la commande
+          </button>
+          <button
+            onClick={handleClearCart}
+            className="action-btn danger-btn"
+          >
+            <Trash2 size={20} style={{ marginBottom: -2 }} /> Vider le panier
+          </button>
+          <button
+            onClick={() => navigate("/productclient")}
+            className="action-btn secondary-btn"
+          >
+            Continuer les achats
+          </button>
+        </aside>
       </main>
 
       {/* --------  Modal Bon de Livraison (PRO) -------- */}
       {showModal && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
+          className="modal-overlay"
           onClick={() => {
             setShowModal(false);
             setConfirmedOrders([]);
           }}
         >
           <div
-            style={{
-              background: "white",
-              padding: "2rem",
-              borderRadius: "8px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-              maxWidth: "90%",
-              maxHeight: "90%",
-              overflowY: "auto",
-              position: "relative",
-              display: "flex",
-              flexDirection: "column",
-            }}
+            className="modal-content"
             onClick={(e) => e.stopPropagation()}
           >
-            {confirmedOrders.length > 0 ? (
-              <>
-                <h2 style={{ color: "#1a1a1a", fontSize: "1.5rem", marginBottom: "1.5rem" }}>
-                  Bon(s) de Livraison
-                </h2>
-                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                  {confirmedOrders.map((order, idx) => (
-                    <div
-                      key={order._id}
-                      ref={(el) => {
-                        blRefs.current[idx] = el;
-                        return undefined;
-                      }}
-                      style={{
-                        background: "#f3f4f6",
-                        padding: 16,
-                        borderRadius: 8,
-                        marginBottom: 20,
-                      }}
-                    >
-                      <div style={{ marginBottom: 8 }}>
-                        <b>Numéro de commande :</b> {order.numero || order._id.slice(-6).toUpperCase()}
-                        <br />
-                        <b>Client :</b> {user?.nom} {user?.prenom}
-                        <br />
-                        <b>Téléphone :</b> {user?.telephone}
-                        <br />
-                        <b>Adresse :</b>{" "}
-                        {(user?.adresse?.adresse || "-") +
-                          (user?.adresse?.ville ? ", " + user.adresse.ville : "") +
-                          (user?.adresse?.code_postal ? ", " + user.adresse.code_postal : "")}
-                        <br />
-                        <b>Date :</b> {new Date(order.createdAt).toLocaleString()}
-                        <br />
-                        <b>Nom du dépôt :</b> {user?.depot_name || "-"}
-                        <br />
-                        <b>Entreprise :</b> {user?.entreprise?.nom_company || "-"}
-                      </div>
-                      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 16 }}>
-                        <thead>
-                          <tr>
-                            <th style={{ border: "1px solid #ddd", padding: 8, textAlign: "left" }}>Produit</th>
-                            <th style={{ border: "1px solid #ddd", padding: 8 }}>Quantité</th>
-                            <th style={{ border: "1px solid #ddd", padding: 8 }}>Prix U.</th>
-                            <th style={{ border: "1px solid #ddd", padding: 8 }}>Total</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {order.items.map((item: any, itemIdx: number) => (
-                            <tr key={itemIdx}>
-                              <td style={{ border: "1px solid #ddd", padding: 8 }}>{item.productName}</td>
-                              <td style={{ border: "1px solid #ddd", padding: 8, textAlign: "center" }}>{item.quantity}</td>
-                              <td style={{ border: "1px solid #ddd", padding: 8, textAlign: "center" }}>{item.prix_detail.toFixed(2)} €</td>
-                              <td style={{ border: "1px solid #ddd", padding: 8, textAlign: "center" }}>{(item.prix_detail * item.quantity).toFixed(2)} €</td>
+            <h3>Bon de Livraison</h3>
+            <div className="bl-preview">
+              {/* --------- AVANT confirmation --------- */}
+              {confirmedOrders.length === 0 && (
+                <>
+                  <div>
+                    <b>Client :</b> {user?.nom_client || "-"}
+                    <br />
+                    <b>Téléphone :</b>{" "}
+                    {user?.contact?.telephone || user?.num || "-"}
+                    <br />
+                    <b>Adresse :</b>{" "}
+                    {(user?.localisation?.adresse || "-") +
+                      (user?.localisation?.ville
+                        ? ", " + user?.localisation?.ville
+                        : "") +
+                      (user?.localisation?.code_postal
+                        ? ", " + user?.localisation?.code_postal
+                        : "")}
+                    <br />
+                    <b>Date :</b> {new Date().toLocaleString()}
+                    <br />
+                    <b>Nom du dépôt :</b>{" "}
+                    {user?.depot_name || user?.depot || "-"}
+                    <br />
+                  </div>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Produit</th>
+                        <th>Quantité</th>
+                        <th>Prix unitaire</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cart.map(
+                        (item) =>
+                          item.product && (
+                            <tr key={item.productId}>
+                              <td>{item.product.nom_product}</td>
+                              <td>{item.quantity}</td>
+                              <td>{item.product.prix_detail.toFixed(2)} €</td>
+                              <td>
+                                {(item.product.prix_detail * item.quantity).toFixed(2)} €
+                              </td>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      <div style={{ textAlign: "right", fontWeight: "bold" }}>
-                        Total général : {order.total?.toFixed(2)} €
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  onClick={() => setShowModal(false)}
-                  style={{
-                    background: "#6366f1",
-                    color: "white",
-                    padding: "0.5rem 1rem",
-                    border: "none",
-                    borderRadius: 4,
-                    marginTop: "1rem",
+                          )
+                      )}
+                    </tbody>
+                  </table>
+                  <div className="total-row">
+                    Total général : {total.toFixed(2)} €
+                  </div>
+                </>
+              )}
+
+              {/* --------- APRÈS confirmation --------- */}
+              {confirmedOrders.map((confirmedOrder, idx) => (
+                <div
+                  key={idx}
+                  ref={(el) => {
+                    if (el) {
+                      blRefs.current[idx] = el;
+                    }
                   }}
                 >
-                  Fermer
-                </button>
-              </>
-            ) : (
-              <div style={{ textAlign: "center" }}>
-                <p style={{ color: "green", fontSize: "1.2rem", fontWeight: "bold" }}>
-                  {orderSuccess}
-                </p>
-                <p style={{ color: "red", fontSize: "1.2rem", fontWeight: "bold" }}>
-                  {orderError}
-                </p>
+                  <div>
+                    <b>Numéro de commande :</b>{" "}
+                    {confirmedOrder.numero ||
+                      confirmedOrder._id?.slice(-6).toUpperCase() ||
+                      "-"}
+                    <br />
+                    <b>Client :</b> {confirmedOrder.nom_client || "-"}
+                    <br />
+                    <b>Téléphone :</b> {confirmedOrder.telephone || "-"}
+                    <br />
+                    <b>Adresse :</b>{" "}
+                    {(confirmedOrder.adresse_client?.adresse || "-") +
+                      (confirmedOrder.adresse_client?.ville
+                        ? ", " + confirmedOrder.adresse_client.ville
+                        : "") +
+                      (confirmedOrder.adresse_client?.code_postal
+                        ? ", " + confirmedOrder.adresse_client.code_postal
+                        : "")}
+                    <br />
+                    <b>Date :</b>{" "}
+                    {new Date(confirmedOrder.createdAt).toLocaleString()}
+                    <br />
+                    <b>Nom du dépôt :</b> {confirmedOrder.depot_name || "-"}
+                    <br />
+                  </div>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Produit</th>
+                        <th>Quantité</th>
+                        <th>Prix unitaire</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {confirmedOrder.items?.map(
+                        (item: any, idx2: number) =>
+                          item && (
+                            <tr key={idx}>
+                              <td>{item.productName}</td>
+                              <td>{item.quantity}</td>
+                              <td>{item.prix_detail?.toFixed(2)} €</td>
+                              <td>
+                                {(item.prix_detail * item.quantity).toFixed(2)} €
+                              </td>
+                            </tr>
+                          )
+                      )}
+                    </tbody>
+                  </table>
+                  <div className="total-row">
+                    Total général : {confirmedOrder.total?.toFixed(2)} €
+                  </div>
+                  <button
+                    onClick={() => handleExportPDF(idx)}
+                    className="action-btn primary-btn"
+                  >
+                    Exporter le BL en PDF
+                  </button>
+                </div>
+              ))}
+            </div>
+            {/* ----------- BOUTONS MODAL ----------- */}
+            {confirmedOrders.length === 0 ? (
+              <div className="action-buttons">
                 <button
-                  onClick={() => setShowModal(false)}
-                  style={{
-                    background: "#6366f1",
-                    color: "white",
-                    padding: "0.5rem 1rem",
-                    border: "none",
-                    borderRadius: 4,
-                    marginTop: "1rem",
+                  onClick={handleSendOrder}
+                  className="confirm-btn"
+                  disabled={sending}
+                >
+                  {sending ? "Envoi..." : "Confirmer la commande"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowModal(false);
+                    setConfirmedOrders([]);
                   }}
+                  className="cancel-btn"
+                >
+                  Annuler
+                </button>
+              </div>
+            ) : (
+              <div className="action-buttons">
+                <button
+                  onClick={() => {
+                    setShowModal(false);
+                    setConfirmedOrders([]);
+                  }}
+                  className="close-btn"
                 >
                   Fermer
                 </button>
               </div>
+            )}
+            {orderError && (
+              <div className="error-message">{orderError}</div>
             )}
           </div>
         </div>
@@ -849,32 +517,17 @@ export default function Cart() {
       {/* --------  Modal Édition quantité -------- */}
       {editItemId && (
         <div
+          className="quantity-editor"
           onClick={closeEditor}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,.4)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1100,
-          }}
         >
           <div
+            className="quantity-editor-content"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              background: "white",
-              borderRadius: 8,
-              padding: "1.5rem",
-              width: 300,
-              textAlign: "center",
-            }}
           >
-            <h4 style={{ marginBottom: 16 }}>Modifier la quantité</h4>
-            <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
+            <h4>Modifier la quantité</h4>
+            <div className="controls">
               <button
                 onClick={() => setEditQty(Math.max(1, editQty - 1))}
-                style={{ padding: ".25rem .6rem" }}
               >
                 -
               </button>
@@ -885,45 +538,27 @@ export default function Cart() {
                 onChange={(e) =>
                   setEditQty(Math.max(1, Number(e.target.value)))
                 }
-                style={{
-                  width: 60,
-                  textAlign: "center",
-                  padding: ".25rem",
-                  border: "1px solid #d1d5db",
-                  borderRadius: 4,
-                }}
               />
               <button
                 onClick={() => setEditQty(editQty + 1)}
-                style={{ padding: ".25rem .6rem" }}
               >
                 +
               </button>
             </div>
-            <div
-              style={{
-                marginTop: 24,
-                display: "flex",
-                gap: 12,
-                justifyContent: "center",
-              }}
-            >
+            <div className="buttons">
               <button
                 onClick={async () => {
                   await handleQuantityChange(editItemId!, editQty);
                   closeEditor();
                 }}
-                style={{
-                  backgroundColor: "#4f46e5",
-                  color: "white",
-                  padding: "0.5rem 1rem",
-                  border: "none",
-                  borderRadius: 4,
-                }}
+                className="ok-btn"
               >
                 OK
               </button>
-              <button onClick={closeEditor} style={{ padding: "0.5rem 1rem" }}>
+              <button
+                onClick={closeEditor}
+                className="cancel-btn"
+              >
                 Annuler
               </button>
             </div>
@@ -933,19 +568,7 @@ export default function Cart() {
 
       {/* Toast succès */}
       {orderSuccess && (
-        <div
-          style={{
-            position: "fixed",
-            top: 16,
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "#10b981",
-            color: "white",
-            padding: 12,
-            borderRadius: 8,
-            zIndex: 2000,
-          }}
-        >
+        <div className="success-toast">
           {orderSuccess}
         </div>
       )}
