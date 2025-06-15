@@ -15,6 +15,7 @@ interface Product {
   _id: string;
   nom_product: string;
   categorie: string;
+  images?: string[];
   disponibilite: Disponibilite[];
 }
 
@@ -26,6 +27,7 @@ interface ExcelRow {
 export default function GestionDepot() {
   const { depotId } = useParams<{ depotId: string }>();
   const navigate = useNavigate();
+  const apiBase = import.meta.env.VITE_API_URL || "";
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,16 +62,22 @@ export default function GestionDepot() {
 
   const handleDelete = async (productId: string) => {
     if (!confirm("Supprimer ce produit de ce dépôt ?")) return;
-    const prod = products.find(p => p._id === productId);
+    const prod = products.find((p) => p._id === productId);
     if (!prod) return;
-    const updatedDispo = prod.disponibilite.filter(d => d.depot_id !== depotId);
-    await axios.put(`/api/products/${productId}`, { disponibilite: updatedDispo });
+    const updatedDispo = prod.disponibilite.filter(
+      (d) => d.depot_id !== depotId
+    );
+    await axios.put(`/api/products/${productId}`, {
+      disponibilite: updatedDispo,
+    });
     const fresh = await axios.get(`/api/products/by-depot/${depotId}`);
     setProducts(fresh.data);
   };
 
-  const categories = Array.from(new Set(products.map(p => p.categorie))).sort();
-  const filteredProducts = products.filter(p => {
+  const categories = Array.from(
+    new Set(products.map((p) => p.categorie))
+  ).sort();
+  const filteredProducts = products.filter((p) => {
     const nm = p.nom_product.toLowerCase().includes(searchName.toLowerCase());
     const ct = !selectedCategory || p.categorie === selectedCategory;
     return nm && ct;
@@ -85,21 +93,31 @@ export default function GestionDepot() {
       const wb = XLSX.read(new Uint8Array(data), { type: "array" });
       const ws = wb.Sheets[wb.SheetNames[0]];
       const json: ExcelRow[] = XLSX.utils.sheet_to_json(ws);
-      if (!json.length) { setUploadError("Fichier vide"); return; }
-      if (!("nom_product" in json[0] && "quantite" in json[0])) {
-        setUploadError("Colonnes requises manquantes"); return;
+      if (!json.length) {
+        setUploadError("Fichier vide");
+        return;
       }
-      let ok = 0, err = 0;
+      if (!("nom_product" in json[0] && "quantite" in json[0])) {
+        setUploadError("Colonnes requises manquantes");
+        return;
+      }
+      let ok = 0,
+        err = 0;
       for (const row of json) {
-        const prod = products.find(p =>
-          p.nom_product.toLowerCase() === row.nom_product.toLowerCase()
+        const prod = products.find(
+          (p) => p.nom_product.toLowerCase() === row.nom_product.toLowerCase()
         );
-        if (!prod) { err++; continue; }
-        const dispo = prod.disponibilite.find(d => d.depot_id === depotId);
+        if (!prod) {
+          err++;
+          continue;
+        }
+        const dispo = prod.disponibilite.find((d) => d.depot_id === depotId);
         const base = dispo?.quantite || 0;
         const newQty = base + Number(row.quantite);
         try {
-          await axios.put(`/api/products/${prod._id}/depot/${depotId}`, { quantite: newQty });
+          await axios.put(`/api/products/${prod._id}/depot/${depotId}`, {
+            quantite: newQty,
+          });
           ok++;
         } catch {
           err++;
@@ -121,21 +139,28 @@ export default function GestionDepot() {
   const applyQuantity = async () => {
     const { product, direction, amount } = qtyPopup;
     if (!product || !direction) return;
-    if (amount <= 0) { alert("Saisissez un nombre > 0"); return; }
-    const dispo = product.disponibilite.find(d => d.depot_id === depotId);
+    if (amount <= 0) {
+      alert("Saisissez un nombre > 0");
+      return;
+    }
+    const dispo = product.disponibilite.find((d) => d.depot_id === depotId);
     const oldQty = dispo?.quantite || 0;
     const newQty = oldQty + (direction === "+" ? amount : -amount);
-    if (newQty < 0) { alert("Quantité ne peut pas être négative"); return; }
+    if (newQty < 0) {
+      alert("Quantité ne peut pas être négative");
+      return;
+    }
     if (
       !confirm(
-        `Vous allez ${direction === "+" ? "ajouter" : "retirer"} ${amount} à “${product.nom_product}”.\n` +
-        `Ancienne : ${oldQty} → Nouvelle : ${newQty}\nConfirmer ?`
+        `Vous allez ${direction === "+" ? "ajouter" : "retirer"} ${amount} à “${
+          product.nom_product
+        }”.\n` + `Ancienne : ${oldQty} → Nouvelle : ${newQty}\nConfirmer ?`
       )
-    ) return;
-    await axios.put(
-      `/api/products/${product._id}/depot/${depotId}`,
-      { quantite: newQty }
-    );
+    )
+      return;
+    await axios.put(`/api/products/${product._id}/depot/${depotId}`, {
+      quantite: newQty,
+    });
     const fresh = await axios.get(`/api/products/by-depot/${depotId}`);
     setProducts(fresh.data);
     setQtyPopup({ visible: false, product: null, direction: null, amount: 0 });
@@ -153,7 +178,7 @@ export default function GestionDepot() {
             className="gd-btn gd-btn-control"
             onClick={() => navigate(`/add-product?depot=${depotId}`)}
           >
-             Ajouter un produit
+            Ajouter un produit
           </button>
           <input
             type="file"
@@ -178,21 +203,26 @@ export default function GestionDepot() {
               <input
                 placeholder="Rechercher..."
                 value={searchName}
-                onChange={e => setSearchName(e.target.value)}
+                onChange={(e) => setSearchName(e.target.value)}
               />
               <select
                 value={selectedCategory}
-                onChange={e => setSelectedCategory(e.target.value)}
+                onChange={(e) => setSelectedCategory(e.target.value)}
               >
                 <option value="">Toutes catégories</option>
-                {categories.map(c => (
-                  <option key={c} value={c}>{c}</option>
+                {categories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
                 ))}
               </select>
               <button
                 type="button"
                 className="gd-btn gd-btn-filter"
-                onClick={() => { setSearchName(""); setSelectedCategory(""); }}
+                onClick={() => {
+                  setSearchName("");
+                  setSelectedCategory("");
+                }}
               >
                 Réinitialiser
               </button>
@@ -202,16 +232,32 @@ export default function GestionDepot() {
               <table className="gd-table">
                 <thead>
                   <tr>
+                    <th>Image</th>
                     <th>Nom</th>
                     <th>Catégorie</th>
                     <th>Quantité</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredProducts.map(p => {
-                    const dispo = p.disponibilite.find(d => d.depot_id === depotId);
+                  {filteredProducts.map((p) => {
+                    const dispo = p.disponibilite.find(
+                      (d) => d.depot_id === depotId
+                    );
                     return (
                       <tr key={p._id}>
+                        <td>
+                          <img
+                            src={
+                              p.images && p.images[0]
+                                ? p.images[0].startsWith("http")
+                                  ? p.images[0]
+                                  : `${apiBase}/${p.images[0]}`
+                                : "/vite.svg"
+                            }
+                            alt={p.nom_product}
+                            className="gd-img"
+                          />
+                        </td>
                         <td>{p.nom_product}</td>
                         <td>{p.categorie}</td>
                         <td className="gd-qty-cell">
@@ -235,7 +281,11 @@ export default function GestionDepot() {
                           <button
                             type="button"
                             className="gd-btn gd-btn-action"
-                            onClick={() => navigate(`/product-edit/${p._id}?fromDepot=${depotId}`)}
+                            onClick={() =>
+                              navigate(
+                                `/product-edit/${p._id}?fromDepot=${depotId}`
+                              )
+                            }
                           >
                             Modifier
                           </button>
@@ -263,13 +313,13 @@ export default function GestionDepot() {
               <div className="gd-popup-dir">
                 <button
                   className={qtyPopup.direction === "+" ? "selected" : ""}
-                  onClick={() => setQtyPopup(q => ({ ...q, direction: "+" }))}
+                  onClick={() => setQtyPopup((q) => ({ ...q, direction: "+" }))}
                 >
                   +
                 </button>
                 <button
                   className={qtyPopup.direction === "-" ? "selected" : ""}
-                  onClick={() => setQtyPopup(q => ({ ...q, direction: "-" }))}
+                  onClick={() => setQtyPopup((q) => ({ ...q, direction: "-" }))}
                 >
                   −
                 </button>
@@ -279,7 +329,12 @@ export default function GestionDepot() {
                   type="number"
                   min={0}
                   value={qtyPopup.amount}
-                  onChange={e => setQtyPopup(q => ({ ...q, amount: Number(e.target.value) }))}
+                  onChange={(e) =>
+                    setQtyPopup((q) => ({
+                      ...q,
+                      amount: Number(e.target.value),
+                    }))
+                  }
                   placeholder="0"
                 />
               </div>
@@ -294,7 +349,14 @@ export default function GestionDepot() {
                 <button
                   type="button"
                   className="gd-btn gd-btn-popup-action"
-                  onClick={() => setQtyPopup({ visible: false, product: null, direction: null, amount: 0 })}
+                  onClick={() =>
+                    setQtyPopup({
+                      visible: false,
+                      product: null,
+                      direction: null,
+                      amount: 0,
+                    })
+                  }
                 >
                   Annuler
                 </button>
