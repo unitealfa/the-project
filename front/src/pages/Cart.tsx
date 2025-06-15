@@ -6,6 +6,7 @@ import { orderService } from "@/services/orderService";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { Pencil, Trash2, ShoppingCart } from "lucide-react";
+import "./Cart.css";
 
 interface Product {
   _id: string;
@@ -192,44 +193,10 @@ export default function Cart() {
   return (
     <>
       <Header />
-      <main
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          gap: "3rem",
-          background: "#fafafa",
-          minHeight: "100vh",
-          fontFamily: "Arial, sans-serif",
-          padding: "2rem",
-          boxSizing: "border-box",
-        }}
-      >
+      <main className="cart-container">
         {/* Colonne gauche : produits */}
-        <section
-          style={{
-            flex: 2,
-            background: "#fff",
-            borderRadius: 12,
-            padding: "2.5rem 2rem",
-            minWidth: 0,
-            display: "flex",
-            flexDirection: "column",
-            boxSizing: "border-box",
-          }}
-        >
-          <h2
-            style={{
-              margin: 0,
-              color: "#1a1a1a",
-              fontSize: "1.3rem",
-              fontWeight: 700,
-              marginBottom: "2rem",
-              textTransform: "uppercase",
-              letterSpacing: "2px",
-            }}
-          >
-            Votre panier
-          </h2>
+        <section className="cart-products">
+          <h2>Votre panier</h2>
           {cart.length === 0 ? (
             <div style={{ textAlign: "center", padding: "3rem 0" }}>
               <p style={{ fontSize: "1.2rem", color: "#666", margin: 0 }}>
@@ -237,172 +204,52 @@ export default function Cart() {
               </p>
               <button
                 onClick={() => navigate("/productclient")}
-                style={{
-                  marginTop: "2rem",
-                  padding: "0.75rem 1.5rem",
-                  background: "#1a1a1a",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  fontWeight: 700,
-                  fontSize: "1rem",
-                  letterSpacing: "1px",
-                  transition: "background 0.2s",
-                }}
-                onMouseOver={(e) => (e.currentTarget.style.background = "#333")}
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.background = "#1a1a1a")
-                }
+                className="cart-summary action-btn primary-btn"
               >
                 Continuer mes achats
               </button>
             </div>
           ) : (
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                background: "transparent",
-                fontSize: "1rem",
-                color: "#1a1a1a",
-              }}
-            >
+            <table>
               <thead>
-                <tr
-                  style={{
-                    borderBottom: "2px solid #f3f4f6",
-                    color: "#888",
-                    fontWeight: 500,
-                    fontSize: "0.98rem",
-                    letterSpacing: "1px",
-                  }}
-                >
-                  <th
-                    style={{
-                      textAlign: "left",
-                      padding: "0 0 1rem 0",
-                      fontWeight: 500,
-                    }}
-                  >
-                    Produit
-                  </th>
-                  <th
-                    style={{
-                      textAlign: "center",
-                      padding: "0 0 1rem 0",
-                      fontWeight: 500,
-                    }}
-                  >
-                    Prix
-                  </th>
-                  <th
-                    style={{
-                      textAlign: "center",
-                      padding: "0 0 1rem 0",
-                      fontWeight: 500,
-                    }}
-                  >
-                    Qté
-                  </th>
-                  <th
-                    style={{
-                      textAlign: "center",
-                      padding: "0 0 1rem 0",
-                      fontWeight: 500,
-                    }}
-                  >
-                    Total
-                  </th>
-                  <th
-                    style={{
-                      textAlign: "center",
-                      padding: "0 0 1rem 0",
-                      fontWeight: 500,
-                    }}
-                  ></th>
+                <tr>
+                  <th>Produit</th>
+                  <th>Prix</th>
+                  <th>Qté</th>
+                  <th>Total</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {cart.map(
                   (item) =>
                     item.product && (
-                      <tr
-                        key={item._id}
-                        style={{
-                          borderBottom: "1px solid #f3f4f6",
-                          height: 90,
-                        }}
-                      >
+                      <tr key={item._id}>
                         {/* Produit */}
-                        <td
-                          style={{
-                            padding: "1.2rem 0",
-                            verticalAlign: "middle",
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "1.2rem",
-                            }}
-                          >
+                        <td>
+                          <div className="product-info">
                             {item.product.images &&
                               item.product.images.length > 0 && (
                                 <img
                                   src={item.product.images[0]}
                                   alt={item.product.nom_product}
-                                  style={{
-                                    width: 64,
-                                    height: 64,
-                                    objectFit: "cover",
-                                    borderRadius: 8,
-                                    background: "#f8fafc",
-                                    border: "1px solid #f3f4f6",
-                                  }}
                                 />
                               )}
-                            <div style={{ minWidth: 0 }}>
-                              <div
-                                style={{
-                                  fontWeight: 700,
-                                  fontSize: "1.08rem",
-                                  marginBottom: 2,
-                                  whiteSpace: "nowrap",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  maxWidth: 180,
-                                }}
-                              >
+                            <div className="product-details">
+                              <div className="product-name">
                                 {item.product.nom_product}
                               </div>
-                              <div
-                                style={{
-                                  color: "#aaa",
-                                  fontSize: "0.95rem",
-                                  fontWeight: 400,
-                                }}
-                              >
+                              <div className="product-price">
                                 {item.product.prix_detail.toFixed(2)} € / unité
                               </div>
                             </div>
                           </div>
                         </td>
                         {/* Prix unitaire */}
-                        <td style={{ textAlign: "center", fontWeight: 500 }}>
-                          {item.product.prix_detail.toFixed(2)} €
-                        </td>
+                        <td>{item.product.prix_detail.toFixed(2)} €</td>
                         {/* Quantité */}
-                        <td style={{ textAlign: "center" }}>
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: ".5rem",
-                            }}
-                          >
+                        <td>
+                          <div className="quantity-controls">
                             <button
                               onClick={() =>
                                 handleQuantityChange(
@@ -411,40 +258,11 @@ export default function Cart() {
                                 )
                               }
                               disabled={item.quantity <= 1}
-                              style={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: "50%",
-                                border: "none",
-                                background: "#f3f4f6",
-                                color: "#1a1a1a",
-                                fontSize: 18,
-                                cursor:
-                                  item.quantity <= 1
-                                    ? "not-allowed"
-                                    : "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                transition: "background 0.2s, transform 0.15s",
-                              }}
-                              onMouseOver={(e) =>
-                                (e.currentTarget.style.background = "#e5e7eb")
-                              }
-                              onMouseOut={(e) =>
-                                (e.currentTarget.style.background = "#f3f4f6")
-                              }
+                              className="quantity-btn"
                             >
                               –
                             </button>
-                            <span
-                              style={{
-                                minWidth: 32,
-                                textAlign: "center",
-                                fontWeight: 600,
-                                fontSize: "1.08rem",
-                              }}
-                            >
+                            <span className="quantity-value">
                               {item.quantity}
                             </span>
                             <button
@@ -454,66 +272,21 @@ export default function Cart() {
                                   item.quantity + 1
                                 )
                               }
-                              style={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: "50%",
-                                border: "none",
-                                background: "#f3f4f6",
-                                color: "#1a1a1a",
-                                fontSize: 18,
-                                cursor: "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                transition: "background 0.2s, transform 0.15s",
-                              }}
-                              onMouseOver={(e) =>
-                                (e.currentTarget.style.background = "#e5e7eb")
-                              }
-                              onMouseOut={(e) =>
-                                (e.currentTarget.style.background = "#f3f4f6")
-                              }
+                              className="quantity-btn"
                             >
                               +
                             </button>
                           </div>
                         </td>
                         {/* Total */}
-                        <td style={{ textAlign: "center", fontWeight: 700 }}>
-                          {(item.product.prix_detail * item.quantity).toFixed(
-                            2
-                          )}{" "}
-                          €
+                        <td>
+                          {(item.product.prix_detail * item.quantity).toFixed(2)} €
                         </td>
                         {/* Supprimer */}
-                        <td style={{ textAlign: "center" }}>
+                        <td>
                           <button
                             onClick={() => handleRemoveItem(item.productId)}
-                            style={{
-                              width: 32,
-                              height: 32,
-                              borderRadius: "50%",
-                              border: "none",
-                              background: "#f3f4f6",
-                              color: "#dc2626",
-                              fontSize: 18,
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              transition: "background 0.2s, transform 0.15s",
-                            }}
-                            onMouseOver={(e) => {
-                              e.currentTarget.style.background = "#fee2e2";
-                              e.currentTarget.style.color = "#b91c1c";
-                              e.currentTarget.style.transform = "scale(1.1)";
-                            }}
-                            onMouseOut={(e) => {
-                              e.currentTarget.style.background = "#f3f4f6";
-                              e.currentTarget.style.color = "#dc2626";
-                              e.currentTarget.style.transform = "none";
-                            }}
+                            className="delete-btn"
                             title="Supprimer"
                           >
                             <Trash2 size={20} />
@@ -527,161 +300,32 @@ export default function Cart() {
           )}
         </section>
         {/* Colonne droite : récapitulatif */}
-        <aside
-          style={{
-            flex: 1,
-            background: "#fbeeee",
-            borderRadius: 12,
-            padding: "2.5rem 2rem",
-            minWidth: 320,
-            maxWidth: 400,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            boxSizing: "border-box",
-            justifyContent: "flex-start",
-            boxShadow: "none",
-          }}
-        >
-          <h3
-            style={{
-              color: "#1a1a1a",
-              fontWeight: 700,
-              fontSize: "1.1rem",
-              letterSpacing: "1px",
-              textTransform: "uppercase",
-              margin: 0,
-              marginBottom: "2.5rem",
-              borderBottom: "2px solid #1a1a1a",
-              width: "100%",
-              paddingBottom: "0.5rem",
-              textAlign: "left",
-            }}
-          >
-            Récapitulatif
-          </h3>
-          <div style={{ width: "100%", marginBottom: "2.5rem" }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontWeight: 600,
-                fontSize: "1.15rem",
-                color: "#1a1a1a",
-                marginBottom: 8,
-              }}
-            >
+        <aside className="cart-summary">
+          <h3>Récapitulatif</h3>
+          <div className="total-section">
+            <div className="total-row">
               <span>Total</span>
               <span>{total.toFixed(2)} €</span>
             </div>
-            <div
-              style={{ color: "#888", fontSize: "0.98rem", marginBottom: 18 }}
-            >
+            <div className="taxes-note">
               Taxes incluses. Livraison calculée à l'étape suivante.
             </div>
           </div>
           <button
             onClick={() => setShowModal(true)}
-            style={{
-              width: "100%",
-              padding: "1.1rem 0",
-              background: "#1a1a1a",
-              color: "white",
-              border: "none",
-              borderRadius: 24,
-              fontWeight: 700,
-              fontSize: "1.15rem",
-              letterSpacing: "1px",
-              cursor: "pointer",
-              marginBottom: "1.5rem",
-              transition: "background 0.2s, transform 0.15s",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: ".7rem",
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = "#333";
-              e.currentTarget.style.transform = "scale(1.03)";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = "#1a1a1a";
-              e.currentTarget.style.transform = "none";
-            }}
+            className="action-btn primary-btn"
           >
             <ShoppingCart size={22} style={{ marginBottom: -2 }} /> Valider la commande
           </button>
           <button
             onClick={handleClearCart}
-            style={{
-              width: "100%",
-              padding: "1.1rem 0",
-              background: "#fff0f0",
-              color: "#dc2626",
-              border: "1.5px solid #fecaca",
-              borderRadius: 24,
-              fontWeight: 700,
-              fontSize: "1.08rem",
-              letterSpacing: "1px",
-              cursor: "pointer",
-              transition:
-                "background 0.2s, color 0.2s, border 0.2s, transform 0.15s",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: ".7rem",
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = "#fee2e2";
-              e.currentTarget.style.color = "#dc2626";
-              e.currentTarget.style.borderColor = "#fca5a5";
-              e.currentTarget.style.transform = "scale(1.03)";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = "#fff0f0";
-              e.currentTarget.style.color = "#dc2626";
-              e.currentTarget.style.borderColor = "#fecaca";
-              e.currentTarget.style.transform = "none";
-            }}
+            className="action-btn danger-btn"
           >
             <Trash2 size={20} style={{ marginBottom: -2 }} /> Vider le panier
           </button>
           <button
             onClick={() => navigate("/productclient")}
-            style={{
-              width: "100%",
-              padding: "1.1rem 0",
-              background: "#fff",
-              color: "#4f46e5",
-              border: "2px solid #4f46e5",
-              borderRadius: 24,
-              fontWeight: 700,
-              fontSize: "1.08rem",
-              letterSpacing: "1px",
-              cursor: "pointer",
-              marginTop: "1.2rem",
-              transition:
-                "background 0.2s, color 0.2s, border 0.2s, transform 0.15s",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: ".7rem",
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = "#f3f4f6";
-              e.currentTarget.style.color = "#4338ca";
-              e.currentTarget.style.borderColor = "#4338ca";
-              e.currentTarget.style.transform = "scale(1.03)";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = "#fff";
-              e.currentTarget.style.color = "#4f46e5";
-              e.currentTarget.style.borderColor = "#4f46e5";
-              e.currentTarget.style.transform = "none";
-            }}
+            className="action-btn secondary-btn"
           >
             Continuer les achats
           </button>
@@ -691,43 +335,22 @@ export default function Cart() {
       {/* --------  Modal Bon de Livraison (PRO) -------- */}
       {showModal && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
+          className="modal-overlay"
           onClick={() => {
             setShowModal(false);
             setConfirmedOrders([]);
           }}
         >
           <div
+            className="modal-content"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              background: "white",
-              borderRadius: "8px",
-              padding: "2rem",
-              minWidth: "320px",
-              maxWidth: "95vw",
-            }}
           >
             <h3>Bon de Livraison</h3>
-            <div
-              style={{
-                background: "#f3f4f6",
-                padding: 16,
-                borderRadius: 8,
-                marginBottom: 20,
-              }}
-            >
+            <div className="bl-preview">
               {/* --------- AVANT confirmation --------- */}
               {confirmedOrders.length === 0 && (
                 <>
-                  <div style={{ marginBottom: 8 }}>
+                  <div>
                     <b>Client :</b> {user?.nom_client || "-"}
                     <br />
                     <b>Téléphone :</b>{" "}
@@ -748,27 +371,13 @@ export default function Cart() {
                     {user?.depot_name || user?.depot || "-"}
                     <br />
                   </div>
-                  <table
-                    style={{
-                      width: "100%",
-                      borderCollapse: "collapse",
-                      marginBottom: 8,
-                    }}
-                  >
+                  <table>
                     <thead>
                       <tr>
-                        <th style={{ border: "1px solid #ddd", padding: 4 }}>
-                          Produit
-                        </th>
-                        <th style={{ border: "1px solid #ddd", padding: 4 }}>
-                          Quantité
-                        </th>
-                        <th style={{ border: "1px solid #ddd", padding: 4 }}>
-                          Prix unitaire
-                        </th>
-                        <th style={{ border: "1px solid #ddd", padding: 4 }}>
-                          Total
-                        </th>
+                        <th>Produit</th>
+                        <th>Quantité</th>
+                        <th>Prix unitaire</th>
+                        <th>Total</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -776,39 +385,18 @@ export default function Cart() {
                         (item) =>
                           item.product && (
                             <tr key={item.productId}>
-                              <td
-                                style={{ border: "1px solid #ddd", padding: 4 }}
-                              >
-                                {item.product.nom_product}
-                              </td>
-                              <td
-                                style={{
-                                  border: "1px solid #ddd",
-                                  padding: 4,
-                                  textAlign: "center",
-                                }}
-                              >
-                                {item.quantity}
-                              </td>
-                              <td
-                                style={{ border: "1px solid #ddd", padding: 4 }}
-                              >
-                                {item.product.prix_detail.toFixed(2)} €
-                              </td>
-                              <td
-                                style={{ border: "1px solid #ddd", padding: 4 }}
-                              >
-                                {(
-                                  item.product.prix_detail * item.quantity
-                                ).toFixed(2)}{" "}
-                                €
+                              <td>{item.product.nom_product}</td>
+                              <td>{item.quantity}</td>
+                              <td>{item.product.prix_detail.toFixed(2)} €</td>
+                              <td>
+                                {(item.product.prix_detail * item.quantity).toFixed(2)} €
                               </td>
                             </tr>
                           )
                       )}
                     </tbody>
                   </table>
-                  <div style={{ textAlign: "right", fontWeight: "bold" }}>
+                  <div className="total-row">
                     Total général : {total.toFixed(2)} €
                   </div>
                 </>
@@ -823,9 +411,8 @@ export default function Cart() {
                       blRefs.current[idx] = el;
                     }
                   }}
-                  style={{ marginBottom: 24 }}
                 >
-                  <div style={{ marginBottom: 8 }}>
+                  <div>
                     <b>Numéro de commande :</b>{" "}
                     {confirmedOrder.numero ||
                       confirmedOrder._id?.slice(-6).toUpperCase() ||
@@ -850,27 +437,13 @@ export default function Cart() {
                     <b>Nom du dépôt :</b> {confirmedOrder.depot_name || "-"}
                     <br />
                   </div>
-                  <table
-                    style={{
-                      width: "100%",
-                      borderCollapse: "collapse",
-                      marginBottom: 8,
-                    }}
-                  >
+                  <table>
                     <thead>
                       <tr>
-                        <th style={{ border: "1px solid #ddd", padding: 4 }}>
-                          Produit
-                        </th>
-                        <th style={{ border: "1px solid #ddd", padding: 4 }}>
-                          Quantité
-                        </th>
-                        <th style={{ border: "1px solid #ddd", padding: 4 }}>
-                          Prix unitaire
-                        </th>
-                        <th style={{ border: "1px solid #ddd", padding: 4 }}>
-                          Total
-                        </th>
+                        <th>Produit</th>
+                        <th>Quantité</th>
+                        <th>Prix unitaire</th>
+                        <th>Total</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -878,49 +451,23 @@ export default function Cart() {
                         (item: any, idx2: number) =>
                           item && (
                             <tr key={idx}>
-                              <td
-                                style={{ border: "1px solid #ddd", padding: 4 }}
-                              >
-                                {item.productName}
-                              </td>
-                              <td
-                                style={{
-                                  border: "1px solid #ddd",
-                                  padding: 4,
-                                  textAlign: "center",
-                                }}
-                              >
-                                {item.quantity}
-                              </td>
-                              <td
-                                style={{ border: "1px solid #ddd", padding: 4 }}
-                              >
-                                {item.prix_detail?.toFixed(2)} €
-                              </td>
-                              <td
-                                style={{ border: "1px solid #ddd", padding: 4 }}
-                              >
-                                {(item.prix_detail * item.quantity).toFixed(2)}{" "}
-                                €
+                              <td>{item.productName}</td>
+                              <td>{item.quantity}</td>
+                              <td>{item.prix_detail?.toFixed(2)} €</td>
+                              <td>
+                                {(item.prix_detail * item.quantity).toFixed(2)} €
                               </td>
                             </tr>
                           )
                       )}
                     </tbody>
                   </table>
-                  <div style={{ textAlign: "right", fontWeight: "bold" }}>
+                  <div className="total-row">
                     Total général : {confirmedOrder.total?.toFixed(2)} €
                   </div>
                   <button
                     onClick={() => handleExportPDF(idx)}
-                    style={{
-                      background: "#1c1917",
-                      color: "white",
-                      padding: "0.5rem 1rem",
-                      border: "none",
-                      borderRadius: 4,
-                      marginTop: 8,
-                    }}
+                    className="action-btn primary-btn"
                   >
                     Exporter le BL en PDF
                   </button>
@@ -929,18 +476,10 @@ export default function Cart() {
             </div>
             {/* ----------- BOUTONS MODAL ----------- */}
             {confirmedOrders.length === 0 ? (
-              <>
-                {/* PAS DE bouton PDF ici */}
+              <div className="action-buttons">
                 <button
                   onClick={handleSendOrder}
-                  style={{
-                    background: "#10b981",
-                    color: "white",
-                    padding: "0.5rem 1rem",
-                    border: "none",
-                    borderRadius: 4,
-                    marginRight: 8,
-                  }}
+                  className="confirm-btn"
                   disabled={sending}
                 >
                   {sending ? "Envoi..." : "Confirmer la commande"}
@@ -950,33 +489,26 @@ export default function Cart() {
                     setShowModal(false);
                     setConfirmedOrders([]);
                   }}
-                  style={{ padding: "0.5rem 1rem" }}
+                  className="cancel-btn"
                 >
                   Annuler
                 </button>
-              </>
+              </div>
             ) : (
-              <>
+              <div className="action-buttons">
                 <button
                   onClick={() => {
                     setShowModal(false);
                     setConfirmedOrders([]);
                   }}
-                  style={{
-                    background: "#6366f1",
-                    color: "white",
-                    padding: "0.5rem 1rem",
-                    border: "none",
-                    borderRadius: 4,
-                    marginRight: 8,
-                  }}
+                  className="close-btn"
                 >
                   Fermer
                 </button>
-              </>
+              </div>
             )}
             {orderError && (
-              <div style={{ color: "red", marginTop: 12 }}>{orderError}</div>
+              <div className="error-message">{orderError}</div>
             )}
           </div>
         </div>
@@ -985,32 +517,17 @@ export default function Cart() {
       {/* --------  Modal Édition quantité -------- */}
       {editItemId && (
         <div
+          className="quantity-editor"
           onClick={closeEditor}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,.4)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1100,
-          }}
         >
           <div
+            className="quantity-editor-content"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              background: "white",
-              borderRadius: 8,
-              padding: "1.5rem",
-              width: 300,
-              textAlign: "center",
-            }}
           >
-            <h4 style={{ marginBottom: 16 }}>Modifier la quantité</h4>
-            <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
+            <h4>Modifier la quantité</h4>
+            <div className="controls">
               <button
                 onClick={() => setEditQty(Math.max(1, editQty - 1))}
-                style={{ padding: ".25rem .6rem" }}
               >
                 -
               </button>
@@ -1021,45 +538,27 @@ export default function Cart() {
                 onChange={(e) =>
                   setEditQty(Math.max(1, Number(e.target.value)))
                 }
-                style={{
-                  width: 60,
-                  textAlign: "center",
-                  padding: ".25rem",
-                  border: "1px solid #d1d5db",
-                  borderRadius: 4,
-                }}
               />
               <button
                 onClick={() => setEditQty(editQty + 1)}
-                style={{ padding: ".25rem .6rem" }}
               >
                 +
               </button>
             </div>
-            <div
-              style={{
-                marginTop: 24,
-                display: "flex",
-                gap: 12,
-                justifyContent: "center",
-              }}
-            >
+            <div className="buttons">
               <button
                 onClick={async () => {
                   await handleQuantityChange(editItemId!, editQty);
                   closeEditor();
                 }}
-                style={{
-                  backgroundColor: "#4f46e5",
-                  color: "white",
-                  padding: "0.5rem 1rem",
-                  border: "none",
-                  borderRadius: 4,
-                }}
+                className="ok-btn"
               >
                 OK
               </button>
-              <button onClick={closeEditor} style={{ padding: "0.5rem 1rem" }}>
+              <button
+                onClick={closeEditor}
+                className="cancel-btn"
+              >
                 Annuler
               </button>
             </div>
@@ -1069,19 +568,7 @@ export default function Cart() {
 
       {/* Toast succès */}
       {orderSuccess && (
-        <div
-          style={{
-            position: "fixed",
-            top: 16,
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "#10b981",
-            color: "white",
-            padding: 12,
-            borderRadius: 8,
-            zIndex: 2000,
-          }}
-        >
+        <div className="success-toast">
           {orderSuccess}
         </div>
       )}
