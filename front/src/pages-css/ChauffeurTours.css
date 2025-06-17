@@ -1,0 +1,288 @@
+/* src/pages-css/ChauffeurTours.css */
+
+/* Base Brutalist Styles */
+body {
+  background-color: #f0f0f0; /* Light gray background */
+  color: #1a1a1a; /* Dark text for contrast */
+  font-family: 'Arial Black', sans-serif; /* Strong, bold font */
+  margin: 0; /* Remove default body margin */
+  height: 100vh; /* Make body fill viewport height */
+  display: flex; /* Use flex to manage header and main content */
+  flex-direction: column; /* Stack header and main vertically */
+  overflow: hidden; /* Prevent body scrollbars, let main content manage its own */
+}
+
+/* Page wrapper for centering and padding */
+.brutalist-page-wrapper {
+  max-width: 900px; /* Slightly wider for maps */
+  margin: 0 auto;
+  padding: 1rem;
+  box-sizing: border-box; /* Include padding in width */
+  display: flex; /* Make this a flex container */
+  flex-direction: column; /* Arrange content inside as a column */
+  flex-grow: 1; /* Allow wrapper to take available height in body's flex context */
+  overflow-y: auto; /* Allow scrolling within the main content if it overflows vertically */
+  min-height: 0; /* Required for flex-grow to work correctly in some browsers */
+  position: relative; /* Establish a new stacking context */
+  z-index: 2; /* Give it a higher z-index than the map if needed */
+  align-items: stretch; /* Allow children (buttons, map) to stretch horizontally */
+  text-align: left; /* Align text to left for better readability on PC */
+}
+
+@media (min-width: 640px) {
+  .brutalist-page-wrapper {
+    padding: 2rem;
+  }
+}
+
+/* Headers */
+.brutalist-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin-bottom: 1.5rem;
+  text-align: center; /* Ensure title is centered */
+  color: #000000;
+  text-transform: uppercase;
+  border-bottom: 3px solid #000000;
+  padding-bottom: 0.5rem;
+  flex-shrink: 0; /* Prevent title from shrinking */
+  width: 100%; /* Ensure title takes full width for centering */
+}
+
+/* Map Containers */
+.brutalist-map-container {
+  width: 100%;
+  border: 4px solid #000000; /* Black border around map */
+  box-shadow: 8px 8px 0px #000000; /* Brutalist shadow */
+  background-color: #ffffff; /* White background for the map area */
+  position: relative; /* Needed for Leaflet internally and for absolute positioning of arrows */
+  z-index: 1; /* Default z-index, lower than controls that should be on top */
+  margin-top: 1.5rem; /* Space between controls above and map */
+  flex-grow: 1; /* Allows map to take up remaining vertical space */
+  min-height: 250px; /* Minimum height for the map on smaller screens */
+  display: flex; /* Make the map container a flex item */
+  flex-direction: column; /* Its children (the leaflet map) will stack */
+}
+
+/* Specific styling for the Leaflet map element inside the container */
+.leaflet-container {
+  height: 100% !important; /* Force Leaflet to fill its parent */
+  width: 100% !important; /* Force Leaflet to fill its parent */
+  position: relative; /* Ensure it plays nice with z-index inside its container */
+  z-index: 1; /* Default z-index for the map content */
+}
+
+/* Buttons (General Styles) */
+.brutalist-button {
+  padding: 1.5rem 1.5rem;
+  background-color: #000000; /* Black button */
+  color: #ffffff; /* White text */
+  border: 3px solid #000000; /* Black border */
+  border-radius: 0; /* Sharp corners */
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  box-shadow: 4px 4px 0px #1a1a1a; /* Initial shadow */
+  transition: all 0.1s ease-in-out; /* Smooth transition for hover */
+  -webkit-appearance: none; /* Reset for cross-browser consistency */
+  -moz-appearance: none;
+  appearance: none;
+  flex-shrink: 0; /* Prevent buttons from shrinking */
+  position: relative;
+  z-index: 3; /* Higher than map */
+  text-align: center; /* Ensure button text is centered */
+}
+
+.brutalist-button:hover:not(:disabled) {
+  transform: translate(-2px, -2px); /* Slight lift on hover */
+  box-shadow: 8px 8px 0px #1a1a1a; /* Larger shadow on hover */
+}
+
+.brutalist-button:disabled {
+  background-color: #cccccc; /* Light gray for disabled */
+  color: #666666;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+  opacity: 0.7; /* Slightly dim disabled buttons */
+}
+
+/* Specific main control button styles */
+.brutalist-start-button {
+  background-color: #000000;
+  border-color: #000000;
+  box-shadow: 4px 4px 0px #000000;
+  font-size: 1.2rem; /* Slightly larger for prominence */
+  padding: 2.5 rem 15rem;
+  min-width: 200px; /* Ensure not too small */
+}
+
+/* Hover color remains consistent */
+.brutalist-start-button:hover:not(:disabled) {
+  box-shadow: 8px 8px 0px #000000;
+}
+
+/* Toggle button */
+.brutalist-toggle-button {
+  background-color: #000000;
+  border-color: #000000;
+  box-shadow: 4px 4px 0px #000000;
+  max-width: 250px; /* Limit width on PC */
+  width: 100%;
+  box-sizing: border-box;
+}
+.brutalist-toggle-button:hover:not(:disabled) {
+  box-shadow: 8px 8px 0px #000000;
+}
+
+/* Popup button */
+.brutalist-popup-button {
+  background-color: #EF4444; /* Red button for popup */
+  color: #fff;
+  border: 2px solid #EF4444;
+  box-shadow: 2px 2px 0px #b91c1c; /* Darker red shadow */
+  padding: 0.25rem 0.75rem;
+  font-size: 0.9rem;
+  margin-top: 0.5rem; /* Space from text in popup */
+}
+.brutalist-popup-button:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px #b91c1c;
+}
+
+/* Text styles */
+.brutalist-text {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: #333333;
+  flex-shrink: 0; /* Prevent text from shrinking */
+  line-height: 1.4; /* Improve readability of longer text */
+  word-break: break-word; /* Allow wrap if needed */
+  padding: 0 1rem; /* Horizontal padding so text isn’t too cramped */
+}
+
+/* Strong text */
+.brutalist-strong {
+  color: #000000;
+}
+
+/* Flex container for buttons */
+.brutalist-button-group {
+  display: flex;
+  gap: 1rem; /* Space between buttons */
+  align-items: center; /* Vertically center buttons */
+  justify-content: center; /* Center buttons horizontally */
+  flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+  flex-shrink: 0; /* Prevent button group from shrinking */
+  position: relative;
+  z-index: 3;
+  width: 100%; /* Ensure group takes full width for centering */
+  margin-bottom: 1rem; /* Space after button group */
+  padding: 0 1rem; /* Horizontal padding so children have breathing room */
+  box-sizing: border-box;
+}
+
+/* In-Map Navigation Arrows */
+.map-nav-arrow {
+  position: absolute;
+  bottom: 10px; /* Position from bottom edge */
+  background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
+  color: #ffffff; /* White text and arrow */
+  border: 2px solid #000000; /* Strong black border */
+  border-radius: 0; /* Sharp corners */
+  padding: 0.5rem 0.6rem; /* Adjusted padding to accommodate text */
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
+  transition: all 0.1s ease-in-out;
+  z-index: 10; /* Above map and markers */
+  display: flex; /* Flexbox for vertical alignment */
+  flex-direction: column; /* Stack arrow icon and text */
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  user-select: none;
+  text-transform: uppercase;
+  font-size: 0.8rem; /* Small text label */
+  text-decoration: none;
+}
+.map-nav-arrow .arrow-icon {
+  font-size: 2.2rem; /* Larger arrow */
+  margin-bottom: 0.2rem; /* Space between arrow and text */
+  line-height: 1;
+  display: block;
+}
+.map-nav-arrow:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.7);
+}
+.map-nav-arrow:disabled {
+  background-color: rgba(100, 100, 100, 0.5);
+  border-color: rgba(50, 50, 50, 0.5);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+  opacity: 0.5;
+}
+.map-nav-arrow.left {
+  left: 10px; /* Position from left edge */
+}
+.map-nav-arrow.right {
+  right: 10px; /* Position from right edge */
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .brutalist-title {
+    font-size: 1.8rem;
+  }
+  .brutalist-button {
+    width: 100%;
+    max-width: 300px;
+  }
+  .brutalist-button-group {
+    flex-direction: column;
+    align-items: center;
+  }
+  .brutalist-map-container {
+    min-height: 300px;
+  }
+  .map-nav-arrow {
+    padding: 0.4rem 0.5rem; /* Smaller padding on mobile */
+    font-size: 0.7rem; /* Smaller text on mobile */
+  }
+  .map-nav-arrow .arrow-icon {
+    font-size: 1.8rem; /* Smaller arrow on mobile */
+  }
+}
+
+/* PC-specific adjustments */
+@media (min-width: 1024px) {
+  /* Enlarge “Commencer la livraison” button */
+  .brutalist-start-button {
+    padding: 2rem 3rem;       /* More inner space */
+    font-size: 1.4rem;        /* Larger text */
+    min-width: 300px;         /* Prevent too narrow */
+    width: auto;
+    margin: 0 auto;           /* Center if full-width desired */
+  }
+  /* Option: full-width up to a max */
+  /*
+  .brutalist-start-button {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  */
+  /* Expand wrapper width */
+  .brutalist-page-wrapper {
+    max-width: 1200px;
+  }
+  /* Ensure button-group uses full width */
+  .brutalist-button-group {
+    justify-content: center;
+    width: 100%;
+  }
+}
