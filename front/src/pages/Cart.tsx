@@ -118,10 +118,14 @@ export default function Cart() {
     fetchCart();
   }, []);
 
-  const total = cart.reduce((sum, item) => {
+  // Montant total du panier courant
+  const cartTotal = cart.reduce((sum, item) => {
     if (!item.product) return sum;
     return sum + item.product.prix_detail * item.quantity;
   }, 0);
+  // Total à afficher (panier ou commande confirmée)
+  const displayTotal =
+    confirmedOrders.length > 0 ? confirmedOrders[0].total : cartTotal;
 
   // ----------- PDF BL (pour après confirmation) -----------
   const handleExportPDF = async (idx: number) => {
@@ -152,7 +156,11 @@ export default function Cart() {
         quantity: item.quantity,
       }));
 
-      const res = await orderService.createOrder({ items: orderItems, total });
+      // Utilise le montant du panier avant nettoyage
+      const res = await orderService.createOrder({
+        items: orderItems,
+        total: cartTotal,
+      });
       await cartService.clearCart();
       setCart([]);
       setConfirmedOrders(res); // <= stocke la commande complète
@@ -275,7 +283,7 @@ export default function Cart() {
           <div className="total-section">
             <div className="total-row">
               <span>Total</span>
-              <span>{total.toFixed(2)} €</span>
+              <span>{cartTotal.toFixed(2)} €</span>
             </div>
             <div className="taxes-note">
               Taxes incluses. Livraison calculée à l'étape suivante.
@@ -300,123 +308,145 @@ export default function Cart() {
         </aside>
       </main>
 
-{/* ========= Modal BL – Version épurée ========= */}
-{showModal && (
-  <div
-    className="modal-overlay"
-    onClick={() => {
-      setShowModal(false);
-      setConfirmedOrders([]);
-    }}
-  >
-    <div className="modal-content bl-clean" onClick={(e) => e.stopPropagation()}>
-      {/* Bandeau latéral couleur + titre */}
-      <aside className="bl-aside" />
+      {/* ========= Modal BL – Version épurée ========= */}
+      {showModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => {
+            setShowModal(false);
+            setConfirmedOrders([]);
+          }}
+        >
+          <div
+            className="modal-content bl-clean"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Bandeau latéral couleur + titre */}
+            <aside className="bl-aside" />
 
-      <section className="bl-body">
-        {/* ---------- En-tête ---------- */}
-        <header className="bl-top">
-          <h2>Bon de Livraison</h2>
-          <small className="bl-ref">
-            Réf. {confirmedOrders[0]?.numero || "PROV."}
-          </small>
-        </header>
+            <section
+              className="bl-body"
+              ref={(el) => {
+                blRefs.current[0] = el as HTMLDivElement | null;
+              }}
+            >
+              {/* ---------- En-tête ---------- */}
+              <header className="bl-top">
+                <h2>Bon de Livraison</h2>
+                <small className="bl-ref">
+                  Réf. {confirmedOrders[0]?.numero || "PROV."}
+                </small>
+              </header>
 
-        {/* ---------- Coordonnées ---------- */}
-        <div className="bl-grid">
-          <div>
-            <h4>Client</h4>
-            <p>
-              {user?.nom_client || "-"}<br />
-              {user?.contact?.telephone || user?.num || "-"}<br />
-              {(user?.localisation?.adresse || "-") +
-                (user?.localisation?.ville ? ", " + user?.localisation.ville : "")}
-            </p>
-          </div>
-          <div>
-            <h4>Dépôt</h4>
-            <p>
-              {user?.depot_name || user?.depot || "-"}<br />
-              {new Date().toLocaleDateString()}
-            </p>
-          </div>
-        </div>
+              {/* ---------- Coordonnées ---------- */}
+              <div className="bl-grid">
+                <div>
+                  <h4>Client</h4>
+                  <p>
+                    {user?.nom_client || "-"}
+                    <br />
+                    {user?.contact?.telephone || user?.num || "-"}
+                    <br />
+                    {(user?.localisation?.adresse || "-") +
+                      (user?.localisation?.ville
+                        ? ", " + user?.localisation.ville
+                        : "")}
+                  </p>
+                </div>
+                <div>
+                  <h4>Dépôt</h4>
+                  <p>
+                    {user?.depot_name || user?.depot || "-"}
+                    <br />
+                    {new Date().toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
 
-        {/* ---------- Détail des articles ---------- */}
-        <table className="bl-clean-table">
-          <thead>
-            <tr>
-              <th>Produit</th>
-              <th>Qté</th>
-              <th>PU&nbsp;(€)</th>
-              <th>Montant</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cart.map(
-              (it) =>
-                it.product && (
-                  <tr key={it.productId}>
-                    <td>{it.product.nom_product}</td>
-                    <td>{it.quantity}</td>
-                    <td>{it.product.prix_detail.toFixed(2)}</td>
-                    <td>{(it.product.prix_detail * it.quantity).toFixed(2)}</td>
+              {/* ---------- Détail des articles ---------- */}
+              <table className="bl-clean-table">
+                <thead>
+                  <tr>
+                    <th>Produit</th>
+                    <th>Qté</th>
+                    <th>PU&nbsp;(€)</th>
+                    <th>Montant</th>
                   </tr>
-                )
-            )}
-          </tbody>
-        </table>
+                </thead>
+                <tbody>
+                  {(confirmedOrders.length > 0
+                    ? confirmedOrders[0].items
+                    : cart
+                  ).map((it: any) => (
+                    <tr key={it.productId}>
+                      <td>{it.productName || it.product?.nom_product}</td>
+                      <td>{it.quantity}</td>
+                      <td>
+                        {(it.prix_detail ?? it.product?.prix_detail)?.toFixed(
+                          2
+                        )}
+                      </td>
+                      <td>
+                        {(
+                          (it.prix_detail ?? it.product?.prix_detail ?? 0) *
+                          it.quantity
+                        ).toFixed(2)}{" "}
+                        €
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-        {/* ---------- Total ---------- */}
-        <p className="bl-total">TOTAL : {total.toFixed(2)} €</p>
+              {/* ---------- Total ---------- */}
+              <p className="bl-total">TOTAL : {displayTotal.toFixed(2)} €</p>
 
-        {/* ---------- Boutons ---------- */}
-        <div className="bl-actions">
-          {confirmedOrders.length === 0 ? (
-            <>
-              <button
-                onClick={handleSendOrder}
-                disabled={sending}
-                className="confirm-btn"
-              >
-                {sending ? "Envoi..." : "Valider"}
-              </button>
-              <button
-                onClick={() => {
-                  setShowModal(false);
-                  setConfirmedOrders([]);
-                }}
-                className="cancel-btn"
-              >
-                Annuler
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => handleExportPDF(0)}
-                className="primary-btn"
-              >
-                Télécharger PDF
-              </button>
-              <button
-                onClick={() => {
-                  setShowModal(false);
-                  setConfirmedOrders([]);
-                }}
-                className="close-btn"
-              >
-                Fermer
-              </button>
-            </>
-          )}
+              {/* ---------- Boutons ---------- */}
+              <div className="bl-actions" data-html2canvas-ignore="true">
+                {confirmedOrders.length === 0 ? (
+                  <>
+                    <button
+                      onClick={handleSendOrder}
+                      disabled={sending}
+                      className="confirm-btn"
+                    >
+                      {sending ? "Envoi..." : "Valider"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowModal(false);
+                        setConfirmedOrders([]);
+                      }}
+                      className="cancel-btn"
+                    >
+                      Annuler
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => handleExportPDF(0)}
+                      className="primary-btn"
+                    >
+                      Télécharger PDF
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowModal(false);
+                        setConfirmedOrders([]);
+                      }}
+                      className="close-btn"
+                    >
+                      Fermer
+                    </button>
+                  </>
+                )}
+              </div>
+              {orderError && <div className="error-message">{orderError}</div>}
+            </section>
+          </div>
         </div>
-        {orderError && <div className="error-message">{orderError}</div>}
-      </section>
-    </div>
-  </div>
-)}
-
+      )}
 
       {/* --------  Modal Édition quantité -------- */}
       {editItemId && (

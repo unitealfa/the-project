@@ -110,7 +110,7 @@ export class OrderService {
         (sum, it) => sum + it.prix_detail * it.quantity,
         0
       );
-      const numero = "CMD-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+      const numero = "ALFA-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
 
       const order = new this.orderModel({
         clientId: client._id,
@@ -183,11 +183,11 @@ export class OrderService {
     return this.orderModel
       .find({ clientId })
       .sort({ createdAt: -1 })
-      .lean<Order[]>(); // <-- Order[] pour indiquer un tableau à TS
+      .lean<Order[]>(); 
   }
 
   async confirmOrder(orderId: string) {
-    const numero = "CMD-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+    const numero = "ALFA-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
     return this.orderModel.findByIdAndUpdate(
       orderId,
       { confirmed: true, numero },
