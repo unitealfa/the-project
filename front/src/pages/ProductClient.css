@@ -31,6 +31,46 @@
   flex-wrap: wrap;
 }
 
+.quick-actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.quick-btn {
+  flex: 1;
+  padding: 0.75rem 0;
+  background: #1a1a1a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-btn:hover {
+  background: #333;
+}
+
+.quick-btn.secondary {
+  background: #fff;
+  color: #4f46e5;
+  border: 2px solid #4f46e5;
+}
+
+.quick-btn.secondary:hover {
+  background: #f3f4f6;
+  color: #4338ca;
+  border-color: #4338ca;
+}
+
 .search-input {
   flex: 1;
   min-width: 250px;

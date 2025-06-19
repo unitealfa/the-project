@@ -210,93 +210,63 @@ export default function Cart() {
               </button>
             </div>
           ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Produit</th>
-                  <th>Prix</th>
-                  <th>Qté</th>
-                  <th>Total</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {cart.map(
-                  (item) =>
-                    item.product && (
-                      <tr key={item._id}>
-                        {/* Produit */}
-                        <td>
-                          <div className="product-info">
-                            {item.product.images &&
-                              item.product.images.length > 0 && (
-                                <img
-                                  src={item.product.images[0]}
-                                  alt={item.product.nom_product}
-                                />
-                              )}
-                            <div className="product-details">
-                              <div className="product-name">
-                                {item.product.nom_product}
-                              </div>
-                              <div className="product-price">
-                                {item.product.prix_detail.toFixed(2)} € / unité
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        {/* Prix unitaire */}
-                        <td>{item.product.prix_detail.toFixed(2)} €</td>
-                        {/* Quantité */}
-                        <td>
-                          <div className="quantity-controls">
-                            <button
-                              onClick={() =>
-                                handleQuantityChange(
-                                  item.productId,
-                                  item.quantity - 1
-                                )
-                              }
-                              disabled={item.quantity <= 1}
-                              className="quantity-btn"
-                            >
-                              –
-                            </button>
-                            <span className="quantity-value">
-                              {item.quantity}
-                            </span>
-                            <button
-                              onClick={() =>
-                                handleQuantityChange(
-                                  item.productId,
-                                  item.quantity + 1
-                                )
-                              }
-                              className="quantity-btn"
-                            >
-                              +
-                            </button>
-                          </div>
-                        </td>
-                        {/* Total */}
-                        <td>
-                          {(item.product.prix_detail * item.quantity).toFixed(2)} €
-                        </td>
-                        {/* Supprimer */}
-                        <td>
-                          <button
-                            onClick={() => handleRemoveItem(item.productId)}
-                            className="delete-btn"
-                            title="Supprimer"
-                          >
-                            <Trash2 size={20} />
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                )}
-              </tbody>
-            </table>
+            <div className="cart-items-list">
+              {cart.map(
+                (item) =>
+                  item.product && (
+                    <div key={item._id} className="cart-item">
+                      {/* image + nom + Qté */}
+                      <div className="item-info">
+                        <img
+                          src={item.product.images?.[0] || "/placeholder.png"}
+                          alt={item.product.nom_product}
+                        />
+                        <div className="item-text">
+                          <p className="item-name">
+                            {item.product.nom_product}
+                          </p>
+                          <p className="item-qty">Qté : {item.quantity}</p>
+                        </div>
+                      </div>
+
+                      {/* boutons +/- et supprimer */}
+                      <div className="item-actions">
+                        <button
+                          onClick={() =>
+                            handleQuantityChange(
+                              item.productId,
+                              item.quantity - 1
+                            )
+                          }
+                          disabled={item.quantity <= 1}
+                          className="quantity-btn"
+                        >
+                          –
+                        </button>
+                        <span className="quantity-value">{item.quantity}</span>
+                        <button
+                          onClick={() =>
+                            handleQuantityChange(
+                              item.productId,
+                              item.quantity + 1
+                            )
+                          }
+                          className="quantity-btn"
+                        >
+                          +
+                        </button>
+                        <button
+                          onClick={() => handleRemoveItem(item.productId)}
+                          className="delete-btn"
+                          title="Supprimer"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  )
+              )}
+            </div>
           )}
         </section>
         {/* Colonne droite : récapitulatif */}
@@ -315,12 +285,10 @@ export default function Cart() {
             onClick={() => setShowModal(true)}
             className="action-btn primary-btn"
           >
-            <ShoppingCart size={22} style={{ marginBottom: -2 }} /> Valider la commande
+            <ShoppingCart size={22} style={{ marginBottom: -2 }} /> Valider la
+            commande
           </button>
-          <button
-            onClick={handleClearCart}
-            className="action-btn danger-btn"
-          >
+          <button onClick={handleClearCart} className="action-btn danger-btn">
             <Trash2 size={20} style={{ marginBottom: -2 }} /> Vider le panier
           </button>
           <button
@@ -332,203 +300,134 @@ export default function Cart() {
         </aside>
       </main>
 
-      {/* --------  Modal Bon de Livraison (PRO) -------- */}
-      {showModal && (
-        <div
-          className="modal-overlay"
-          onClick={() => {
-            setShowModal(false);
-            setConfirmedOrders([]);
-          }}
-        >
-          <div
-            className="modal-content"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3>Bon de Livraison</h3>
-            <div className="bl-preview">
-              {/* --------- AVANT confirmation --------- */}
-              {confirmedOrders.length === 0 && (
-                <>
-                  <div>
-                    <b>Client :</b> {user?.nom_client || "-"}
-                    <br />
-                    <b>Téléphone :</b>{" "}
-                    {user?.contact?.telephone || user?.num || "-"}
-                    <br />
-                    <b>Adresse :</b>{" "}
-                    {(user?.localisation?.adresse || "-") +
-                      (user?.localisation?.ville
-                        ? ", " + user?.localisation?.ville
-                        : "") +
-                      (user?.localisation?.code_postal
-                        ? ", " + user?.localisation?.code_postal
-                        : "")}
-                    <br />
-                    <b>Date :</b> {new Date().toLocaleString()}
-                    <br />
-                    <b>Nom du dépôt :</b>{" "}
-                    {user?.depot_name || user?.depot || "-"}
-                    <br />
-                  </div>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Produit</th>
-                        <th>Quantité</th>
-                        <th>Prix unitaire</th>
-                        <th>Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {cart.map(
-                        (item) =>
-                          item.product && (
-                            <tr key={item.productId}>
-                              <td>{item.product.nom_product}</td>
-                              <td>{item.quantity}</td>
-                              <td>{item.product.prix_detail.toFixed(2)} €</td>
-                              <td>
-                                {(item.product.prix_detail * item.quantity).toFixed(2)} €
-                              </td>
-                            </tr>
-                          )
-                      )}
-                    </tbody>
-                  </table>
-                  <div className="total-row">
-                    Total général : {total.toFixed(2)} €
-                  </div>
-                </>
-              )}
+{/* ========= Modal BL – Version épurée ========= */}
+{showModal && (
+  <div
+    className="modal-overlay"
+    onClick={() => {
+      setShowModal(false);
+      setConfirmedOrders([]);
+    }}
+  >
+    <div className="modal-content bl-clean" onClick={(e) => e.stopPropagation()}>
+      {/* Bandeau latéral couleur + titre */}
+      <aside className="bl-aside" />
 
-              {/* --------- APRÈS confirmation --------- */}
-              {confirmedOrders.map((confirmedOrder, idx) => (
-                <div
-                  key={idx}
-                  ref={(el) => {
-                    if (el) {
-                      blRefs.current[idx] = el;
-                    }
-                  }}
-                >
-                  <div>
-                    <b>Numéro de commande :</b>{" "}
-                    {confirmedOrder.numero ||
-                      confirmedOrder._id?.slice(-6).toUpperCase() ||
-                      "-"}
-                    <br />
-                    <b>Client :</b> {confirmedOrder.nom_client || "-"}
-                    <br />
-                    <b>Téléphone :</b> {confirmedOrder.telephone || "-"}
-                    <br />
-                    <b>Adresse :</b>{" "}
-                    {(confirmedOrder.adresse_client?.adresse || "-") +
-                      (confirmedOrder.adresse_client?.ville
-                        ? ", " + confirmedOrder.adresse_client.ville
-                        : "") +
-                      (confirmedOrder.adresse_client?.code_postal
-                        ? ", " + confirmedOrder.adresse_client.code_postal
-                        : "")}
-                    <br />
-                    <b>Date :</b>{" "}
-                    {new Date(confirmedOrder.createdAt).toLocaleString()}
-                    <br />
-                    <b>Nom du dépôt :</b> {confirmedOrder.depot_name || "-"}
-                    <br />
-                  </div>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Produit</th>
-                        <th>Quantité</th>
-                        <th>Prix unitaire</th>
-                        <th>Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {confirmedOrder.items?.map(
-                        (item: any, idx2: number) =>
-                          item && (
-                            <tr key={idx}>
-                              <td>{item.productName}</td>
-                              <td>{item.quantity}</td>
-                              <td>{item.prix_detail?.toFixed(2)} €</td>
-                              <td>
-                                {(item.prix_detail * item.quantity).toFixed(2)} €
-                              </td>
-                            </tr>
-                          )
-                      )}
-                    </tbody>
-                  </table>
-                  <div className="total-row">
-                    Total général : {confirmedOrder.total?.toFixed(2)} €
-                  </div>
-                  <button
-                    onClick={() => handleExportPDF(idx)}
-                    className="action-btn primary-btn"
-                  >
-                    Exporter le BL en PDF
-                  </button>
-                </div>
-              ))}
-            </div>
-            {/* ----------- BOUTONS MODAL ----------- */}
-            {confirmedOrders.length === 0 ? (
-              <div className="action-buttons">
-                <button
-                  onClick={handleSendOrder}
-                  className="confirm-btn"
-                  disabled={sending}
-                >
-                  {sending ? "Envoi..." : "Confirmer la commande"}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowModal(false);
-                    setConfirmedOrders([]);
-                  }}
-                  className="cancel-btn"
-                >
-                  Annuler
-                </button>
-              </div>
-            ) : (
-              <div className="action-buttons">
-                <button
-                  onClick={() => {
-                    setShowModal(false);
-                    setConfirmedOrders([]);
-                  }}
-                  className="close-btn"
-                >
-                  Fermer
-                </button>
-              </div>
-            )}
-            {orderError && (
-              <div className="error-message">{orderError}</div>
-            )}
+      <section className="bl-body">
+        {/* ---------- En-tête ---------- */}
+        <header className="bl-top">
+          <h2>Bon de Livraison</h2>
+          <small className="bl-ref">
+            Réf. {confirmedOrders[0]?.numero || "PROV."}
+          </small>
+        </header>
+
+        {/* ---------- Coordonnées ---------- */}
+        <div className="bl-grid">
+          <div>
+            <h4>Client</h4>
+            <p>
+              {user?.nom_client || "-"}<br />
+              {user?.contact?.telephone || user?.num || "-"}<br />
+              {(user?.localisation?.adresse || "-") +
+                (user?.localisation?.ville ? ", " + user?.localisation.ville : "")}
+            </p>
+          </div>
+          <div>
+            <h4>Dépôt</h4>
+            <p>
+              {user?.depot_name || user?.depot || "-"}<br />
+              {new Date().toLocaleDateString()}
+            </p>
           </div>
         </div>
-      )}
+
+        {/* ---------- Détail des articles ---------- */}
+        <table className="bl-clean-table">
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Qté</th>
+              <th>PU&nbsp;(€)</th>
+              <th>Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            {cart.map(
+              (it) =>
+                it.product && (
+                  <tr key={it.productId}>
+                    <td>{it.product.nom_product}</td>
+                    <td>{it.quantity}</td>
+                    <td>{it.product.prix_detail.toFixed(2)}</td>
+                    <td>{(it.product.prix_detail * it.quantity).toFixed(2)}</td>
+                  </tr>
+                )
+            )}
+          </tbody>
+        </table>
+
+        {/* ---------- Total ---------- */}
+        <p className="bl-total">TOTAL : {total.toFixed(2)} €</p>
+
+        {/* ---------- Boutons ---------- */}
+        <div className="bl-actions">
+          {confirmedOrders.length === 0 ? (
+            <>
+              <button
+                onClick={handleSendOrder}
+                disabled={sending}
+                className="confirm-btn"
+              >
+                {sending ? "Envoi..." : "Valider"}
+              </button>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setConfirmedOrders([]);
+                }}
+                className="cancel-btn"
+              >
+                Annuler
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => handleExportPDF(0)}
+                className="primary-btn"
+              >
+                Télécharger PDF
+              </button>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setConfirmedOrders([]);
+                }}
+                className="close-btn"
+              >
+                Fermer
+              </button>
+            </>
+          )}
+        </div>
+        {orderError && <div className="error-message">{orderError}</div>}
+      </section>
+    </div>
+  </div>
+)}
+
 
       {/* --------  Modal Édition quantité -------- */}
       {editItemId && (
-        <div
-          className="quantity-editor"
-          onClick={closeEditor}
-        >
+        <div className="quantity-editor" onClick={closeEditor}>
           <div
             className="quantity-editor-content"
             onClick={(e) => e.stopPropagation()}
           >
             <h4>Modifier la quantité</h4>
             <div className="controls">
-              <button
-                onClick={() => setEditQty(Math.max(1, editQty - 1))}
-              >
+              <button onClick={() => setEditQty(Math.max(1, editQty - 1))}>
                 -
               </button>
               <input
@@ -539,11 +438,7 @@ export default function Cart() {
                   setEditQty(Math.max(1, Number(e.target.value)))
                 }
               />
-              <button
-                onClick={() => setEditQty(editQty + 1)}
-              >
-                +
-              </button>
+              <button onClick={() => setEditQty(editQty + 1)}>+</button>
             </div>
             <div className="buttons">
               <button
@@ -555,10 +450,7 @@ export default function Cart() {
               >
                 OK
               </button>
-              <button
-                onClick={closeEditor}
-                className="cancel-btn"
-              >
+              <button onClick={closeEditor} className="cancel-btn">
                 Annuler
               </button>
             </div>
@@ -567,11 +459,7 @@ export default function Cart() {
       )}
 
       {/* Toast succès */}
-      {orderSuccess && (
-        <div className="success-toast">
-          {orderSuccess}
-        </div>
-      )}
+      {orderSuccess && <div className="success-toast">{orderSuccess}</div>}
     </>
   );
 }

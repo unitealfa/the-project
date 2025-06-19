@@ -125,20 +125,31 @@ export default function ProductClient() {
                 </option>
               ))}
             </select>
-            <select
-              value={selectedCompany}
-              onChange={(e) => setSelectedCompany(e.target.value)}
-              className="filter-select"
-            >
-              <option value="">Toutes les entreprises</option>
-              {availableCompanies.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+ <select
+            value={selectedCompany}
+            onChange={(e) => setSelectedCompany(e.target.value)}
+            className="filter-select"
+          >
+            <option value="">Toutes les entreprises</option>
+            {availableCompanies.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
           </div>
+          <div className="quick-actions">
+                        <button
+              className="quick-btn secondary"
+              onClick={() => navigate('/wishlist')}
+            >
+              Ma wishlist
+            </button>
+            <button className="quick-btn" onClick={() => navigate('/cart')}>
+              Mon panier
+            </button>
 
+          </div>
           {filteredProduits.length === 0 ? (
             <div className="no-products">
               <p>Aucun produit ne correspond à vos critères de recherche.</p>

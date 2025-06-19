@@ -155,6 +155,8 @@ export default function ProductList() {
               boxShadow: '0 1px 4px 0 rgba(0,0,0,0.03)',
               border: '1px solid #e0e0e0'
             }}>
+
+              
               <span style={{ color: '#666' }}>Client sélectionné :</span>
               <strong style={{ color: '#1a1a1a' }}>{client.nom_client}</strong>
             </div>
