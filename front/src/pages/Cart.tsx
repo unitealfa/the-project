@@ -210,12 +210,6 @@ export default function Cart() {
               <p style={{ fontSize: "1.2rem", color: "#666", margin: 0 }}>
                 Votre panier est vide
               </p>
-              <button
-                onClick={() => navigate("/productclient")}
-                className="cart-summary action-btn primary-btn"
-              >
-                Continuer mes achats
-              </button>
             </div>
           ) : (
             <div className="cart-items-list">
