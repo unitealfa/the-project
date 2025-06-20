@@ -21,8 +21,14 @@ export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Post()
-  create(@Body() dto: CreateProductDto) {
-    return this.productService.create(dto);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin', 'ResponsableDepot', 'Gestionnaire de stock')
+  create(@Body() dto: CreateProductDto, @Req() req) {
+    const enrichedDto = {
+      ...dto,
+      company_id: req.user.company,
+    };
+    return this.productService.create(enrichedDto);
   }
 
   @Get()
@@ -59,8 +65,21 @@ export class ProductController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
-    return this.productService.update(id, dto);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin', 'ResponsableDepot', 'Gestionnaire de stock')
+  update(@Param('id') id: string, @Body() dto: UpdateProductDto, @Req() req) {
+    console.log('Received update request for product:', id);
+    console.log('Request body:', dto);
+    console.log('User company:', req.user.company);
+    
+    const enrichedDto = {
+      ...dto,
+      company_id: req.user.company,
+    };
+    
+    console.log('Enriched DTO:', enrichedDto);
+    
+    return this.productService.update(id, enrichedDto);
   }
 
   @Delete(':id')

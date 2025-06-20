@@ -89,20 +89,37 @@ export default function ProductEdit() {
     setError('');
     setSuccess('');
 
+    // Validate numeric fields
+    const prixGros = parseFloat(formData.prix_gros);
+    const prixDetail = parseFloat(formData.prix_detail);
+    
+    if (isNaN(prixGros) || isNaN(prixDetail)) {
+      setError('Les prix doivent être des nombres valides');
+      return;
+    }
+
+    const requestData: any = {
+      nom_product: formData.nom_product,
+      prix_gros: prixGros,
+      prix_detail: prixDetail,
+      description: formData.description,
+      categorie: formData.categorie,
+      type: formData.type,
+      images: formData.images,
+    };
+
+    // Only include specifications if poids or volume have values
+    if ((formData.poids && String(formData.poids).trim()) || (formData.volume && String(formData.volume).trim())) {
+      requestData.specifications = {
+        poids: formData.poids ? String(formData.poids).trim() : '',
+        volume: formData.volume ? String(formData.volume).trim() : '',
+      };
+    }
+
+    console.log('Sending PUT request with data:', requestData);
+
     try {
-      await axios.put(`/products/${id}`, {
-        nom_product: formData.nom_product,
-        prix_gros: parseFloat(formData.prix_gros),
-        prix_detail: parseFloat(formData.prix_detail),
-        description: formData.description,
-        categorie: formData.categorie,
-        type: formData.type,
-        images: formData.images,
-        specifications: {
-          poids: formData.poids,
-          volume: formData.volume,
-        },
-      });
+      await axios.put(`/products/${id}`, requestData);
 
       setSuccess('Produit modifié avec succès');
       setTimeout(() => {
@@ -112,7 +129,12 @@ export default function ProductEdit() {
           navigate("/dashboard-stock");
         }
       }, 2000);
-    } catch (err) {
+    } catch (err: any) {
+      console.error('Error response:', err.response?.data);
+      console.error('Error message array:', err.response?.data?.message);
+      if (err.response?.data?.message && Array.isArray(err.response.data.message)) {
+        console.error('Validation errors:', err.response.data.message.join(', '));
+      }
       setError('Erreur lors de la modification du produit');
     }
   };

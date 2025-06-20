@@ -2,11 +2,13 @@ import { IsString, IsNumber, IsArray, IsOptional, ValidateNested, IsEnum } from 
 import { Type } from 'class-transformer';
 
 class SpecificationDto {
+  @IsOptional()
   @IsString()
-  poids: string;
+  poids?: string;
 
+  @IsOptional()
   @IsString()
-  volume: string;
+  volume?: string;
 }
 
 class DisponibiliteDto {
@@ -37,12 +39,14 @@ export class CreateProductDto {
   @IsEnum(['normal', 'frigorifique'], { each: true })
   type: string[];
 
+  @IsOptional()
   @IsArray()
-  images: string[];
+  images?: string[];
 
+  @IsOptional()
   @ValidateNested()
   @Type(() => SpecificationDto)
-  specifications: SpecificationDto;
+  specifications?: SpecificationDto;
 
   @IsOptional()
   @IsArray()
@@ -50,6 +54,7 @@ export class CreateProductDto {
   @Type(() => DisponibiliteDto)
   disponibilite?: DisponibiliteDto[];
 
+  @IsOptional()
   @IsString()
-  company_id: string;
+  company_id?: string;
 }
