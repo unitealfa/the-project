@@ -77,7 +77,21 @@ export class User {
   @Prop({ type: Types.ObjectId, ref: "Company", required: true })
   company!: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: "Depot", required: true })
+  @Prop({ type: Types.ObjectId, ref: "Depot", required(this: User) {
+    // depot requis seulement pour les membres d'équipe et responsable depot
+    const jobs = [
+      "Administrateur des ventes",
+      "Livreur",
+      "Chauffeur",
+      "Superviseur des ventes",
+      "Pré-vendeur",
+      "Gestionnaire de stock",
+      "Contrôleur",
+      "Manutentionnaire",
+      "responsable depot"
+    ];
+    return jobs.includes(this.role);
+  } })
   depot!: Types.ObjectId;
 
   @Prop({ default: "images/default-user.webp" })
