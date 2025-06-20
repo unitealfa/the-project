@@ -28,6 +28,7 @@ export default function EditPreventeMember() {
   const [passwordError, setPasswordError] = useState<string>('');
   const [pfpFile, setPfpFile] = useState<File | null>(null);
   const [pfpPreview, setPfpPreview] = useState('');
+  const [emailError, setEmailError] = useState<string>("");
 
   useEffect(() => {
     (async () => {
@@ -65,47 +66,46 @@ export default function EditPreventeMember() {
     }
   }, [pfpFile, f?.pfp]);
 
-  // Fonction de validation du mot de passe
-  const validatePassword = (password: string): boolean => {
-    if (!password) return true; // Le mot de passe est optionnel en édition
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    const hasMinLength = password.length >= 6;
-
-    if (!hasUpperCase) {
-      setPasswordError('Le mot de passe doit contenir au moins une lettre majuscule');
-      return false;
-    }
-    if (!hasNumber) {
-      setPasswordError('Le mot de passe doit contenir au moins un chiffre');
-      return false;
-    }
-    if (!hasMinLength) {
-      setPasswordError('Le mot de passe doit contenir au moins 6 caractères');
-      return false;
-    }
-
-    setPasswordError('');
-    return true;
-  };
+  // Nouvelle validation du mot de passe (optionnel)
+  function validatePassword(pw: string): string {
+    if (!pw) return "";
+    if (pw.length < 6) return "Le mot de passe doit contenir au moins 6 caractères";
+    if (!/[A-Z]/.test(pw)) return "Le mot de passe doit contenir au moins une lettre majuscule";
+    if (!/[0-9]/.test(pw)) return "Le mot de passe doit contenir au moins un chiffre";
+    return "";
+  }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!f) return;
-    setError('');
+    setError("");
+    setEmailError("");
     setSaving(true);
-
-    // Vérifier le mot de passe avant de soumettre
-    if (f.password && !validatePassword(f.password)) {
+    const pwErr = validatePassword(f.password || "");
+    setPasswordError(pwErr);
+    if (f.password && pwErr) {
       setSaving(false);
       return;
     }
-
     try {
-      await apiFetch(`/api/teams/members/${memberId}`, {
+      const res = await apiFetch(`/api/teams/members/${memberId}`, {
         method: 'PUT',
         body: JSON.stringify(f),
       });
+      if (!res.ok) {
+        let msg = 'Une erreur est survenue';
+        try {
+          const data = await res.json();
+          if (data && data.message) msg = Array.isArray(data.message) ? data.message.join(', ') : data.message;
+        } catch {}
+        if (msg.toLowerCase().includes('email déjà utilisé')) {
+          setEmailError('Cet email est déjà utilisé.');
+        } else {
+          setError(msg);
+        }
+        setSaving(false);
+        return;
+      }
       if (pfpFile) {
         await uploadMemberPfp(memberId, pfpFile);
       }
@@ -261,9 +261,19 @@ export default function EditPreventeMember() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Email :</label>
-            <input type="email" placeholder="Email" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} required style={{
-              padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box'
-            }} />
+            <input
+              type="email"
+              value={f.email}
+              onChange={e => {
+                setF({ ...f, email: e.target.value });
+                if (emailError) setEmailError("");
+              }}
+              required
+              style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+            />
+            {emailError && (
+              <span style={{ color: '#dc2626', fontSize: '0.95rem', marginTop: '0.3rem' }}>{emailError}</span>
+            )}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Téléphone :</label>
@@ -285,28 +295,19 @@ export default function EditPreventeMember() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Nouveau mot de passe (optionnel) :</label>
+            <label style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#555' }}>Mot de passe :</label>
             <input
               type="password"
-              value={f.password || ''}
+              value={f.password || ""}
               onChange={e => {
                 setF({ ...f, password: e.target.value });
-                if (e.target.value) {
-                  validatePassword(e.target.value);
-                } else {
-                  setPasswordError('');
-                }
+                if (passwordError) setPasswordError("");
               }}
-              style={{ 
-                padding: '0.75rem', 
-                border: passwordError ? '1px solid #dc2626' : '1px solid #ccc', 
-                borderRadius: '4px' 
-              }}
+              onBlur={e => setPasswordError(validatePassword(e.target.value))}
+              style={{ padding: '0.75rem', border: passwordError ? '1px solid #dc2626' : '1px solid #ccc', borderRadius: '4px' }}
             />
             {passwordError && (
-              <p style={{ color: '#dc2626', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-                {passwordError}
-              </p>
+              <span style={{ color: '#dc2626', fontSize: '0.95rem', marginTop: '0.3rem' }}>{passwordError}</span>
             )}
           </div>
 

@@ -31,19 +31,51 @@ export default function AddMember() {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string>("");
+  const [emailError, setEmailError] = useState<string>("");
+
+  // Validation du mot de passe
+  function validatePassword(pw: string): string {
+    if (pw.length < 6) return "Le mot de passe doit contenir au moins 6 caractères";
+    if (!/[A-Z]/.test(pw)) return "Le mot de passe doit contenir au moins une lettre majuscule";
+    if (!/[0-9]/.test(pw)) return "Le mot de passe doit contenir au moins un chiffre";
+    return "";
+  }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setError('');
+    setError("");
+    setEmailError("");
+    const pwErr = validatePassword(f.password);
+    setPasswordError(pwErr);
+    if (pwErr) {
+      setSaving(false);
+      return;
+    }
     try {
-      await apiFetch(`/api/teams/${depotId}/members`, {
+      const res = await apiFetch(`/api/teams/${depotId}/members`, {
         method: 'POST',
         body  : JSON.stringify(f),
       });
+      if (!res.ok) {
+        let msg = 'Une erreur est survenue';
+        try {
+          const data = await res.json();
+          if (data && data.message) msg = Array.isArray(data.message) ? data.message.join(', ') : data.message;
+        } catch {}
+        if (msg.toLowerCase().includes('email déjà utilisé')) {
+          setEmailError('Cet email est déjà utilisé.');
+        } else {
+          setError(msg);
+        }
+        setSaving(false);
+        return;
+      }
       nav(`/teams/${depotId}/livraison`, { replace: true });
     } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue');
+      const msg = err.message || 'Une erreur est survenue';
+      setError(msg);
     } finally {
       setSaving(false);
     }
@@ -154,10 +186,16 @@ export default function AddMember() {
               type="email"
               placeholder="Email"
               value={f.email}
-              onChange={e => setF({ ...f, email: e.target.value })}
+              onChange={e => {
+                setF({ ...f, email: e.target.value });
+                if (emailError) setEmailError("");
+              }}
               required
               style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
             />
+            {emailError && (
+              <span style={{ color: '#dc2626', fontSize: '0.95rem', marginTop: '0.3rem' }}>{emailError}</span>
+            )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -194,10 +232,17 @@ export default function AddMember() {
               type="password"
               placeholder="Mot de passe"
               value={f.password}
-              onChange={e => setF({ ...f, password: e.target.value })}
+              onChange={e => {
+                setF({ ...f, password: e.target.value });
+                if (passwordError) setPasswordError("");
+              }}
+              onBlur={e => setPasswordError(validatePassword(e.target.value))}
               required
               style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
             />
+            {passwordError && (
+              <span style={{ color: '#dc2626', fontSize: '0.95rem', marginTop: '0.3rem' }}>{passwordError}</span>
+            )}
           </div>
 
           <button
