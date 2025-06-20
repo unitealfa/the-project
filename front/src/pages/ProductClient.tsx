@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import { AddToCartButton } from "@/components/AddToCartButton/AddToCartButton";
 import { AddToWishlistButton } from "@/components/AddToWishlistButton/AddToWishlistButton";
 import { cartService } from '@/services/cartService';
+import { Heart, ShoppingCart } from "lucide-react";
 import "./ProductClient.css";
 
 interface Product {
@@ -138,17 +139,21 @@ export default function ProductClient() {
             ))}
           </select>
           </div>
-          <div className="quick-actions">
-                        <button
-              className="quick-btn secondary"
+          <div className="quick-actions header-actions-right">
+            <button
+              className="header-action-btn wishlist"
               onClick={() => navigate('/wishlist')}
             >
+              <Heart size={18} style={{ stroke: '#dc2626', marginRight: 2 }} />
               Ma wishlist
             </button>
-            <button className="quick-btn" onClick={() => navigate('/cart')}>
+            <button
+              className="header-action-btn cart"
+              onClick={() => navigate('/cart')}
+            >
+              <ShoppingCart size={18} style={{ stroke: '#4f46e5', marginRight: 2 }} />
               Mon panier
             </button>
-
           </div>
           {filteredProduits.length === 0 ? (
             <div className="no-products">
