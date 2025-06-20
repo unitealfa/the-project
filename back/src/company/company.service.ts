@@ -34,7 +34,7 @@ export class CompanyService {
     });
     if (exists) {
       throw new ConflictException(
-        `L’entreprise '${companyData.nom_company}' existe déjà.`
+        `L'entreprise '${companyData.nom_company}' existe déjà.`
       );
     }
 
@@ -44,7 +44,7 @@ export class CompanyService {
     });
     if (userExists || clientExists) {
       throw new ConflictException(
-        `L’email '${adminData.email}' est déjà utilisé.`
+        `L'email '${adminData.email}' est déjà utilisé.`
       );
     }
 
@@ -121,6 +121,19 @@ export class CompanyService {
 
     await this.userModel.deleteMany({ company: companyObjectId });
     await this.clientModel.deleteMany({ company: companyObjectId });
+
+    // Supprimer aussi tous les utilisateurs liés à chaque dépôt de l'entreprise
+    const depots = await this.depotModel.find({ company_id: companyObjectId }).lean();
+    for (const depot of depots) {
+      await this.userModel.deleteMany({ depot: depot._id });
+    }
+
+    // Retirer toutes les affectations à cette entreprise pour tous les clients
+    await this.clientModel.updateMany(
+      { 'affectations.entreprise': companyObjectId },
+      { $pull: { affectations: { entreprise: companyObjectId } } }
+    );
+
     await this.depotModel.deleteMany({ company_id: companyObjectId });
 
     const result = await this.companyModel

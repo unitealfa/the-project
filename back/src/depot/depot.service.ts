@@ -246,6 +246,15 @@ export class DepotService {
       .lean();
     if (!depot) throw new NotFoundException("Dépôt introuvable");
 
+    // Supprimer tous les utilisateurs liés à ce dépôt
+    await this.userModel.deleteMany({ depot: id });
+
+    // Retirer l'affectation à ce dépôt pour tous les clients
+    await this.clientModel.updateMany(
+      { 'affectations.depot': depot._id },
+      { $pull: { affectations: { depot: depot._id } } }
+    );
+
     if (depot.responsable_id) {
       await this.userModel.deleteOne({ _id: depot.responsable_id });
     }
