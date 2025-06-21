@@ -94,6 +94,14 @@ export default function Cart() {
     newQuantity: number
   ) => {
     if (newQuantity < 1) return;
+    
+    // Vérifier le stock disponible
+    const availableStock = stockInfo[productId];
+    if (availableStock && newQuantity > availableStock) {
+      alert(`Stock insuffisant. Il ne reste que ${availableStock} unité(s) disponible(s).`);
+      return;
+    }
+    
     try {
       await cartService.updateCartItem(productId, newQuantity);
       fetchCart();
@@ -228,6 +236,17 @@ export default function Cart() {
                             {item.product.nom_product}
                           </p>
                           <p className="item-qty">Qté : {item.quantity}</p>
+                          {/* Affichage de l'alerte de stock limité */}
+                          {stockInfo[item.productId] && stockInfo[item.productId] <= 10 && (
+                            <p className="stock-warning" style={{ 
+                              color: '#dc2626', 
+                              fontSize: '0.85rem', 
+                              margin: '4px 0 0 0',
+                              fontWeight: '500'
+                            }}>
+                              ⚠️ Plus que {stockInfo[item.productId]} dispo en stock
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -253,7 +272,12 @@ export default function Cart() {
                               item.quantity + 1
                             )
                           }
+                          disabled={stockInfo[item.productId] ? item.quantity >= stockInfo[item.productId] : false}
                           className="quantity-btn"
+                          title={stockInfo[item.productId] && item.quantity >= stockInfo[item.productId] ? 
+                            `Stock limité : ${stockInfo[item.productId]} disponible(s)` : 
+                            "Augmenter la quantité"
+                          }
                         >
                           +
                         </button>

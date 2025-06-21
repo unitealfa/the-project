@@ -493,6 +493,13 @@
 
 .item-qty { font-size: 0.9rem; color: #666; margin: 0; }
 
+.stock-warning {
+  color: #dc2626;
+  font-size: 0.85rem;
+  margin: 4px 0 0 0;
+  font-weight: 500;
+}
+
 .item-actions {
   display: flex;
   align-items: center;
