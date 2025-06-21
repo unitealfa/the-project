@@ -308,7 +308,7 @@ export default function ChauffeurTours() {
     <>
       <Header />
       <main className="brutalist-page-wrapper">
-        <h1 className="brutalist-title">🛣️ Tournée du chauffeur</h1>
+        <h1 className="brutalist-title">Tournée du chauffeur</h1>
 
         {/* Contrôles en haut */}
         <div className="brutalist-button-group">

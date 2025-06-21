@@ -149,7 +149,7 @@ export default function LivreurCommandes() {
     <>
       <Header />
       <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-        <h1>🚚 Commandes à livrer</h1>
+        <h1> Commandes à livrer</h1>
         <div style={{ display: 'grid', gap: '1rem' }}>
           {orders.map(o => (
             <div key={o._id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem', backgroundColor: 'white' }}>

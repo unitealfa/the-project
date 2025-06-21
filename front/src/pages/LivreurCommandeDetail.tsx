@@ -70,26 +70,6 @@ export default function LivreurCommandeDetail() {
     });
   };
 
-  const uploadPhotos = async () => {
-    if (!order || selectedPhotos.length === 0) return;
-    const form = new FormData();
-    selectedPhotos.forEach(f => form.append('photos', f));
-    const res = await fetch(`${apiBase}/api/orders/${order._id}/photos`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-      body: form
-    });
-    if (res.ok) {
-      setSelectedPhotos([]);
-      setPreviews([]);
-      // Rafraîchir la commande pour voir les nouvelles preuves
-      const data = await res.json();
-      setOrder(data);
-    } else {
-      alert('Erreur lors de l\'upload des photos');
-    }
-  };
-
   const deletePhoto = async (photoIdx: number) => {
     if (!order) return;
     const res = await fetch(`${apiBase}/api/orders/${order._id}/photos/${photoIdx}`, {
@@ -106,6 +86,24 @@ export default function LivreurCommandeDetail() {
   };
 
   const updateDeliveryStatus = async (orderId: string, status: 'en_attente' | 'en_cours' | 'livree') => {
+    // Si on valide la livraison et qu'il y a des photos sélectionnées, les uploader d'abord
+    if (status === 'livree' && selectedPhotos.length > 0) {
+      const form = new FormData();
+      selectedPhotos.forEach(f => form.append('photos', f));
+      const uploadRes = await fetch(`${apiBase}/api/orders/${orderId}/photos`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        body: form
+      });
+      if (uploadRes.ok) {
+        setSelectedPhotos([]);
+        setPreviews([]);
+      } else {
+        alert('Erreur lors de l\'upload des photos');
+        return;
+      }
+    }
+
     const res = await fetch(`${apiBase}/api/orders/${orderId}/delivery-status`, {
       method: 'PATCH',
       headers: {
@@ -250,13 +248,8 @@ export default function LivreurCommandeDetail() {
                 </div>
               )}
               <button
-                onClick={uploadPhotos}
-                style={{ padding: '0.75rem 1.5rem', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '0.5rem', marginRight: '0.5rem', fontSize: '1rem' }}>
-                Valider les preuves
-              </button>
-              <button
                 onClick={() => updateDeliveryStatus(order._id, 'livree')}
-                style={{ padding: '0.75rem 1.5rem', backgroundColor: '#1a1a1a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '0.5rem', fontSize: '1rem' }}>
+                style={{ padding: '0.75rem 1.5rem', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '0.5rem', marginRight: '0.5rem', fontSize: '1rem' }}>
                 Valider la livraison
               </button>
             </div>

@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import { AddToCartButton } from "@/components/AddToCartButton/AddToCartButton";
 import { AddToWishlistButton } from "@/components/AddToWishlistButton/AddToWishlistButton";
 import { cartService } from '@/services/cartService';
-import { Heart, ShoppingCart } from "lucide-react";
+import { Heart, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
 import "./ProductClient.css";
 
 interface Product {
@@ -30,6 +30,11 @@ export default function ProductClient() {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [messageId, setMessageId] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<'success' | 'error' | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [productsPerPage] = useState(12); // 12 products per page
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,6 +77,23 @@ export default function ProductClient() {
 
     return matchesName && matchesType && matchesCompany;
   });
+
+  // Pagination logic
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentProducts = filteredProduits.slice(indexOfFirstProduct, indexOfLastProduct);
+  const totalPages = Math.ceil(filteredProduits.length / productsPerPage);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchName, selectedType, selectedCompany]);
+
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+    // Scroll to top when page changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleQuantityChange = (productId: string, newQuantity: number) => {
     setQuantities(prev => ({
@@ -161,7 +183,7 @@ export default function ProductClient() {
             </div>
           ) : (
             <div className="products-grid">
-              {filteredProduits.map((p) => (
+              {currentProducts.map((p) => (
                 <div key={p._id} className="product-card">
                   <div className="product-image-container">
                     <img
@@ -215,6 +237,46 @@ export default function ProductClient() {
                   )}
                 </div>
               ))}
+              
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="pagination-container">
+                  <div className="pagination-info">
+                    Affichage de {indexOfFirstProduct + 1} à {Math.min(indexOfLastProduct, filteredProduits.length)} sur {filteredProduits.length} produits
+                  </div>
+                  <div className="pagination-controls">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="pagination-btn"
+                    >
+                      <ChevronLeft size={16} />
+                      Précédent
+                    </button>
+                    
+                    <div className="pagination-numbers">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="pagination-btn"
+                    >
+                      Suivant
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
