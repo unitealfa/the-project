@@ -153,10 +153,28 @@ export default function LivreurCommandes() {
   };
 
   const markNonDelivery = async (orderId: string) => {
-    const reason = window.prompt(
-      "Motif de non livraison (magasin fermé, responsable absent, autre...)"
+    const motifs = [
+      "Magasin fermé",
+      "Responsable absent",
+      "Adresse incorrecte",
+      "Client indisponible",
+      "Autre",
+    ];
+    const choix = window.prompt(
+      "Motif de non livraison:\n" +
+        motifs.map((m, i) => `${i + 1}) ${m}`).join("\n")
     );
-    if (!reason) return;
+    if (!choix) return;
+    let index = parseInt(choix, 10);
+    let reason = motifs[index - 1];
+    if (isNaN(index) || index < 1 || index > motifs.length) {
+      reason = choix;
+    }
+    if (reason === "Autre") {
+      const autre = window.prompt("Veuillez pr\xE9ciser le motif:");
+      if (!autre) return;
+      reason = autre;
+    }
     try {
       const res = await fetch(`${apiBase}/api/orders/${orderId}/non-delivery`, {
         method: "PATCH",
@@ -169,6 +187,25 @@ export default function LivreurCommandes() {
       if (res.ok) fetchOrders();
     } catch (err) {
       console.error("Erreur non livraison:", err);
+    }
+  };
+
+    const cancelNonDelivery = async (orderId: string) => {
+    try {
+      const res = await fetch(
+        `${apiBase}/api/orders/${orderId}/delivery-status`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: "en_cours" }),
+        }
+      );
+      if (res.ok) fetchOrders();
+    } catch (err) {
+      console.error("Erreur annulation non livraison:", err);
     }
   };
 
@@ -413,10 +450,27 @@ export default function LivreurCommandes() {
                     marginLeft: "0.5rem",
                   }}
                 >
-                  Commande non livrée
-                </button>
-              )}
-            </div>
+                Commande non livrée
+              </button>
+            )}
+
+            {o.etat_livraison === "non_livree" && (
+              <button
+                onClick={() => cancelNonDelivery(o._id)}
+                style={{
+                  padding: "0.5rem 1rem",
+                  backgroundColor: "#3b82f6",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  marginTop: "0.5rem",
+                }}
+              >
+                Annuler la non-livraison
+              </button>
+            )}
+          </div>
           ))}
         </div>
       </main>

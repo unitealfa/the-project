@@ -1,8 +1,8 @@
 // src/pages/TourneesList.tsx
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
-import '../pages-css/TourneesList.css';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
+import "../pages-css/TourneesList.css";
 
 interface Tournee {
   _id: string;
@@ -14,18 +14,27 @@ interface Tournee {
   total_travel_distance?: number;
 }
 
+interface Retour {
+  _id: string;
+  nom_client: string;
+  nonLivraisonCause?: string;
+  updatedAt?: string;
+  createdAt?: string;
+}
+
 export default function TourneesList() {
   const navigate = useNavigate();
   const [tournees, setTournees] = useState<Tournee[]>([]);
+  const [retours, setRetours] = useState<Retour[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
 
   const [seenTournees, setSeenTournees] = useState<string[]>(() => {
     try {
-      const stored = localStorage.getItem('seenTournees');
+      const stored = localStorage.getItem("seenTournees");
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -33,25 +42,36 @@ export default function TourneesList() {
   });
 
   const apiBase = import.meta.env.VITE_API_URL;
-  const token = localStorage.getItem('token');
-  const raw = localStorage.getItem('user');
+  const token = localStorage.getItem("token");
+  const raw = localStorage.getItem("user");
   const user = raw ? JSON.parse(raw) : null;
 
   useEffect(() => {
     if (!user?.depot) {
-      setError('Aucun dépôt associé à votre compte');
+      setError("Aucun dépôt associé à votre compte");
       setLoading(false);
       return;
     }
-    fetch(`${apiBase}/tournees/depot/${user.depot}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Erreur ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        setTournees(data);
+
+    Promise.all([
+      fetch(`${apiBase}/tournees/depot/${user.depot}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      fetch(`${apiBase}/api/orders?confirmed=true`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    ])
+      .then(async ([tRes, oRes]) => {
+        if (!tRes.ok) throw new Error(`Erreur ${tRes.status}`);
+        const tours = await tRes.json();
+        if (!oRes.ok) throw new Error(`Erreur ${oRes.status}`);
+        const orders = await oRes.json();
+
+        setTournees(tours);
+        const filtered = orders.filter(
+          (o: any) => o.etat_livraison === "non_livree"
+        );
+        setRetours(filtered);
         setLoading(false);
       })
       .catch((err) => {
@@ -65,11 +85,28 @@ export default function TourneesList() {
     const updated = [...seenTournees, id];
     setSeenTournees(updated);
     try {
-      localStorage.setItem('seenTournees', JSON.stringify(updated));
+      localStorage.setItem("seenTournees", JSON.stringify(updated));
     } catch {
       // silent
     }
   };
+
+  const confirmReturn = async (id: string) => {
+    const res = await fetch(`${apiBase}/api/orders/${id}/confirm-return`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) setRetours((prev) => prev.filter((o) => o._id !== id));
+  };
+
+  const retoursByDate: Record<string, Retour[]> = retours.reduce((acc, o) => {
+    const d = new Date(o.updatedAt || o.createdAt || "")
+      .toISOString()
+      .slice(0, 10);
+    if (!acc[d]) acc[d] = [];
+    acc[d].push(o);
+    return acc;
+  }, {} as Record<string, Retour[]>);
 
   const recentTournees = [...tournees]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -105,10 +142,34 @@ export default function TourneesList() {
           </button>
         )}
 
-        {recentTournees.length === 0 ? (
+        {recentTournees.length === 0 &&
+        Object.keys(retoursByDate).length === 0 ? (
           <p className="tl-no-data">Aucune tournée trouvée</p>
         ) : (
           <div className="tl-card-list">
+            {Object.entries(retoursByDate).map(([date, list]) => (
+              <div className="tl-card" key={`r-${date}`}>
+                <div className="tl-card-header">
+                  <h3 className="tl-card-title">
+                    Retours - Tournée du {new Date(date).toLocaleDateString()}
+                  </h3>
+                </div>
+                <ul style={{ listStyle: "none", padding: 0 }}>
+                  {list.map((o) => (
+                    <li key={o._id} style={{ marginBottom: "0.5rem" }}>
+                      {o.nom_client} - {o.nonLivraisonCause || ""}
+                      <button
+                        className="tl-btn tl-btn-purple"
+                        style={{ marginLeft: "0.5rem" }}
+                        onClick={() => confirmReturn(o._id)}
+                      >
+                        Confirmer retour
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
             {recentTournees.map((tournee) => {
               const isNew = !seenTournees.includes(tournee._id);
               return (
@@ -122,7 +183,10 @@ export default function TourneesList() {
                   <p>Nombre d'arrêts : {tournee.stops.length}</p>
                   <p>Nombre de véhicules : {tournee.vehicles.length}</p>
                   {tournee.total_travel_time && (
-                    <p>Temps de trajet total : {tournee.total_travel_time} minutes</p>
+                    <p>
+                      Temps de trajet total : {tournee.total_travel_time}{" "}
+                      minutes
+                    </p>
                   )}
                   {tournee.total_travel_distance && (
                     <p>Distance totale : {tournee.total_travel_distance} km</p>
@@ -145,30 +209,64 @@ export default function TourneesList() {
 
       {showHistory && (
         <div className="tl-popup-overlay" onClick={() => setShowHistory(false)}>
-          <div className="tl-popup-content" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="tl-popup-content"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2 className="tl-popup-title">Historique complet des tournées</h2>
 
-            {currentItems.length === 0 ? (
+            {currentItems.length === 0 &&
+            Object.keys(retoursByDate).length === 0 ? (
               <p className="tl-no-data">Aucune tournée dans l'historique</p>
             ) : (
               <div className="tl-card-list">
+                {Object.entries(retoursByDate).map(([date, list]) => (
+                  <div className="tl-card" key={`hist-r-${date}`}>
+                    <div className="tl-card-header">
+                      <h3 className="tl-card-title">
+                        Retours - Tournée du{" "}
+                        {new Date(date).toLocaleDateString()}
+                      </h3>
+                    </div>
+                    <ul style={{ listStyle: "none", padding: 0 }}>
+                      {list.map((o) => (
+                        <li key={o._id} style={{ marginBottom: "0.5rem" }}>
+                          {o.nom_client} - {o.nonLivraisonCause || ""}
+                          <button
+                            className="tl-btn tl-btn-purple"
+                            style={{ marginLeft: "0.5rem" }}
+                            onClick={() => confirmReturn(o._id)}
+                          >
+                            Confirmer retour
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
                 {currentItems.map((tournee) => {
                   const isNew = !seenTournees.includes(tournee._id);
                   return (
                     <div className="tl-card" key={tournee._id}>
                       <div className="tl-card-header">
                         <h3 className="tl-card-title">
-                          Tournée du {new Date(tournee.date).toLocaleDateString()}
+                          Tournée du{" "}
+                          {new Date(tournee.date).toLocaleDateString()}
                         </h3>
                         {isNew && <span className="tl-badge-new">Nouveau</span>}
                       </div>
                       <p>Nombre d'arrêts : {tournee.stops.length}</p>
                       <p>Nombre de véhicules : {tournee.vehicles.length}</p>
                       {tournee.total_travel_time && (
-                        <p>Temps de trajet total : {tournee.total_travel_time} minutes</p>
+                        <p>
+                          Temps de trajet total : {tournee.total_travel_time}{" "}
+                          minutes
+                        </p>
                       )}
                       {tournee.total_travel_distance && (
-                        <p>Distance totale : {tournee.total_travel_distance} km</p>
+                        <p>
+                          Distance totale : {tournee.total_travel_distance} km
+                        </p>
                       )}
                       <button
                         className="tl-btn tl-btn-purple"
