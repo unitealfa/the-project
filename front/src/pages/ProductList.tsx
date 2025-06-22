@@ -270,7 +270,7 @@ export default function ProductList() {
                       fontSize: '1.1rem',
                       color: '#1a1a1a'
                     }}>
-                      {product.prix_detail.toFixed(2)} €
+                      {product.prix_detail.toFixed(2)} DZD
                 </p>
                     <span style={{
                       padding: '0.4rem 0.8rem',

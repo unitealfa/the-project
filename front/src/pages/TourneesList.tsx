@@ -30,6 +30,10 @@ export default function TourneesList() {
   const [error, setError] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+    const [historyFilter, setHistoryFilter] = useState<
+    "all" | "tournees" | "retours"
+  >("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const itemsPerPage = 15;
 
   const [seenTournees, setSeenTournees] = useState<string[]>(() => {
@@ -99,6 +103,10 @@ export default function TourneesList() {
     if (res.ok) setRetours((prev) => prev.filter((o) => o._id !== id));
   };
 
+    useEffect(() => {
+    setCurrentPage(1);
+  }, [historyFilter, searchTerm]);
+
   const retoursByDate: Record<string, Retour[]> = retours.reduce((acc, o) => {
     const d = new Date(o.updatedAt || o.createdAt || "")
       .toISOString()
@@ -108,13 +116,36 @@ export default function TourneesList() {
     return acc;
   }, {} as Record<string, Retour[]>);
 
+    const filteredRetoursByDate: Record<string, Retour[]> = Object.entries(
+    retoursByDate
+  ).reduce((acc, [date, list]) => {
+    if (historyFilter === "tournees") return acc;
+    const matchDate = date.includes(searchTerm.toLowerCase());
+    const filteredList = list.filter(
+      (o) =>
+        !searchTerm ||
+        matchDate ||
+        o.nom_client.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    if (filteredList.length) acc[date] = filteredList;
+    return acc;
+  }, {} as Record<string, Retour[]>);
+
+  const filteredTournees =
+    historyFilter === "retours"
+      ? []
+      : tournees.filter((t) => {
+          const d = new Date(t.date).toISOString().slice(0, 10);
+          return !searchTerm || d.includes(searchTerm.toLowerCase());
+        });
+
   const recentTournees = [...tournees]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 
-  const totalPages = Math.ceil(tournees.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredTournees.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentItems = tournees.slice(startIndex, startIndex + itemsPerPage);
+  const currentItems = filteredTournees.slice(startIndex, startIndex + itemsPerPage);
 
   const goToPage = (page: number) => {
     if (page < 1 || page > totalPages) return;
@@ -130,7 +161,7 @@ export default function TourneesList() {
       <main className="tl-page">
         <h1 className="tl-title-card">Tournées du dépôt</h1>
 
-        {tournees.length > 5 && (
+        {user?.role === "Contrôleur" && tournees.length > 0 && (
           <button
             className="tl-btn tl-btn-green"
             onClick={() => {
@@ -158,6 +189,13 @@ export default function TourneesList() {
                   {list.map((o) => (
                     <li key={o._id} style={{ marginBottom: "0.5rem" }}>
                       {o.nom_client} - {o.nonLivraisonCause || ""}
+                                            <button
+                        className="tl-btn tl-btn-purple"
+                        style={{ marginLeft: "0.5rem" }}
+                        onClick={() => navigate(`/orders/${o._id}`)}
+                      >
+                        Voir les détails
+                      </button>
                       <button
                         className="tl-btn tl-btn-purple"
                         style={{ marginLeft: "0.5rem" }}
@@ -214,13 +252,31 @@ export default function TourneesList() {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="tl-popup-title">Historique complet des tournées</h2>
+            <div className="tl-history-controls">
+              <select
+                value={historyFilter}
+                onChange={(e) =>
+                  setHistoryFilter(e.target.value as "all" | "tournees" | "retours")
+                }
+              >
+                <option value="all">Tout</option>
+                <option value="tournees">Tournées</option>
+                <option value="retours">Retours</option>
+              </select>
+              <input
+                type="text"
+                placeholder="Rechercher..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
 
             {currentItems.length === 0 &&
-            Object.keys(retoursByDate).length === 0 ? (
+            Object.keys(filteredRetoursByDate).length === 0 ? (
               <p className="tl-no-data">Aucune tournée dans l'historique</p>
             ) : (
               <div className="tl-card-list">
-                {Object.entries(retoursByDate).map(([date, list]) => (
+                {Object.entries(filteredRetoursByDate).map(([date, list]) => (
                   <div className="tl-card" key={`hist-r-${date}`}>
                     <div className="tl-card-header">
                       <h3 className="tl-card-title">
@@ -232,6 +288,13 @@ export default function TourneesList() {
                       {list.map((o) => (
                         <li key={o._id} style={{ marginBottom: "0.5rem" }}>
                           {o.nom_client} - {o.nonLivraisonCause || ""}
+                                                    <button
+                            className="tl-btn tl-btn-purple"
+                            style={{ marginLeft: "0.5rem" }}
+                            onClick={() => navigate(`/orders/${o._id}`)}
+                          >
+                            Voir les détails
+                          </button>
                           <button
                             className="tl-btn tl-btn-purple"
                             style={{ marginLeft: "0.5rem" }}

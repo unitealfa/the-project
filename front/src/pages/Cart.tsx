@@ -301,7 +301,7 @@ export default function Cart() {
           <div className="total-section">
             <div className="total-row">
               <span>Total</span>
-              <span>{cartTotal.toFixed(2)} €</span>
+              <span>{cartTotal.toFixed(2)} DZD</span>
             </div>
             <div className="taxes-note">
               Taxes incluses. Livraison calculée à l'étape suivante.
@@ -387,7 +387,7 @@ export default function Cart() {
                   <tr>
                     <th>Produit</th>
                     <th>Qté</th>
-                    <th>PU&nbsp;(€)</th>
+                    <th>PU&nbsp;(DZD)</th>
                     <th>Montant</th>
                   </tr>
                 </thead>
@@ -409,7 +409,7 @@ export default function Cart() {
                           (it.prix_detail ?? it.product?.prix_detail ?? 0) *
                           it.quantity
                         ).toFixed(2)}{" "}
-                        €
+                        DZD
                       </td>
                     </tr>
                   ))}
@@ -417,7 +417,7 @@ export default function Cart() {
               </table>
 
               {/* ---------- Total ---------- */}
-              <p className="bl-total">TOTAL : {displayTotal.toFixed(2)} €</p>
+              <p className="bl-total">TOTAL : {displayTotal.toFixed(2)} DZD</p>
 
               {/* ---------- Boutons ---------- */}
               <div className="bl-actions" data-html2canvas-ignore="true">

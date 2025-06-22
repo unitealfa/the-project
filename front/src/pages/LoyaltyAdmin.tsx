@@ -305,7 +305,7 @@ export default function LoyaltyAdmin() {
 
           <div className="tokens">
             <div className="token">
-              <span className="token-value">{ratioAmount}€</span>
+              <span className="token-value">{ratioAmount}DZD</span>
             </div>
             <div className="arrow">
               <div className="arrow-line" />
@@ -319,7 +319,7 @@ export default function LoyaltyAdmin() {
           {/* === FORMULAIRE RATIO === */}
           <form onSubmit={submitRatio} className="ratio-form">
             <div className="form-group">
-              <label className="form-label">Montant (€)</label>
+              <label className="form-label">Montant (DZD)</label>
               <input
                 type="number"
                 min={1}

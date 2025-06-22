@@ -646,7 +646,7 @@ export default function TourneeDetail() {
                                         fontWeight: 500,
                                       }}
                                     >
-                                      {product.prix_detail.toFixed(2)} €
+                                      {product.prix_detail.toFixed(2)} DZD
                                     </td>
                                     <td
                                       style={{
@@ -660,7 +660,7 @@ export default function TourneeDetail() {
                                       {(
                                         product.quantity * product.prix_detail
                                       ).toFixed(2)}{" "}
-                                      €
+                                      DZD
                                     </td>
                                   </tr>
                                 ))}

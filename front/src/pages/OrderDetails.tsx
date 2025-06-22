@@ -294,7 +294,7 @@ export default function OrderDetails() {
               }}>Informations de la commande</legend>
             <p><strong>Numéro :</strong> {order.numero || order._id}</p>
             <p><strong>Date :</strong> {new Date(order.createdAt).toLocaleString()}</p>
-            <p><strong>Total :</strong> {order.total?.toFixed(2) || '0.00'} €</p>
+            <p><strong>Total :</strong> {order.total?.toFixed(2) || '0.00'} DZD</p>
             <p>
                 <strong>État de livraison :</strong>{' '}
               <span style={{
@@ -345,7 +345,7 @@ export default function OrderDetails() {
             }}>Articles commandés</legend>
             <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
               {order.items.map((item, i) => (
-                <li key={i} style={{ marginBottom: '1rem', color: '#1a1a1a' }}>{item.productName} × {item.quantity} — {item.prix_detail.toFixed(2)} €</li>
+                <li key={i} style={{ marginBottom: '1rem', color: '#1a1a1a' }}>{item.productName} × {item.quantity} — {item.prix_detail.toFixed(2)} DZD</li>
               ))}
             </ul>
           </fieldset>

@@ -181,7 +181,7 @@ export default function Commandes() {
                       {order.telephone}
                     </td>
                     <td style={{ border: "1px solid #eee", padding: "8px" }}>
-                      {order.total?.toFixed(2)} €
+                      {order.total?.toFixed(2)} DZD
                     </td>
                     <td style={{ border: "1px solid #eee", padding: "8px" }}>
                       {new Date(order.createdAt).toLocaleString()}
@@ -347,17 +347,17 @@ export default function Commandes() {
                           {item.quantity}
                         </td>
                         <td style={{ border: "1px solid #ddd", padding: 4 }}>
-                          {item.prix_detail?.toFixed(2)} €
+                          {item.prix_detail?.toFixed(2)} DZD
                         </td>
                         <td style={{ border: "1px solid #ddd", padding: 4 }}>
-                          {(item.prix_detail * item.quantity).toFixed(2)} €
+                          {(item.prix_detail * item.quantity).toFixed(2)} DZD
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
                 <div style={{ textAlign: "right", fontWeight: "bold" }}>
-                  Total général : {selectedOrder.total?.toFixed(2)} €
+                  Total général : {selectedOrder.total?.toFixed(2)} DZD
                 </div>
               </div>
               <button

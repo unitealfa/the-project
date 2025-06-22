@@ -164,7 +164,7 @@ const AdminStats: React.FC = () => {
                 boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
               }}>
                 <h3 style={{ marginBottom: "0.5rem", color: "#6b7280" }}>Chiffre d'affaires total</h3>
-                <p style={{ fontSize: "2rem", fontWeight: "bold" }}>{stats.totalAmount.toFixed(2)} €</p>
+                <p style={{ fontSize: "2rem", fontWeight: "bold" }}>{stats.totalAmount.toFixed(2)} DZD</p>
               </div>
 
               <div style={{
@@ -260,7 +260,7 @@ const AdminStats: React.FC = () => {
                         Dépôt : {client.depotName}
                       </div>
                       <div style={{ color: "#6b7280" }}>
-                        Montant total : {client.montantTotal.toFixed(2)} €
+                        Montant total : {client.montantTotal.toFixed(2)} DZD
                       </div>
                     </div>
                   ))}
@@ -290,7 +290,7 @@ const AdminStats: React.FC = () => {
                         <span>{product.totalQuantity} unités</span>
                       </div>
                       <div style={{ color: "#6b7280" }}>
-                        Montant total : {product.totalAmount.toFixed(2)} €
+                        Montant total : {product.totalAmount.toFixed(2)} DZD
                       </div>
                     </div>
                   )) || <p>Aucun produit trouvé</p>}
@@ -337,7 +337,7 @@ const AdminStats: React.FC = () => {
                       <span>{depot.totalOrders} commandes</span>
                     </div>
                     <div style={{ color: "#6b7280" }}>
-                      Chiffre d'affaires : {depot.totalAmount.toFixed(2)} €
+                      Chiffre d'affaires : {depot.totalAmount.toFixed(2)} DZD
                     </div>
                     {selectedDepot === depot._id && (
                       <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #e5e7eb" }}>

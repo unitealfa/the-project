@@ -203,7 +203,7 @@ export default function Wishlist() {
                     </td>
                     {/* Prix unitaire */}
                     <td style={{ textAlign: 'center', fontWeight: 500 }}>
-                      {product.prix_detail.toFixed(2)} €
+                      {product.prix_detail.toFixed(2)} DZD
                     </td>
                     {/* Stock */}
                     <td style={{ textAlign: 'center', color: '#7cb342', fontWeight: 600 }}>En stock</td>

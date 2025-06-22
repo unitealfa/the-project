@@ -240,7 +240,7 @@ export default function ProductClient() {
                   <div className="product-name">{p.nom_product}</div>
                   <div className="product-description">{p.description}</div>
                   <div className="product-price">
-                    {p.prix_detail.toFixed(2)} €
+                    {p.prix_detail.toFixed(2)} DZD
                   </div>
 
                   <div className="quantity-controls">

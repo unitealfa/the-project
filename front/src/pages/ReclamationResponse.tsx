@@ -272,7 +272,7 @@ export default function ReclamationResponse() {
                   <ul style={{ marginTop: "0.5rem", paddingLeft: "1.5rem", color: '#333' }}>
                     {order.items.map((item, index) => (
                       <li key={index}>
-                        {item.productName} - Quantité: {item.quantity} - Prix: {item.prix_detail} €
+                        {item.productName} - Quantité: {item.quantity} - Prix: {item.prix_detail} DZD
                       </li>
                     ))}
                   </ul>

@@ -219,8 +219,8 @@ export default function ProductDetail() {
               <div style={{ marginBottom: '1rem' }}><strong style={{ color: '#555' }}>Description :</strong> <span style={{ color: '#333' }}>{product.description}</span></div>
               <div style={{ marginBottom: '1rem' }}><strong style={{ color: '#555' }}>Catégorie :</strong> <span style={{ color: '#333' }}>{product.categorie}</span></div>
               <div style={{ marginBottom: '1rem' }}><strong style={{ color: '#555' }}>Type :</strong> <span style={{ color: '#333' }}>{product.type?.join(', ') || '-'}</span></div>
-               <div style={{ marginBottom: '1rem' }}><strong style={{ color: '#555' }}>Prix de gros :</strong> <span style={{ color: '#333' }}>{product.prix_gros ? `${product.prix_gros} €` : '-'}</span></div>
-               <div style={{ marginBottom: '1rem' }}><strong style={{ color: '#555' }}>Prix de détail :</strong> <span style={{ color: '#333' }}>{product.prix_detail ? `${product.prix_detail} €` : '-'}</span></div>
+               <div style={{ marginBottom: '1rem' }}><strong style={{ color: '#555' }}>Prix de gros :</strong> <span style={{ color: '#333' }}>{product.prix_gros ? `${product.prix_gros} DZD` : '-'}</span></div>
+               <div style={{ marginBottom: '1rem' }}><strong style={{ color: '#555' }}>Prix de détail :</strong> <span style={{ color: '#333' }}>{product.prix_detail ? `${product.prix_detail} DZD` : '-'}</span></div>
               {product.specifications && (
                 <div style={{ marginTop: '1.5rem', borderTop: '1px solid #eee', paddingTop: '1rem' }}>
                   <h3 style={{ color: '#1a1a1a', fontSize: '1.1rem', marginBottom: '1rem' }}>Spécifications</h3>

@@ -349,7 +349,7 @@ const Orders: React.FC = () => {
                       <div style={{ fontSize: "0.875rem", color: "#666" }}>{order.telephone}</div>
                     </td>
                     <td style={tdStyle}>{formatDate(order.createdAt)}</td>
-                    <td style={tdStyle}>{order.total.toFixed(2)} €</td>
+                    <td style={tdStyle}>{order.total.toFixed(2)} DZD</td>
                     <td style={tdStyle}>
                       <span style={{
                         padding: '0.25rem 0.75rem',
