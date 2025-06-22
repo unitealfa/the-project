@@ -50,8 +50,15 @@ export class Order extends Document {
 
   @Prop({ required: true }) total: number;
 
-  @Prop({ default: 'en_attente', enum: ['en_attente', 'en_cours', 'livree'] })
+    @Prop({
+    default: 'en_attente',
+    enum: ['en_attente', 'en_cours', 'livree', 'non_livree'],
+  })
   etat_livraison!: string;
+
+    // Motif de non livraison le cas échéant
+  @Prop()
+  nonLivraisonCause?: string;
 
   @Prop({ default: 'en_attente', enum: ['en_attente', 'en_cours', 'charge'] })
   statut_chargement!: string;

@@ -12,8 +12,9 @@ interface Order {
   nom_client: string;
   numero?: string;
   items: OrderItem[];
-  etat_livraison: 'en_attente' | 'en_cours' | 'livree';
+etat_livraison: 'en_attente' | 'en_cours' | 'livree' | 'non_livree';
   photosLivraison?: Array<{ url: string; takenAt: string }>;
+  nonLivraisonCause?: string;
 }
 
 export default function LivreurCommandeDetail() {
@@ -85,7 +86,10 @@ export default function LivreurCommandeDetail() {
     }
   };
 
-  const updateDeliveryStatus = async (orderId: string, status: 'en_attente' | 'en_cours' | 'livree') => {
+  const updateDeliveryStatus = async (
+    orderId: string,
+    status: 'en_attente' | 'en_cours' | 'livree' | 'non_livree'
+  ) => {
     // Si on valide la livraison et qu'il y a des photos sélectionnées, les uploader d'abord
     if (status === 'livree' && selectedPhotos.length > 0) {
       const form = new FormData();
@@ -118,11 +122,31 @@ export default function LivreurCommandeDetail() {
     }
   };
 
+    const markNonDelivery = async (orderId: string) => {
+    const reason = window.prompt(
+      'Motif de non livraison (magasin fermé, responsable absent, autre...)'
+    );
+    if (!reason) return;
+    const res = await fetch(`${apiBase}/api/orders/${orderId}/non-delivery`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ reason }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setOrder(data);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'en_attente': return '#f59e0b';
       case 'en_cours': return '#3b82f6';
       case 'livree': return '#10b981';
+      case 'non_livree': return '#ef4444';
       default: return '#6b7280';
     }
   };
@@ -132,6 +156,7 @@ export default function LivreurCommandeDetail() {
       case 'en_attente': return 'En attente';
       case 'en_cours': return 'En cours';
       case 'livree': return 'Livrée';
+            case 'non_livree': return 'Non livrée';
       default: return status;
     }
   };
@@ -167,6 +192,11 @@ export default function LivreurCommandeDetail() {
           <span style={{ padding: '0.25rem 0.75rem', borderRadius: '9999px', backgroundColor: getStatusColor(order.etat_livraison), color: 'white', fontSize: '0.875rem', marginBottom: 16, display: 'inline-block' }}>
             {getStatusText(order.etat_livraison)}
           </span>
+                    {order.etat_livraison === 'non_livree' && order.nonLivraisonCause && (
+            <div style={{ color: '#dc2626', marginBottom: 8 }}>
+              Motif : {order.nonLivraisonCause}
+            </div>
+          )}
           <h3 style={{ color: '#1a1a1a', marginTop: 24 }}>Produits de la commande</h3>
           <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
             {order.items.map((item, i) => (
@@ -251,6 +281,11 @@ export default function LivreurCommandeDetail() {
                 onClick={() => updateDeliveryStatus(order._id, 'livree')}
                 style={{ padding: '0.75rem 1.5rem', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '0.5rem', marginRight: '0.5rem', fontSize: '1rem' }}>
                 Valider la livraison
+              </button>
+                            <button
+                onClick={() => markNonDelivery(order._id)}
+                style={{ padding: '0.75rem 1.5rem', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '0.5rem', fontSize: '1rem' }}>
+                Commande non livrée
               </button>
             </div>
           )}

@@ -197,7 +197,7 @@ export class OrderService {
 
   async updateDeliveryStatus(
     orderId: string,
-    status: "en_attente" | "en_cours" | "livree"
+    status: "en_attente" | "en_cours" | "livree" | "non_livree"
   ) {
     const order = await this.orderModel.findById(orderId);
     if (!order) throw new NotFoundException("Commande non trouvée");
@@ -225,6 +225,24 @@ export class OrderService {
       }
     }
 
+    return order;
+  }
+
+    async markAsNonDelivered(orderId: string, reason: string) {
+    const order = await this.orderModel.findById(orderId);
+    if (!order) throw new NotFoundException("Commande non trouvée");
+    order.etat_livraison = "non_livree";
+    order.nonLivraisonCause = reason;
+    await order.save();
+    return order;
+  }
+
+  async confirmReturn(orderId: string) {
+    const order = await this.orderModel.findById(orderId);
+    if (!order) throw new NotFoundException("Commande non trouvée");
+    order.etat_livraison = "en_attente";
+    order.nonLivraisonCause = undefined;
+    await order.save();
     return order;
   }
 

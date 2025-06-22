@@ -108,11 +108,23 @@ export class OrderController {
   @Patch(':id/delivery-status')
   async updateDeliveryStatus(
     @Param('id') id: string,
-    @Body('status') status: 'en_attente' | 'en_cours' | 'livree'
+     @Body('status') status: 'en_attente' | 'en_cours' | 'livree' | 'non_livree'
   ) {
     return this.orderService.updateDeliveryStatus(id, status);
   }
 
+   @Patch(':id/non-delivery')
+  async markAsNonDelivered(
+    @Param('id') id: string,
+    @Body('reason') reason: string,
+  ) {
+    return this.orderService.markAsNonDelivered(id, reason);
+  }
+
+  @Patch(':id/confirm-return')
+  async confirmReturn(@Param('id') id: string) {
+    return this.orderService.confirmReturn(id);
+  }
   @Post(':id/photos')
   @UseInterceptors(
     FilesInterceptor('photos', 4, {
