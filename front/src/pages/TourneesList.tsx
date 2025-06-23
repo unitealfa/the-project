@@ -30,7 +30,7 @@ export default function TourneesList() {
   const [error, setError] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-    const [historyFilter, setHistoryFilter] = useState<
+  const [historyFilter, setHistoryFilter] = useState<
     "all" | "tournees" | "retours"
   >("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -39,6 +39,15 @@ export default function TourneesList() {
   const [seenTournees, setSeenTournees] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem("seenTournees");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [seenRetours, setSeenRetours] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem("seenRetours");
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -95,8 +104,18 @@ export default function TourneesList() {
     }
   };
 
+  const markRetourAsSeen = (id: string) => {
+    if (seenRetours.includes(id)) return;
+    const updated = [...seenRetours, id];
+    setSeenRetours(updated);
+    try {
+      localStorage.setItem("seenRetours", JSON.stringify(updated));
+    } catch {
+      // silent
+    }
+  };
 
-    useEffect(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [historyFilter, searchTerm]);
 
@@ -109,7 +128,7 @@ export default function TourneesList() {
     return acc;
   }, {} as Record<string, Retour[]>);
 
-    const filteredRetoursByDate: Record<string, Retour[]> = Object.entries(
+  const filteredRetoursByDate: Record<string, Retour[]> = Object.entries(
     retoursByDate
   ).reduce((acc, [date, list]) => {
     if (historyFilter === "tournees") return acc;
@@ -138,7 +157,10 @@ export default function TourneesList() {
 
   const totalPages = Math.ceil(filteredTournees.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentItems = filteredTournees.slice(startIndex, startIndex + itemsPerPage);
+  const currentItems = filteredTournees.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   const goToPage = (page: number) => {
     if (page < 1 || page > totalPages) return;
@@ -179,18 +201,32 @@ export default function TourneesList() {
                   </h3>
                 </div>
                 <ul style={{ listStyle: "none", padding: 0 }}>
-                  {list.map((o) => (
-                    <li key={o._id} style={{ marginBottom: "0.5rem" }}>
-                      {o.nom_client} - {o.nonLivraisonCause || ""}
-                                            <button
-                        className="tl-btn tl-btn-purple"
-                        style={{ marginLeft: "0.5rem" }}
-                        onClick={() => navigate(`/orders/${o._id}`)}
-                      >
-                        Voir les détails
-                      </button>
-                    </li>
-                  ))}
+                  {list.map((o) => {
+                    const isNew = !seenRetours.includes(o._id);
+                    return (
+                      <li key={o._id} style={{ marginBottom: "0.5rem" }}>
+                        {o.nom_client} - {o.nonLivraisonCause || ""}
+                        {isNew && (
+                          <span
+                            className="tl-badge-new"
+                            style={{ marginLeft: "0.5rem" }}
+                          >
+                            Nouveau
+                          </span>
+                        )}
+                        <button
+                          className="tl-btn tl-btn-purple"
+                          style={{ marginLeft: "0.5rem" }}
+                          onClick={() => {
+                            markRetourAsSeen(o._id);
+                            navigate(`/orders/${o._id}`);
+                          }}
+                        >
+                          Voir les détails
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             ))}
@@ -242,7 +278,9 @@ export default function TourneesList() {
               <select
                 value={historyFilter}
                 onChange={(e) =>
-                  setHistoryFilter(e.target.value as "all" | "tournees" | "retours")
+                  setHistoryFilter(
+                    e.target.value as "all" | "tournees" | "retours"
+                  )
                 }
               >
                 <option value="all">Tout</option>
@@ -271,18 +309,32 @@ export default function TourneesList() {
                       </h3>
                     </div>
                     <ul style={{ listStyle: "none", padding: 0 }}>
-                      {list.map((o) => (
-                        <li key={o._id} style={{ marginBottom: "0.5rem" }}>
-                          {o.nom_client} - {o.nonLivraisonCause || ""}
-                                                    <button
-                            className="tl-btn tl-btn-purple"
-                            style={{ marginLeft: "0.5rem" }}
-                            onClick={() => navigate(`/orders/${o._id}`)}
-                          >
-                            Voir les détails
-                          </button>
-                        </li>
-                      ))}
+                      {list.map((o) => {
+                        const isNew = !seenRetours.includes(o._id);
+                        return (
+                          <li key={o._id} style={{ marginBottom: "0.5rem" }}>
+                            {o.nom_client} - {o.nonLivraisonCause || ""}
+                            {isNew && (
+                              <span
+                                className="tl-badge-new"
+                                style={{ marginLeft: "0.5rem" }}
+                              >
+                                Nouveau
+                              </span>
+                            )}
+                            <button
+                              className="tl-btn tl-btn-purple"
+                              style={{ marginLeft: "0.5rem" }}
+                              onClick={() => {
+                                markRetourAsSeen(o._id);
+                                navigate(`/orders/${o._id}`);
+                              }}
+                            >
+                              Voir les détails
+                            </button>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 ))}

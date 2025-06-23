@@ -1,6 +1,10 @@
 // back/src/order/order.service.ts
 
-import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Order } from "./schemas/order.schema";
@@ -9,7 +13,7 @@ import { Client } from "../client/schemas/client.schema";
 import { ProductService } from "../product/product.service";
 import { Reclamation } from "./schemas/reclamation.schema";
 import { Depot } from "../depot/schemas/depot.schema";
-import { LoyaltyService } from '../loyalty/loyalty.service';
+import { LoyaltyService } from "../loyalty/loyalty.service";
 
 @Injectable()
 export class OrderService {
@@ -19,7 +23,7 @@ export class OrderService {
     @InjectModel(Reclamation.name) private reclamationModel: Model<Reclamation>,
     @InjectModel(Depot.name) private depotModel: Model<Depot>,
     private productService: ProductService,
-    private loyaltyService: LoyaltyService,
+    private loyaltyService: LoyaltyService
   ) {}
 
   async createOrder(userId: string, dto: CreateOrderDto): Promise<Order[]> {
@@ -32,7 +36,9 @@ export class OrderService {
     const region = client.localisation?.region || "";
 
     // Récupère la liste des dépôts assignés au client
-    const clientDepots = (client.affectations ?? []).map(a => a.depot.toString());
+    const clientDepots = (client.affectations ?? []).map((a) =>
+      a.depot.toString()
+    );
     if (clientDepots.length === 0) {
       throw new BadRequestException("Aucun dépôt associé au client");
     }
@@ -47,23 +53,23 @@ export class OrderService {
       }
 
       // Cherche la disponibilité du produit dans l'un des dépôts du client
-      const dispo = product.disponibilite.find(d =>
-        clientDepots.includes(d.depot_id.toString()),
+      const dispo = product.disponibilite.find((d) =>
+        clientDepots.includes(d.depot_id.toString())
       );
 
       if (!dispo) {
         throw new BadRequestException(
-          `Le produit ${item.productName} n'est pas disponible dans vos dépôts`,
+          `Le produit ${item.productName} n'est pas disponible dans vos dépôts`
         );
       }
       if (dispo.quantite <= 0) {
         throw new BadRequestException(
-          `Le produit ${item.productName} est en rupture de stock`,
+          `Le produit ${item.productName} est en rupture de stock`
         );
       }
       if (dispo.quantite < item.quantity) {
         throw new BadRequestException(
-          `Stock insuffisant pour ${item.productName}. Quantité disponible : ${dispo.quantite}`,
+          `Stock insuffisant pour ${item.productName}. Quantité disponible : ${dispo.quantite}`
         );
       }
 
@@ -86,16 +92,16 @@ export class OrderService {
       for (const item of items) {
         const product = await this.productService.findOne(item.productId);
         const depotDispo = product.disponibilite.find(
-          d => d.depot_id.toString() === depotId,
+          (d) => d.depot_id.toString() === depotId
         );
         if (!depotDispo || depotDispo.quantite <= 0) {
           throw new BadRequestException(
-            `Le produit ${item.productName} est en rupture de stock`,
+            `Le produit ${item.productName} est en rupture de stock`
           );
         }
         if (depotDispo.quantite < item.quantity) {
           throw new BadRequestException(
-            `Stock insuffisant pour ${item.productName}. Quantité disponible : ${depotDispo.quantite}`,
+            `Stock insuffisant pour ${item.productName}. Quantité disponible : ${depotDispo.quantite}`
           );
         }
         const newQuantite = depotDispo.quantite - item.quantity;
@@ -110,7 +116,8 @@ export class OrderService {
         (sum, it) => sum + it.prix_detail * it.quantity,
         0
       );
-      const numero = "ALFA-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+      const numero =
+        "ALFA-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
 
       const order = new this.orderModel({
         clientId: client._id,
@@ -143,7 +150,7 @@ export class OrderService {
   async findByDepot(depotId: string, confirmed?: boolean) {
     // 1. On récupère toutes les commandes du dépôt (optionnellement filtrées sur le statut), triées par date
     const query: any = { depot: depotId };
-    if (typeof confirmed === 'boolean') {
+    if (typeof confirmed === "boolean") {
       query.confirmed = confirmed;
     }
     const orders = await this.orderModel
@@ -152,16 +159,16 @@ export class OrderService {
       .lean<Order[]>(); // <-- bien préciser Order[] pour que TS sache que c'est un tableau
 
     // 2. On récupère en une seule fois tous les clients référencés
-    const clientIds = [...new Set(orders.map(o => o.clientId.toString()))];
+    const clientIds = [...new Set(orders.map((o) => o.clientId.toString()))];
     const clients = await this.clientModel
       .find({ _id: { $in: clientIds } })
       .lean<Client[]>(); // <-- idem Client[]
     const clientMap = Object.fromEntries(
-      clients.map(c => [c._id.toString(), c])
+      clients.map((c) => [c._id.toString(), c])
     );
 
     // 3. On enrichit chaque commande avec son nom_depot + infos client
-    return orders.map(order => {
+    return orders.map((order) => {
       const client = clientMap[order.clientId.toString()];
       const coord = client?.localisation?.coordonnees || {
         latitude: 0,
@@ -183,11 +190,12 @@ export class OrderService {
     return this.orderModel
       .find({ clientId })
       .sort({ createdAt: -1 })
-      .lean<Order[]>(); 
+      .lean<Order[]>();
   }
 
   async confirmOrder(orderId: string) {
-    const numero = "ALFA-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+    const numero =
+      "ALFA-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
     return this.orderModel.findByIdAndUpdate(
       orderId,
       { confirmed: true, numero },
@@ -218,17 +226,25 @@ export class OrderService {
           await this.clientModel.findByIdAndUpdate(order.clientId, {
             $inc: { [`fidelite_points.${companyId}`]: pts },
           });
-          await this.loyaltyService.recordRepeatPoints(companyId, order.clientId, pts);
+          await this.loyaltyService.recordRepeatPoints(
+            companyId,
+            order.clientId,
+            pts
+          );
         }
-        
-        await this.loyaltyService.recordSpend(companyId, order.clientId, order.total);
+
+        await this.loyaltyService.recordSpend(
+          companyId,
+          order.clientId,
+          order.total
+        );
       }
     }
 
     return order;
   }
 
-    async markAsNonDelivered(orderId: string, reason: string) {
+  async markAsNonDelivered(orderId: string, reason: string) {
     const order = await this.orderModel.findById(orderId);
     if (!order) throw new NotFoundException("Commande non trouvée");
     order.etat_livraison = "non_livree";
@@ -242,6 +258,7 @@ export class OrderService {
     if (!order) throw new NotFoundException("Commande non trouvée");
     order.etat_livraison = "en_attente";
     order.nonLivraisonCause = undefined;
+    order.confirmed = false;
     await order.save();
     return order;
   }
@@ -270,7 +287,10 @@ export class OrderService {
     return order;
   }
 
-  async getOrderStats(depotId: string, period: "day" | "week" | "month" | "all") {
+  async getOrderStats(
+    depotId: string,
+    period: "day" | "week" | "month" | "all"
+  ) {
     const now = new Date();
     let startDate: Date;
 
@@ -299,14 +319,14 @@ export class OrderService {
     const totalOrders = orders.length;
     const totalAmount = orders.reduce((sum, order) => sum + order.total, 0);
     const ordersInDelivery = orders.filter(
-      order => order.etat_livraison === "en_cours"
+      (order) => order.etat_livraison === "en_cours"
     ).length;
     const ordersDelivered = orders.filter(
-      order => order.etat_livraison === "livree"
+      (order) => order.etat_livraison === "livree"
     ).length;
 
     // IDs des commandes pour récupérer leurs réclamations
-    const orderIds = orders.map(order => order._id);
+    const orderIds = orders.map((order) => order._id);
 
     const reclamations = await this.reclamationModel.find({
       orderId: { $in: orderIds },
@@ -314,13 +334,13 @@ export class OrderService {
 
     const totalReclamations = reclamations.length;
     const reclamationsEnAttente = reclamations.filter(
-      r => r.status === "en_attente"
+      (r) => r.status === "en_attente"
     ).length;
     const reclamationsRejetees = reclamations.filter(
-      r => r.status === "rejeter"
+      (r) => r.status === "rejeter"
     ).length;
     const reclamationsResolues = reclamations.filter(
-      r => r.status === "resolue"
+      (r) => r.status === "resolue"
     ).length;
 
     // Top 5 clients les plus fidèles pour ce dépôt
@@ -331,19 +351,27 @@ export class OrderService {
           createdAt: { $gte: startDate },
         },
       },
-      { $group: { _id: "$clientId", count: { $sum: 1 }, total: { $sum: "$total" } } },
+      {
+        $group: {
+          _id: "$clientId",
+          count: { $sum: 1 },
+          total: { $sum: "$total" },
+        },
+      },
       { $sort: { count: -1 } },
       { $limit: 5 },
     ]);
 
     const topClients = await Promise.all(
-      clientOrders.map(async clientAgg => {
+      clientOrders.map(async (clientAgg) => {
         const clientInfo = await this.clientModel.findById(clientAgg._id);
         const firstDepotId = clientInfo?.affectations?.[0]?.depot;
         let depotName = "Non assigné";
 
         if (firstDepotId) {
-          const depotDoc = await this.depotModel.findById(firstDepotId).lean<Depot>();
+          const depotDoc = await this.depotModel
+            .findById(firstDepotId)
+            .lean<Depot>();
           if (depotDoc && typeof depotDoc.nom_depot === "string") {
             depotName = depotDoc.nom_depot;
           }
@@ -421,10 +449,10 @@ export class OrderService {
     const totalOrders = orders.length;
     const totalAmount = orders.reduce((sum, order) => sum + order.total, 0);
     const ordersInDelivery = orders.filter(
-      order => order.etat_livraison === "en_cours"
+      (order) => order.etat_livraison === "en_cours"
     ).length;
     const ordersDelivered = orders.filter(
-      order => order.etat_livraison === "livree"
+      (order) => order.etat_livraison === "livree"
     ).length;
 
     const reclamations = await this.reclamationModel.find({
@@ -433,31 +461,39 @@ export class OrderService {
 
     const totalReclamations = reclamations.length;
     const reclamationsEnAttente = reclamations.filter(
-      r => r.status === "en_attente"
+      (r) => r.status === "en_attente"
     ).length;
     const reclamationsRejetees = reclamations.filter(
-      r => r.status === "rejeter"
+      (r) => r.status === "rejeter"
     ).length;
     const reclamationsResolues = reclamations.filter(
-      r => r.status === "resolue"
+      (r) => r.status === "resolue"
     ).length;
 
     // Top 5 clients tous dépôts confondus
     const clientOrders = await this.orderModel.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
-      { $group: { _id: "$clientId", count: { $sum: 1 }, total: { $sum: "$total" } } },
+      {
+        $group: {
+          _id: "$clientId",
+          count: { $sum: 1 },
+          total: { $sum: "$total" },
+        },
+      },
       { $sort: { count: -1 } },
       { $limit: 5 },
     ]);
 
     const topClients = await Promise.all(
-      clientOrders.map(async clientAgg => {
+      clientOrders.map(async (clientAgg) => {
         const clientInfo = await this.clientModel.findById(clientAgg._id);
         const firstDepotId = clientInfo?.affectations?.[0]?.depot;
         let depotName = "Non assigné";
 
         if (firstDepotId) {
-          const depotDoc = await this.depotModel.findById(firstDepotId).lean<Depot>();
+          const depotDoc = await this.depotModel
+            .findById(firstDepotId)
+            .lean<Depot>();
           if (depotDoc && typeof depotDoc.nom_depot === "string") {
             depotName = depotDoc.nom_depot;
           }
