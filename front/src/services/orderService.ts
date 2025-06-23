@@ -32,7 +32,7 @@ export interface Order {
   };
   items: OrderItem[];
   total: number;
-  etat_livraison: "en_attente" | "en_cours" | "livree";
+  etat_livraison: "en_attente" | "en_cours" | "livree" | "non_livree";
   createdAt: string;
   photosLivraison?: Array<{ url: string; takenAt: string }>;
 }

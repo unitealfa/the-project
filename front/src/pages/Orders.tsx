@@ -24,7 +24,7 @@ interface Order {
     prix_detail: number;
   }>;
   total: number;
-  etat_livraison: 'en_attente' | 'en_cours' | 'livree';
+  etat_livraison: 'en_attente' | 'en_cours' | 'livree' | 'non_livree';
   statut_chargement: 'en_attente' | 'en_cours' | 'charge';
   createdAt: string;
   photosLivraison?: Array<{ url: string; takenAt: string }>;

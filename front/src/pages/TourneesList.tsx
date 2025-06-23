@@ -95,13 +95,6 @@ export default function TourneesList() {
     }
   };
 
-  const confirmReturn = async (id: string) => {
-    const res = await fetch(`${apiBase}/api/orders/${id}/confirm-return`, {
-      method: "PATCH",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (res.ok) setRetours((prev) => prev.filter((o) => o._id !== id));
-  };
 
     useEffect(() => {
     setCurrentPage(1);
@@ -196,13 +189,6 @@ export default function TourneesList() {
                       >
                         Voir les détails
                       </button>
-                      <button
-                        className="tl-btn tl-btn-purple"
-                        style={{ marginLeft: "0.5rem" }}
-                        onClick={() => confirmReturn(o._id)}
-                      >
-                        Confirmer retour
-                      </button>
                     </li>
                   ))}
                 </ul>
@@ -294,13 +280,6 @@ export default function TourneesList() {
                             onClick={() => navigate(`/orders/${o._id}`)}
                           >
                             Voir les détails
-                          </button>
-                          <button
-                            className="tl-btn tl-btn-purple"
-                            style={{ marginLeft: "0.5rem" }}
-                            onClick={() => confirmReturn(o._id)}
-                          >
-                            Confirmer retour
                           </button>
                         </li>
                       ))}

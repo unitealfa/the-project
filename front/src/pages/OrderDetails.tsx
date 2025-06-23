@@ -27,7 +27,7 @@ interface Order {
   };
   depot_name?: string;
   entreprise?: { nom_company?: string };
-  etat_livraison: 'en_attente' | 'en_cours' | 'livree';
+  etat_livraison: 'en_attente' | 'en_cours' | 'livree' | 'non_livree';
 }
 
 interface User {
@@ -49,6 +49,7 @@ export default function OrderDetails() {
   const [newReclamationTitre, setNewReclamationTitre] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const apiBase = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const raw = localStorage.getItem('user');
@@ -132,6 +133,29 @@ export default function OrderDetails() {
       default: return status;
     }
   };
+
+   const confirmReturn = async () => {
+    if (!order) return;
+    try {
+      const res = await fetch(
+        `${apiBase}/api/orders/${order._id}/confirm-return`,
+        {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }
+      );
+      if (res.ok) {
+        const updated = await res.json();
+        setOrder(updated);
+      }
+    } catch (err) {
+      console.error('Erreur lors de la confirmation du retour:', err);
+    }
+  };
+
+  const isRetour = order?.etat_livraison === 'non_livree';
+  const isControleur = user?.role === 'Contrôleur';
+
 
   if (loading) {
     return (
@@ -273,6 +297,24 @@ export default function OrderDetails() {
           <h1 style={{ color: '#1a1a1a', fontSize: '2rem', marginBottom: '2rem', borderBottom: '2px solid #1a1a1a', paddingBottom: '0.5rem' }}>
             Détails de la commande {order.numero || order._id}
           </h1>
+          {isControleur && isRetour && (
+            <button
+              onClick={confirmReturn}
+              style={{
+                backgroundColor: '#000',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '0.75rem 1.5rem',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                marginBottom: '1rem',
+              }}
+            >
+              Confirmer retour
+            </button>
+          )}
+
 
         <div style={{ 
             display: 'grid',
@@ -342,7 +384,7 @@ export default function OrderDetails() {
               color: '#1a1a1a',
               fontWeight: 'bold',
               fontSize: '1.1rem'
-            }}>Articles commandés</legend>
+             }}>{isRetour ? 'Produits à retours' : 'Articles commandés'}</legend>
             <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
               {order.items.map((item, i) => (
                 <li key={i} style={{ marginBottom: '1rem', color: '#1a1a1a' }}>{item.productName} × {item.quantity} — {item.prix_detail.toFixed(2)} DZD</li>
@@ -351,7 +393,7 @@ export default function OrderDetails() {
           </fieldset>
 
           {/* Réclamations */}
-          {user?.role !== 'Administrateur des ventes' && (
+           {!isRetour && user?.role !== 'Administrateur des ventes' && (
             <fieldset style={{
               border: '1px solid #e0e0e0',
               borderRadius: '8px',

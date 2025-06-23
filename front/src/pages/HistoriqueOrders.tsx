@@ -27,7 +27,7 @@ interface Order {
   };
   depot_name?: string;
   entreprise?: { nom_company?: string };
-  etat_livraison: 'en_attente' | 'en_cours' | 'livree';
+  etat_livraison: 'en_attente' | 'en_cours' | 'livree' | 'non_livree';
   statut_chargement: 'en_attente' | 'en_cours' | 'charge';
 }
 
