@@ -70,7 +70,7 @@ export default function TourneesList() {
       fetch(`${apiBase}/tournees/depot/${user.depot}`, {
         headers: { Authorization: `Bearer ${token}` },
       }),
-      fetch(`${apiBase}/api/orders?confirmed=true`, {
+      fetch(`${apiBase}/api/orders`, {
         headers: { Authorization: `Bearer ${token}` },
       }),
     ])

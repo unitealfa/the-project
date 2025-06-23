@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { orderService } from "../services/orderService";
 import { reclamationService, Reclamation } from "../services/reclamationService";
+import { CheckCircle } from "lucide-react";
 
 interface OrderItem {
   productId: string;
@@ -27,6 +28,7 @@ interface Order {
   };
   depot_name?: string;
   entreprise?: { nom_company?: string };
+  confirmed: boolean;
   etat_livraison: 'en_attente' | 'en_cours' | 'livree' | 'non_livree';
 }
 
@@ -155,6 +157,8 @@ export default function OrderDetails() {
 
   const isRetour = order?.etat_livraison === 'non_livree';
   const isControleur = user?.role === 'Contrôleur';
+    const retourAConfirmer = isRetour && order?.confirmed;
+  const retourConfirme = isRetour && !order?.confirmed;
 
 
   if (loading) {
@@ -297,7 +301,7 @@ export default function OrderDetails() {
           <h1 style={{ color: '#1a1a1a', fontSize: '2rem', marginBottom: '2rem', borderBottom: '2px solid #1a1a1a', paddingBottom: '0.5rem' }}>
             Détails de la commande {order.numero || order._id}
           </h1>
-          {isControleur && isRetour && (
+          {isControleur && retourAConfirmer && (
             <button
               onClick={confirmReturn}
               style={{
@@ -314,7 +318,20 @@ export default function OrderDetails() {
               Confirmer retour
             </button>
           )}
-
+          {isControleur && retourConfirme && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                color: '#10b981',
+                fontWeight: 500,
+                marginBottom: '1rem',
+              }}
+            >
+              <CheckCircle size={20} /> Confirmé
+            </div>
+          )}
 
         <div style={{ 
             display: 'grid',

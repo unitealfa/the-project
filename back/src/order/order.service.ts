@@ -256,8 +256,6 @@ export class OrderService {
   async confirmReturn(orderId: string) {
     const order = await this.orderModel.findById(orderId);
     if (!order) throw new NotFoundException("Commande non trouvée");
-    order.etat_livraison = "en_attente";
-    order.nonLivraisonCause = undefined;
     order.confirmed = false;
     await order.save();
     return order;
