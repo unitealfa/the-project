@@ -1,7 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { apiFetch } from '../utils/api';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import * as L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import '../pages-css/AssignPrevendeurs.css';
+
+// Restore default Leaflet icons
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'leaflet/dist/images/marker-icon-2x.png',
+  iconUrl: 'leaflet/dist/images/marker-icon.png',
+  shadowUrl: 'leaflet/dist/images/marker-shadow.png',
+});
+
+// Define a default icon explicitly, to avoid direct instantiation of L.Icon.Default if it's problematic
+const defaultLeafletIcon = L.icon({
+  iconRetinaUrl: 'leaflet/dist/images/marker-icon-2x.png',
+  iconUrl: 'leaflet/dist/images/marker-icon.png',
+  shadowUrl: 'leaflet/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+// TS-bypass for React-Leaflet components
+const AnyMapContainer = MapContainer as any;
+const AnyMarker = Marker as any;
+
+// Derive the Icon type from the factory function as a workaround for type resolution issues.
+type LeafletIcon = ReturnType<typeof L.icon>;
 
 interface Client {
   _id: string;
@@ -12,6 +42,7 @@ interface Client {
     depot: string;
     prevendeur_id?: string;
   }>;
+  localisation?: { coordonnees?: { latitude: number; longitude: number } };
 }
 
 interface Prevendeur {
@@ -19,6 +50,7 @@ interface Prevendeur {
   nom: string;
   prenom: string;
   role: string;
+  pfp?: string;
 }
 
 export default function AssignPrevendeurs() {
@@ -27,7 +59,27 @@ export default function AssignPrevendeurs() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showMap, setShowMap] = useState(false);
+  const [activePrevendeur, setActivePrevendeur] = useState<Prevendeur | null>(null);
+  const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set());
+  const [colorMap, setColorMap] = useState<Record<string, string>>({});
+  const iconCache = useRef<Record<string, LeafletIcon>>({});
   const navigate = useNavigate();
+
+    const getIcon = (color: string) => {
+    if (!iconCache.current[color]) {
+      iconCache.current[color] = L.icon({
+        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
+        iconRetinaUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      });
+    }
+    return iconCache.current[color];
+  };
 
   const rawUser = localStorage.getItem('user');
   const user = rawUser ? JSON.parse(rawUser) : null;
@@ -65,6 +117,12 @@ export default function AssignPrevendeurs() {
 
         console.log('Prévendeurs filtrés:', filteredPrevendeurs); // Debug
         setPrevendeurs(filteredPrevendeurs);
+                const palette = ['red','blue','green','orange','violet','grey','gold','black'];
+        const mapping: Record<string,string> = {};
+        filteredPrevendeurs.forEach((p: any, idx: number) => {
+          mapping[p._id] = palette[idx % palette.length];
+        });
+        setColorMap(mapping);
       } catch (err: any) {
         console.error('Erreur:', err); // Debug
         setError(err.message);
@@ -137,6 +195,23 @@ export default function AssignPrevendeurs() {
     } catch (err: any) {
       alert(err.message);
     }
+  };
+
+    const toggleSelect = (clientId: string) => {
+    setSelectedClients(prev => {
+      const n = new Set(prev);
+      if (n.has(clientId)) n.delete(clientId); else n.add(clientId);
+      return n;
+    });
+  };
+
+  const confirmAssign = async () => {
+    if (!activePrevendeur || selectedClients.size === 0) return;
+    if (!window.confirm(`Voulez-vous affecter ces clients à ${activePrevendeur.prenom} ${activePrevendeur.nom} ?`)) return;
+    for (const id of Array.from(selectedClients)) {
+      await handleAssignPrevendeur(id, activePrevendeur._id);
+    }
+    setSelectedClients(new Set());
   };
 
   const getPrevendeurName = (prevendeurId: string | undefined) => {
@@ -239,6 +314,68 @@ export default function AssignPrevendeurs() {
             </tbody>
           </table>
         </div>
+        
+        <button
+          onClick={() => setShowMap(s => !s)}
+          style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}
+        >
+          {showMap ? 'Cacher la carte' : 'Afficher la carte'}
+        </button>
+
+        {showMap && (
+          <div className="assign-map">
+            <AnyMapContainer
+              center={[
+                filteredClients[0]?.localisation?.coordonnees?.latitude || 0,
+                filteredClients[0]?.localisation?.coordonnees?.longitude || 0,
+              ]}
+              zoom={13}
+              style={{ height: '100%', width: '100%' }}
+            >
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              {filteredClients.map(c => {
+                const loc = c.localisation?.coordonnees;
+                if (!loc) return null;
+                const assignedColor = colorMap[c.affectations?.[0]?.prevendeur_id || ''];
+                const markerColor = selectedClients.has(c._id)
+                  ? colorMap[activePrevendeur?._id || 'blue']
+                  : assignedColor;
+                const icon = markerColor ? getIcon(markerColor) : defaultLeafletIcon;
+                return (
+                  <AnyMarker
+                    key={c._id}
+                    position={[loc.latitude, loc.longitude]}
+                    icon={icon}
+                    eventHandlers={{ click: () => toggleSelect(c._id) }}
+                  >
+                    <Popup>{c.nom_client}</Popup>
+                  </AnyMarker>
+                );
+              })}
+            </AnyMapContainer>
+
+            <div className="prevendeur-palette">
+              {prevendeurs.map(p => (
+                <img
+                  key={p._id}
+                  src={`${import.meta.env.VITE_API_URL}/${p.pfp || 'images/default-user.webp'}`}
+                  onClick={() => setActivePrevendeur(p)}
+                  className={activePrevendeur?._id === p._id ? 'active' : ''}
+                  style={{ borderColor: colorMap[p._id] }}
+                  title={`${p.prenom} ${p.nom}`}
+                />
+              ))}
+            </div>
+
+            {activePrevendeur && selectedClients.size > 0 && (
+              <div className="assign-validate">
+                <button onClick={confirmAssign} style={{ padding: '0.5rem 1rem' }}>
+                  Affecter
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </>
   );
