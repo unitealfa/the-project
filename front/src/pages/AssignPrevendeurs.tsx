@@ -112,7 +112,40 @@ export default function AssignPrevendeurs() {
     })();
   }, [depot]);
 
-  const toggleSelect = (id: string) => {
+   const toggleSelect = async (id: string) => {
+    const client = clients.find(c => c._id === id);
+    if (!client) return;
+
+    const isSelected = selectedClients.has(id);
+    const currentPrev = client.affectations[0]?.prevendeur_id;
+
+    if (
+      isSelected &&
+      activePrevendeur &&
+      currentPrev === activePrevendeur._id
+    ) {
+      await apiFetch(`/clients/${id}/unassign-prevendeur`, { method: 'POST' });
+      setSelectedClients(s => {
+        const n = new Set(s);
+        n.delete(id);
+        return n;
+      });
+      setClients(list =>
+        list.map(c =>
+          c._id === id
+            ? {
+                ...c,
+                affectations: c.affectations.map(a => ({
+                  ...a,
+                  prevendeur_id: undefined,
+                })),
+              }
+            : c,
+        ),
+      );
+      return;
+    }
+
     setSelectedClients(s => {
       const next = new Set(s);
       next.has(id) ? next.delete(id) : next.add(id);
@@ -130,6 +163,19 @@ export default function AssignPrevendeurs() {
         body: JSON.stringify({ prevendeurId: activePrevendeur._id }),
       });
     }
+        setClients(list =>
+      list.map(c =>
+        selectedClients.has(c._id)
+          ? {
+              ...c,
+              affectations: c.affectations.map(a => ({
+                ...a,
+                prevendeur_id: activePrevendeur._id,
+              })),
+            }
+          : c,
+      ),
+    );
     setSelectedClients(new Set());
   };
 
