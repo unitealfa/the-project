@@ -1,9 +1,16 @@
 // src/pages/Login.tsx
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  lazy,
+  Suspense,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import "../pages-css/login/Login.css";
-import Hyperspeed from "../pages-css/login/Hyperspeed";
 import LogoAnimation from "../pages-css/login/LogoAnimation";
+
+const Hyperspeed = lazy(() => import("../pages-css/login/Hyperspeed"));
 
 interface LoginResponse {
   access_token: string;
@@ -27,7 +34,7 @@ interface LoginResponse {
 
 function getCookie(name: string): string | null {
   const matches = document.cookie.match(
-    new RegExp(`(?:^|; )${name.replace(/([.$?*|{}()[\]\/+^])/g, '\\$1')}=([^;]*)`)
+    new RegExp(`(?:^|; )${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}=([^;]*)`)
   );
   return matches ? decodeURIComponent(matches[1]) : null;
 }
@@ -48,8 +55,20 @@ const Login: React.FC = () => {
     return getCookie("skipIntro") === "true";
   });
   const [introDone, setIntroDone] = useState(false);
+  const [showAnimation, setShowAnimation] = useState(true);
   const timerRef = useRef<number | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
+
+  // Détecte si l'animation doit être lancée (mobile ou préférences d'accessibilité)
+  useEffect(() => {
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const shouldShow = !isMobile && !prefersReduced;
+    setShowAnimation(shouldShow);
+    if (!shouldShow) {
+      setIntroDone(true);
+    }
+  }, []);
 
   // Redirection si déjà connecté
   useEffect(() => {
@@ -60,7 +79,7 @@ const Login: React.FC = () => {
 
   // Timer d'intro (5.5 s) ou skip immédiat
   useEffect(() => {
-    if (skipIntro) {
+    if (skipIntro || !showAnimation) {
       setIntroDone(true);
       return;
     }
@@ -72,7 +91,7 @@ const Login: React.FC = () => {
         clearTimeout(timerRef.current);
       }
     };
-  }, [skipIntro]);
+  }, [skipIntro, showAnimation]);
 
   // Appeler l'entrée du formulaire dès que introDone === true
   useEffect(() => {
@@ -108,8 +127,9 @@ const Login: React.FC = () => {
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
       navigate("/dashboard", { replace: true });
-    } catch (err: any) {
-      setError(err.message || "Erreur réseau");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erreur réseau";
+      setError(message);
     }
   };
 
@@ -119,7 +139,11 @@ const Login: React.FC = () => {
 
       {introDone && (
         <>
-          <Hyperspeed />
+          {showAnimation && (
+            <Suspense fallback={null}>
+              <Hyperspeed />
+            </Suspense>
+          )}
 
           <form className="form" ref={formRef} onSubmit={handleSubmit}>
             <div className="title">
@@ -135,6 +159,7 @@ const Login: React.FC = () => {
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
               required
             />
 
@@ -145,6 +170,7 @@ const Login: React.FC = () => {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
               required
             />
 

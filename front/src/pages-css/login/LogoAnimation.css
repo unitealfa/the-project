@@ -177,6 +177,6 @@
     transform-origin: 40% 45%;
   }
   .logo.zoom {
-    transform: scale(30);
+    transform: scale(50);
   }
 }
