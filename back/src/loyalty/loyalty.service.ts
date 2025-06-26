@@ -458,4 +458,90 @@ export class LoyaltyService {
         rewardName = prog?.spendReward?.reward || "Récompense dépenses";
       } else if (r.type === "repeat") {
         const rr = prog?.repeatRewards?.find((x) => x.every === r.points);
-        rewardName = rr?.reward || `Défi ${r.points} pts`;
+            rewardName = rr?.reward || `Défi ${r.points} pts`;
+      } else {
+        const tier = prog?.tiers.find((t) => t.points === r.points);
+        rewardName = tier?.reward || `Récompense ${r.points} pts`;
+      }
+
+      return {
+        productId: r.type === "spend" ? "spend-reward" : `reward-${r.points}`,
+        productName: rewardName,
+        quantity: 1,
+        prix_detail: 0,
+      };
+    });
+
+    await this.rewardModel.updateMany(
+      { _id: { $in: rewards.map((x) => x._id) } },
+      { delivered: true, notified: false }
+    );
+
+    return items;
+  }
+
+  async getNewRewardsForClient(clientId: string) {
+    const rewards = await this.rewardModel
+      .find({ client: clientId, delivered: true, notified: false })
+      .lean<LoyaltyReward[]>();
+    const result = [] as Array<{ _id: string; name: string }>;
+    for (const r of rewards) {
+      const prog = await this.programModel
+        .findOne({ company: r.company })
+        .lean<LoyaltyProgram>();
+      let name = "";
+      if (r.type === "spend") {
+        name = prog?.spendReward?.reward || "Récompense dépenses";
+      } else if (r.type === "repeat") {
+        const rr = prog?.repeatRewards?.find((x) => x.every === r.points);
+        name = rr?.reward || `Défi ${r.points} pts`;
+      } else {
+        const tier = prog?.tiers.find((t) => t.points === r.points);
+        name = tier?.reward || `Récompense ${r.points} pts`;
+      }
+      result.push({ _id: r._id.toString(), name });
+    }
+    return result;
+  }
+
+  async markRewardsNotified(clientId: string) {
+    await this.rewardModel.updateMany(
+      { client: clientId, delivered: true, notified: false },
+      { notified: true }
+    );
+  }
+
+  async availableForClient(clientId: string) {
+    // 1) Load the client
+    const client = await this.clientModel.findById(clientId).lean();
+    if (!client) return [];
+
+    // 2) Extract company IDs from their affectations
+    const companyIds = (client.affectations || []).map((a: any) =>
+      a.entreprise.toString()
+    );
+
+    // 3) Find only programs that exist and have at least one tier
+    const programs = await this.programModel
+      .find({
+        company: { $in: companyIds },
+        "tiers.0": { $exists: true }, // tiers.0 exists <=> length > 0
+      })
+      .lean();
+
+    // 4) Keep the list of "active" company IDs
+    const activeIds = programs.map((p) => p.company.toString());
+
+    // 5) Load their info (name + pfp)
+    const companies = await this.companyModel
+      .find({ _id: { $in: activeIds } })
+      .lean();
+
+    // 6) Return only this format
+    return companies.map((c) => ({
+      _id: c._id.toString(),
+      nom_company: c.nom_company,
+      pfp: c.pfp,
+    }));
+  }
+}
