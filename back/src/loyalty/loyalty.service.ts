@@ -60,7 +60,7 @@ export class LoyaltyService {
       prix_detail: number;
     }>
   ) {
-    const map = new Map<string, typeof items[0]>();
+    const map = new Map<string, (typeof items)[0]>();
     for (const it of items) {
       const key = `${it.productId}::${it.productName}`;
       const existing = map.get(key);
@@ -251,7 +251,8 @@ export class LoyaltyService {
     );
     if (!reward) return { every: 0, current: undefined };
     const client = await this.clientModel.findById(clientId).lean<Client>();
-    const current = client?.points_since_last_repeat?.[rewardId] ?? 0;
+    const map: any = client?.points_since_last_repeat;
+    const current = map?.get?.(rewardId) ?? map?.[rewardId] ?? 0;
     return { every: reward.every, current };
   }
 
@@ -293,7 +294,8 @@ export class LoyaltyService {
 
     for (const r of prog.repeatRewards as any) {
       const id = r._id.toString();
-      const current = (client.points_since_last_repeat?.[id] || 0) + ptsEarned;
+      const map: any = client.points_since_last_repeat;
+      const current = (map?.get?.(id) ?? map?.[id] ?? 0) + ptsEarned;
       let remaining = current;
       while (remaining >= r.every) {
         remaining -= r.every;
@@ -305,11 +307,16 @@ export class LoyaltyService {
           delivered: false,
           label: r.reward,
         });
-            }
-      client.points_since_last_repeat = {
-        ...(client.points_since_last_repeat || {}),
-        [id]: remaining,
-      } as any;
+      }
+      if (!client.points_since_last_repeat) {
+        client.points_since_last_repeat = {} as any;
+      }
+      if (client.points_since_last_repeat instanceof Map) {
+        (client.points_since_last_repeat as any).set(id, remaining);
+      } else {
+        (client.points_since_last_repeat as any)[id] = remaining;
+      }
+      client.markModified("points_since_last_repeat");
     }
     await client.save();
   }
@@ -342,14 +349,14 @@ export class LoyaltyService {
 
     const client = await this.clientModel.findById(clientId).lean<Client>();
     if (!client) return;
-    const aff = client.affectations?.find((a: any) =>
-      a.entreprise.toString() === companyId
+    const aff = client.affectations?.find(
+      (a: any) => a.entreprise.toString() === companyId
     );
     const depotId = aff?.depot?.toString();
     if (!depotId) return;
     const depotDoc = await this.depotModel.findById(depotId).lean<Depot>();
-    
-const rawItems = rewards.map((r) => ({
+
+    const rawItems = rewards.map((r) => ({
       productId: r.type === "spend" ? "spend-reward" : `reward-${r.points}`,
       productName: `${client.nom_client} - ${this.resolveRewardName(r, prog)}`,
       quantity: 1,
@@ -394,23 +401,21 @@ const rawItems = rewards.map((r) => ({
       .findOne({ company: companyId })
       .lean<LoyaltyProgram>();
 
-    const rewardsByClient = rewards.reduce<Record<string, LoyaltyReward[]>>( (
-      acc,
-      r
-    ) => {
-      const id = r.client.toString();
-      if (!acc[id]) acc[id] = [];
-      acc[id].push(r);
-      return acc;
-    }, {} );
+    const rewardsByClient = rewards.reduce<Record<string, LoyaltyReward[]>>(
+      (acc, r) => {
+        const id = r.client.toString();
+        if (!acc[id]) acc[id] = [];
+        acc[id].push(r);
+        return acc;
+      },
+      {}
+    );
 
     for (const [clientId, list] of Object.entries(rewardsByClient)) {
-      const client = await this.clientModel
-        .findById(clientId)
-        .lean<Client>();
+      const client = await this.clientModel.findById(clientId).lean<Client>();
       if (!client) continue;
-      const aff = client.affectations?.find((a: any) =>
-        a.entreprise.toString() === companyId
+      const aff = client.affectations?.find(
+        (a: any) => a.entreprise.toString() === companyId
       );
       const depotId = aff?.depot?.toString();
       if (!depotId) continue;
@@ -418,7 +423,10 @@ const rawItems = rewards.map((r) => ({
 
       const rawItems = list.map((r) => ({
         productId: r.type === "spend" ? "spend-reward" : `reward-${r.points}`,
-        productName: `${client.nom_client} - ${this.resolveRewardName(r, prog)}`,
+        productName: `${client.nom_client} - ${this.resolveRewardName(
+          r,
+          prog
+        )}`,
         quantity: 1,
         prix_detail: 0,
       }));
@@ -456,18 +464,19 @@ const rawItems = rewards.map((r) => ({
       .find({ company: companyId, client: clientId, delivered: false })
       .lean<LoyaltyReward[]>();
 
-    if (rewards.length === 0) return [] as Array<{
-      productId: string;
-      productName: string;
-      quantity: number;
-      prix_detail: number;
-    }>;
+    if (rewards.length === 0)
+      return [] as Array<{
+        productId: string;
+        productName: string;
+        quantity: number;
+        prix_detail: number;
+      }>;
 
     const prog = await this.programModel
       .findOne({ company: companyId })
       .lean<LoyaltyProgram>();
 
-          const client = await this.clientModel.findById(clientId).lean<Client>();
+    const client = await this.clientModel.findById(clientId).lean<Client>();
     const clientName = client?.nom_client || "";
 
     const rawItems = rewards.map((r) => ({

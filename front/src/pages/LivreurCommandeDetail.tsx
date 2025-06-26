@@ -113,20 +113,26 @@ export default function LivreurCommandeDetail() {
       }
     }
 
-    const res = await fetch(
-      `${apiBase}/api/orders/${orderId}/delivery-status`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status }),
-      }
-    );
+    setOrder((prev) => (prev ? { ...prev, etat_livraison: status } : prev));
+
+    const res = await fetch(`${apiBase}/api/orders/${orderId}/delivery-status`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status }),
+    });
     if (res.ok) {
       const data = await res.json();
       setOrder(data);
+          } else {
+      // En cas d'erreur on recharge depuis le serveur
+      const data = await fetch(`${apiBase}/api/orders/${orderId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }).then((r) => r.json());
+      setOrder(data);
+      
     }
   };
 

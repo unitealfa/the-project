@@ -759,7 +759,7 @@ body {
 
 .reward-progress-fill {
   height: 100%;
-  background: linear-gradient(to right, #fdba74, #f97316);
+  background: linear-gradient(to right, #ffffff, #000000);
   border-radius: 9999px;
   transition: width 0.5s ease-in-out;
   position: relative;
@@ -775,14 +775,7 @@ body {
   opacity: 0.2;
 }
 
-.reward-progress-milestone {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 0.25rem;
-  background-color: white;
-  opacity: 0.7;
-}
+
 
 /* === Bloc C - Progression dépenses === */
 .spending-section {

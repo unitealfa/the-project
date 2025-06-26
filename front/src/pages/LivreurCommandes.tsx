@@ -71,23 +71,30 @@ export default function LivreurCommandes() {
     orderId: string,
     status: "en_attente" | "en_cours" | "livree" | "non_livree"
   ) => {
+
+        setOrders((prev) =>
+      prev.map((o) =>
+        o._id === orderId ? { ...o, etat_livraison: status } : o
+      )
+    );
+
     try {
-      const res = await fetch(
-        `${apiBase}/api/orders/${orderId}/delivery-status`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ status }),
-        }
-      );
-      if (res.ok) {
-        fetchOrders(); // Rafraîchir la liste des commandes
+      const res = await fetch(`${apiBase}/api/orders/${orderId}/delivery-status`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      });
+      
+      if (!res.ok) {
+        // Si l'appel échoue on recharge les données
+        fetchOrders();
       }
     } catch (error) {
       console.error("Erreur lors de la mise à jour du statut:", error);
+      fetchOrders();
     }
   };
 
