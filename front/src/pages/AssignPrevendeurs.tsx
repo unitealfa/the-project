@@ -17,9 +17,11 @@ L.Icon.Default.mergeOptions({
 
 // Icône par défaut
 const defaultLeafletIcon = L.icon({
-  iconRetinaUrl: 'leaflet/dist/images/marker-icon-2x.png',
-  iconUrl: 'leaflet/dist/images/marker-icon.png',
-  shadowUrl: 'leaflet/dist/images/marker-shadow.png',
+  iconRetinaUrl:
+    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-white.png',
+  iconUrl:
+    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-white.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
@@ -200,12 +202,19 @@ export default function AssignPrevendeurs() {
             {clients.map(c => {
               const loc = c.localisation?.coordonnees;
               if (!loc) return null;
-              const color = colorMap[c.affectations[0]?.prevendeur_id || ''];
+             
+              let color = 'white';
+              if (selectedClients.has(c._id) && activePrevendeur) {
+                color = colorMap[activePrevendeur._id];
+              } else if (c.affectations[0]?.prevendeur_id) {
+                color = colorMap[c.affectations[0].prevendeur_id];
+              }
+
               return (
                 <AnyMarker
                   key={c._id}
                   position={[loc.latitude, loc.longitude]}
-                  icon={color ? getIcon(color) : defaultLeafletIcon}
+                  icon={getIcon(color)}
                   eventHandlers={{ click: () => toggleSelect(c._id) }}
                 >
                   <Popup>{c.nom_client}</Popup>
