@@ -15,7 +15,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'leaflet/dist/images/marker-shadow.png',
 });
 
-// Icône par défaut
+// Icône par défaut blanche
 const defaultLeafletIcon = L.icon({
   iconRetinaUrl:
     'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-white.png',
@@ -28,7 +28,7 @@ const defaultLeafletIcon = L.icon({
   shadowSize: [41, 41],
 });
 
-// Bypass typing
+// Bypass typing pour React-Leaflet
 const AnyMapContainer: React.FC<any> = MapContainer as any;
 const AnyMarker: React.FC<any> = Marker as any;
 
@@ -64,6 +64,7 @@ export default function AssignPrevendeurs() {
   const user = rawUser ? JSON.parse(rawUser) : null;
   const depot = user?.depot;
 
+  // Fonction pour récupérer ou créer une icône de marqueur colorée
   const getIcon = (color: string) => {
     if (!iconCache.current[color]) {
       iconCache.current[color] = L.icon({
@@ -79,6 +80,7 @@ export default function AssignPrevendeurs() {
     return iconCache.current[color];
   };
 
+  // Chargement initial des clients et prévendeurs
   useEffect(() => {
     if (!depot) {
       setError('Aucun dépôt associé à votre compte');
@@ -87,25 +89,28 @@ export default function AssignPrevendeurs() {
     }
     (async () => {
       try {
+        // Clients
         const resC = await apiFetch(`/clients?depot=${depot}`);
-        if (!resC.ok) throw new Error('Erreur chargement clients');
+        if (!resC.ok) throw new Error('Erreur lors du chargement des clients');
         setClients(await resC.json());
 
+        // Prévendeurs
         const resP = await apiFetch(`/api/teams/${depot}?role=prevente`);
-        if (!resP.ok) throw new Error('Erreur chargement prévendeurs');
+        if (!resP.ok) throw new Error('Erreur lors du chargement des prévendeurs');
         const dataP = await resP.json();
         const team = dataP.prevente || [];
-        const filt = team.filter((p: any) =>
-          p.role === 'prevente' || p.role === 'Pré-vendeur'
+        const filt = team.filter(
+          (p: any) => p.role === 'prevente' || p.role === 'Pré-vendeur'
         );
         setPrevendeurs(filt);
 
-        const palette = ['red','blue','green','orange','violet','grey','gold','black'];
-        const map: Record<string,string> = {};
+        // Palette de couleurs
+        const palette = ['red', 'blue', 'green', 'orange', 'violet', 'grey', 'gold', 'black'];
+        const mapCols: Record<string,string> = {};
         filt.forEach((p: any, i: number) => {
-          map[p._id] = palette[i % palette.length];
+          mapCols[p._id] = palette[i % palette.length];
         });
-        setColorMap(map);
+        setColorMap(mapCols);
       } catch (e: any) {
         setError(e.message);
       } finally {
@@ -114,47 +119,17 @@ export default function AssignPrevendeurs() {
     })();
   }, [depot]);
 
-   const toggleSelect = async (id: string) => {
-    const client = clients.find(c => c._id === id);
-    if (!client) return;
-
-    const isSelected = selectedClients.has(id);
-    const currentPrev = client.affectations[0]?.prevendeur_id;
-
-    if (
-      isSelected &&
-      activePrevendeur &&
-      currentPrev === activePrevendeur._id
-    ) {
-      await apiFetch(`/clients/${id}/unassign-prevendeur`, { method: 'POST' });
-      setSelectedClients(s => {
-        const n = new Set(s);
-        n.delete(id);
-        return n;
-      });
-      setClients(list =>
-        list.map(c =>
-          c._id === id
-            ? {
-                ...c,
-                affectations: c.affectations.map(a => ({
-                  ...a,
-                  prevendeur_id: undefined,
-                })),
-              }
-            : c,
-        ),
-      );
-      return;
-    }
-
-    setSelectedClients(s => {
-      const next = new Set(s);
+  // Clic sur un marqueur : n'agit que si un prevendeur est sélectionné
+  const toggleSelect = (id: string) => {
+    if (!activePrevendeur) return;  // <== Ne rien faire si pas de prevendeur actif
+    setSelectedClients(prev => {
+      const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   };
 
+  // Confirme l'affectation de tous les clients sélectionnés
   const confirmAssign = async () => {
     if (!activePrevendeur || selectedClients.size === 0) return;
     if (!window.confirm(`Affecter ${activePrevendeur.prenom} ${activePrevendeur.nom} ?`))
@@ -165,7 +140,8 @@ export default function AssignPrevendeurs() {
         body: JSON.stringify({ prevendeurId: activePrevendeur._id }),
       });
     }
-        setClients(list =>
+    // Mise à jour locale
+    setClients(list =>
       list.map(c =>
         selectedClients.has(c._id)
           ? {
@@ -175,14 +151,14 @@ export default function AssignPrevendeurs() {
                 prevendeur_id: activePrevendeur._id,
               })),
             }
-          : c,
-      ),
+          : c
+      )
     );
     setSelectedClients(new Set());
   };
 
   if (loading) return <div>Chargement...</div>;
-  if (error) return <div style={{ color: 'red' }}>{error}</div>;
+  if (error)   return <div style={{ color: 'red' }}>{error}</div>;
 
   return (
     <>
@@ -192,7 +168,7 @@ export default function AssignPrevendeurs() {
         <div className="assign-map" style={{ height: '600px' }}>
           <AnyMapContainer
             center={[
-              clients[0]?.localisation?.coordonnees?.latitude || 0,
+              clients[0]?.localisation?.coordonnees?.latitude  || 0,
               clients[0]?.localisation?.coordonnees?.longitude || 0,
             ]}
             zoom={13}
@@ -202,12 +178,15 @@ export default function AssignPrevendeurs() {
             {clients.map(c => {
               const loc = c.localisation?.coordonnees;
               if (!loc) return null;
-             
-              let color = 'white';
-              if (selectedClients.has(c._id) && activePrevendeur) {
+
+              // Détermine la couleur du marqueur
+              const assigned = c.affectations[0]?.prevendeur_id;
+              const isSelected = selectedClients.has(c._id);
+              let color = 'grey';
+              if (isSelected && activePrevendeur) {
                 color = colorMap[activePrevendeur._id];
-              } else if (c.affectations[0]?.prevendeur_id) {
-                color = colorMap[c.affectations[0].prevendeur_id];
+              } else if (assigned) {
+                color = colorMap[assigned];
               }
 
               return (
