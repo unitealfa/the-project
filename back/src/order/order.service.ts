@@ -112,7 +112,17 @@ export class OrderService {
         );
       }
 
-      const totalDepot = items.reduce(
+            let orderItems = [...items];
+
+      if (depotDoc?.company_id) {
+        const rewards = await this.loyaltyService.claimPendingRewards(
+          depotDoc.company_id.toString(),
+          client._id.toString()
+        );
+        orderItems = orderItems.concat(rewards);
+      }
+
+      const totalDepot = orderItems.reduce(
         (sum, it) => sum + it.prix_detail * it.quantity,
         0
       );
@@ -131,7 +141,7 @@ export class OrderService {
           code_postal: codePostal,
           region,
         },
-        items,
+        items: orderItems,
         total: totalDepot,
         confirmed: false,
         numero,

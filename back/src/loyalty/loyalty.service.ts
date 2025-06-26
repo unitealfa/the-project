@@ -261,15 +261,13 @@ export class LoyaltyService {
       let remaining = current;
       while (remaining >= r.every) {
         remaining -= r.every;
-        const reward = await this.rewardModel.create({
+        await this.rewardModel.create({
           client: client._id,
           company: new Types.ObjectId(companyId),
           type: "repeat",
           points: r.every,
-          delivered: true,
-          notified: false,
+          delivered: false,
         });
-        await this.createRewardOrder(reward as any);
       }
       client.points_since_last_repeat = {
         ...(client.points_since_last_repeat || {}),
@@ -295,12 +293,6 @@ export class LoyaltyService {
   }
 
   async deliver(companyId: string, clientId: string, points: number) {
-    const rewards = await this.rewardModel
-      .find({ company: companyId, client: clientId, points, delivered: false })
-      .lean();
-    for (const reward of rewards) {
-      await this.createRewardOrder(reward);
-    }
     await this.rewardModel.updateMany(
       { company: companyId, client: clientId, points, delivered: false },
       { delivered: true, notified: false }
@@ -308,77 +300,57 @@ export class LoyaltyService {
   }
 
   async deliverAll(companyId: string) {
-    const rewards = await this.rewardModel
-      .find({ company: companyId, delivered: false })
-      .lean();
-    for (const reward of rewards) {
-      await this.createRewardOrder(reward);
-    }
     await this.rewardModel.updateMany(
       { company: companyId, delivered: false },
       { delivered: true, notified: false }
     );
   }
 
-  private async createRewardOrder(reward: LoyaltyReward) {
-    const client = await this.clientModel
-      .findById(reward.client)
-      .lean<Client>();
-    if (!client) return;
+  async claimPendingRewards(companyId: string, clientId: string) {
+    const rewards = await this.rewardModel
+      .find({ company: companyId, client: clientId, delivered: false })
+      .lean<LoyaltyReward[]>();
 
-    const lastOrder = await this.orderModel
-      .findOne({ clientId: reward.client.toString() })
-      .sort({ createdAt: -1 })
-      .lean<Order>();
+    if (rewards.length === 0) return [] as Array<{
+      productId: string;
+      productName: string;
+      quantity: number;
+      prix_detail: number;
+    }>;
 
-    const depotId =
-      lastOrder?.depot || client.affectations?.[0]?.depot?.toString();
-    if (!depotId) return;
-
-    const depot = await this.depotModel.findById(depotId).lean<Depot>();
     const prog = await this.programModel
-      .findOne({ company: reward.company })
+      .findOne({ company: companyId })
       .lean<LoyaltyProgram>();
-    let rewardName = "";
-    if (reward.type === "spend") {
-      rewardName = prog?.spendReward?.reward || "Récompense dépenses";
-    } else if (reward.type === "repeat") {
-      const rr = prog?.repeatRewards?.find((r) => r.every === reward.points);
-      rewardName = rr?.reward || `Défi ${reward.points} pts`;
-    } else {
-      const tier = prog?.tiers.find((t) => t.points === reward.points);
-      rewardName = tier?.reward || `Récompense ${reward.points} pts`;
-    }
 
-    const order = new this.orderModel({
-      clientId: reward.client.toString(),
-      nom_client: client.nom_client,
-      telephone: client.contact?.telephone || "",
-      depot: depotId,
-      depot_name: depot?.nom_depot || "",
-      adresse_client: {
-        adresse: client.localisation?.adresse || "",
-        ville: client.localisation?.ville || "",
-        code_postal: client.localisation?.code_postal || "",
-        region: client.localisation?.region || "",
-      },
-      items: [
-        {
-          productId:
-            reward.type === "spend"
-              ? "spend-reward"
-              : `reward-${reward.points}`,
-          productName: rewardName,
-          quantity: 1,
-          prix_detail: 0,
-        },
-      ],
-      total: 0,
-      confirmed: false,
+    const items = rewards.map((r) => {
+      let rewardName = "";
+      if (r.type === "spend") {
+        rewardName = prog?.spendReward?.reward || "Récompense dépenses";
+      } else if (r.type === "repeat") {
+        const rr = prog?.repeatRewards?.find((x) => x.every === r.points);
+        rewardName = rr?.reward || `Défi ${r.points} pts`;
+      } else {
+        const tier = prog?.tiers.find((t) => t.points === r.points);
+        rewardName = tier?.reward || `Récompense ${r.points} pts`;
+      }
+
+      return {
+        productId: r.type === "spend" ? "spend-reward" : `reward-${r.points}`,
+        productName: rewardName,
+        quantity: 1,
+        prix_detail: 0,
+      };
     });
 
-    await order.save();
+    await this.rewardModel.updateMany(
+      { _id: { $in: rewards.map((x) => x._id) } },
+      { delivered: true, notified: false }
+    );
+
+    return items;
   }
+
+
 
     async getNewRewardsForClient(clientId: string) {
     const rewards = await this.rewardModel

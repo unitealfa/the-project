@@ -19,10 +19,10 @@ export class LoyaltyReward extends Document {
   amount?: number;
 
   @Prop({ default: false })
-  
+  delivered: boolean;
+
   @Prop({ default: false })
   notified: boolean;
-  delivered: boolean;
 }
 
 export const LoyaltyRewardSchema = SchemaFactory.createForClass(LoyaltyReward);
