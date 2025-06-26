@@ -18,6 +18,9 @@ export class LoyaltyReward extends Document {
   @Prop()
   amount?: number;
 
+    @Prop()
+  label?: string;
+
   @Prop({ default: false })
   delivered: boolean;
 

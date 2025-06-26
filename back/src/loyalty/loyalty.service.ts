@@ -128,6 +128,7 @@ export class LoyaltyService {
             points: dto.points,
             type: "points",
             delivered: false,
+            label: dto.reward,
           });
         }
       }
@@ -179,6 +180,7 @@ export class LoyaltyService {
         amount: target,
         points: 0,
         delivered: false,
+        label: prog.spendReward?.reward,
       });
       total -= target;
       rewards += 1;
@@ -267,6 +269,7 @@ export class LoyaltyService {
           type: "repeat",
           points: r.every,
           delivered: false,
+          label: r.reward,
         });
             }
       client.points_since_last_repeat = {
@@ -303,25 +306,6 @@ export class LoyaltyService {
       .findOne({ company: companyId })
       .lean<LoyaltyProgram>();
 
-    const items = rewards.map((r) => {
-      let rewardName = "";
-      if (r.type === "spend") {
-        rewardName = prog?.spendReward?.reward || "Récompense dépenses";
-      } else if (r.type === "repeat") {
-        const rr = prog?.repeatRewards?.find((x) => x.every === r.points);
-        rewardName = rr?.reward || `Défi ${r.points} pts`;
-      } else {
-        const tier = prog?.tiers.find((t) => t.points === r.points);
-        rewardName = tier?.reward || `Récompense ${r.points} pts`;
-      }
-      return {
-        productId: r.type === "spend" ? "spend-reward" : `reward-${r.points}`,
-        productName: rewardName,
-        quantity: 1,
-        prix_detail: 0,
-      };
-    });
-
     const client = await this.clientModel.findById(clientId).lean<Client>();
     if (!client) return;
     const aff = client.affectations?.find((a: any) =>
@@ -330,6 +314,27 @@ export class LoyaltyService {
     const depotId = aff?.depot?.toString();
     if (!depotId) return;
     const depotDoc = await this.depotModel.findById(depotId).lean<Depot>();
+    
+    const items = rewards.map((r) => {
+      let rewardName = r.label || "";
+      if (!rewardName) {
+        if (r.type === "spend") {
+          rewardName = prog?.spendReward?.reward || "Récompense dépenses";
+        } else if (r.type === "repeat") {
+          const rr = prog?.repeatRewards?.find((x) => x.every === r.points);
+          rewardName = rr?.reward || `Défi ${r.points} pts`;
+        } else {
+          const tier = prog?.tiers.find((t) => t.points === r.points);
+          rewardName = tier?.reward || `Récompense ${r.points} pts`;
+        }
+      }
+      return {
+        productId: r.type === "spend" ? "spend-reward" : `reward-${r.points}`,
+        productName: `${client.nom_client} - ${rewardName}`,
+        quantity: 1,
+        prix_detail: 0,
+      };
+    });
     const numero =
       "ALFA-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
 
@@ -391,19 +396,21 @@ export class LoyaltyService {
       const depotDoc = await this.depotModel.findById(depotId).lean<Depot>();
 
       const items = list.map((r) => {
-        let rewardName = "";
-        if (r.type === "spend") {
-          rewardName = prog?.spendReward?.reward || "Récompense dépenses";
-        } else if (r.type === "repeat") {
-          const rr = prog?.repeatRewards?.find((x) => x.every === r.points);
-          rewardName = rr?.reward || `Défi ${r.points} pts`;
-        } else {
-          const tier = prog?.tiers.find((t) => t.points === r.points);
-          rewardName = tier?.reward || `Récompense ${r.points} pts`;
+         let rewardName = r.label || "";
+        if (!rewardName) {
+          if (r.type === "spend") {
+            rewardName = prog?.spendReward?.reward || "Récompense dépenses";
+          } else if (r.type === "repeat") {
+            const rr = prog?.repeatRewards?.find((x) => x.every === r.points);
+            rewardName = rr?.reward || `Défi ${r.points} pts`;
+          } else {
+            const tier = prog?.tiers.find((t) => t.points === r.points);
+            rewardName = tier?.reward || `Récompense ${r.points} pts`;
+          }
         }
         return {
           productId: r.type === "spend" ? "spend-reward" : `reward-${r.points}`,
-          productName: rewardName,
+          productName: `${client.nom_client} - ${rewardName}`,
           quantity: 1,
           prix_detail: 0,
         };
@@ -452,21 +459,26 @@ export class LoyaltyService {
       .findOne({ company: companyId })
       .lean<LoyaltyProgram>();
 
+          const client = await this.clientModel.findById(clientId).lean<Client>();
+    const clientName = client?.nom_client || "";
+
     const items = rewards.map((r) => {
-      let rewardName = "";
-      if (r.type === "spend") {
-        rewardName = prog?.spendReward?.reward || "Récompense dépenses";
-      } else if (r.type === "repeat") {
-        const rr = prog?.repeatRewards?.find((x) => x.every === r.points);
-            rewardName = rr?.reward || `Défi ${r.points} pts`;
-      } else {
-        const tier = prog?.tiers.find((t) => t.points === r.points);
-        rewardName = tier?.reward || `Récompense ${r.points} pts`;
+      let rewardName = r.label || "";
+      if (!rewardName) {
+        if (r.type === "spend") {
+          rewardName = prog?.spendReward?.reward || "Récompense dépenses";
+        } else if (r.type === "repeat") {
+          const rr = prog?.repeatRewards?.find((x) => x.every === r.points);
+          rewardName = rr?.reward || `Défi ${r.points} pts`;
+        } else {
+          const tier = prog?.tiers.find((t) => t.points === r.points);
+          rewardName = tier?.reward || `Récompense ${r.points} pts`;
+        }
       }
 
       return {
         productId: r.type === "spend" ? "spend-reward" : `reward-${r.points}`,
-        productName: rewardName,
+        productName: `${clientName} - ${rewardName}`, 
         quantity: 1,
         prix_detail: 0,
       };
@@ -486,18 +498,20 @@ export class LoyaltyService {
       .lean<LoyaltyReward[]>();
     const result = [] as Array<{ _id: string; name: string }>;
     for (const r of rewards) {
-      const prog = await this.programModel
-        .findOne({ company: r.company })
-        .lean<LoyaltyProgram>();
-      let name = "";
-      if (r.type === "spend") {
-        name = prog?.spendReward?.reward || "Récompense dépenses";
-      } else if (r.type === "repeat") {
-        const rr = prog?.repeatRewards?.find((x) => x.every === r.points);
-        name = rr?.reward || `Défi ${r.points} pts`;
-      } else {
-        const tier = prog?.tiers.find((t) => t.points === r.points);
-        name = tier?.reward || `Récompense ${r.points} pts`;
+      let name = r.label || "";
+      if (!name) {
+        const prog = await this.programModel
+          .findOne({ company: r.company })
+          .lean<LoyaltyProgram>();
+        if (r.type === "spend") {
+          name = prog?.spendReward?.reward || "Récompense dépenses";
+        } else if (r.type === "repeat") {
+          const rr = prog?.repeatRewards?.find((x) => x.every === r.points);
+          name = rr?.reward || `Défi ${r.points} pts`;
+        } else {
+          const tier = prog?.tiers.find((t) => t.points === r.points);
+          name = tier?.reward || `Récompense ${r.points} pts`;
+        }
       }
       result.push({ _id: r._id.toString(), name });
     }
