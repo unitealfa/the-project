@@ -59,6 +59,16 @@ export class LoyaltyController {
     return this.loyaltyService.getRepeatProgress(companyId, clientId, rewardId);
   }
 
+    @Get("client/new-rewards")
+  getNewRewards(@GetUser("id") clientId: string) {
+    return this.loyaltyService.getNewRewardsForClient(clientId);
+  }
+
+  @Post("client/ack-rewards")
+  ackRewards(@GetUser("id") clientId: string) {
+    return this.loyaltyService.markRewardsNotified(clientId);
+  }
+  
   @Roles("admin")
   @Patch(":companyId/ratio")
   setRatio(

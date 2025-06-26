@@ -117,6 +117,24 @@ export default function LoyaltyClient() {
       })
       .catch(console.error)
 
+          /* nouvelles récompenses livrées */
+    fetch(`${api}/loyalty/client/new-rewards`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then((list: Array<{ _id: string; name: string }>) => {
+        if (Array.isArray(list) && list.length > 0) {
+          alert(
+            `Récompense obtenue : ${list.map((x) => x.name).join(', ')}`
+          )
+          fetch(`${api}/loyalty/client/ack-rewards`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        }
+      })
+      .catch(() => {})
+      
     /* déclenche les animations après le montage */
     setMounted(true)
   }, [api, token, companyId])

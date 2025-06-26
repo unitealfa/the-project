@@ -261,13 +261,15 @@ export class LoyaltyService {
       let remaining = current;
       while (remaining >= r.every) {
         remaining -= r.every;
-        await this.rewardModel.create({
+        const reward = await this.rewardModel.create({
           client: client._id,
           company: new Types.ObjectId(companyId),
           type: "repeat",
           points: r.every,
-          delivered: false,
+          delivered: true,
+          notified: false,
         });
+        await this.createRewardOrder(reward as any);
       }
       client.points_since_last_repeat = {
         ...(client.points_since_last_repeat || {}),
@@ -301,7 +303,7 @@ export class LoyaltyService {
     }
     await this.rewardModel.updateMany(
       { company: companyId, client: clientId, points, delivered: false },
-      { delivered: true }
+      { delivered: true, notified: false }
     );
   }
 
@@ -314,7 +316,7 @@ export class LoyaltyService {
     }
     await this.rewardModel.updateMany(
       { company: companyId, delivered: false },
-      { delivered: true }
+      { delivered: true, notified: false }
     );
   }
 
@@ -376,6 +378,37 @@ export class LoyaltyService {
     });
 
     await order.save();
+  }
+
+    async getNewRewardsForClient(clientId: string) {
+    const rewards = await this.rewardModel
+      .find({ client: clientId, delivered: true, notified: false })
+      .lean<LoyaltyReward[]>();
+    const result = [] as Array<{ _id: string; name: string }>;
+    for (const r of rewards) {
+      const prog = await this.programModel
+        .findOne({ company: r.company })
+        .lean<LoyaltyProgram>();
+      let name = "";
+      if (r.type === "spend") {
+        name = prog?.spendReward?.reward || "Récompense dépenses";
+      } else if (r.type === "repeat") {
+        const rr = prog?.repeatRewards?.find((x) => x.every === r.points);
+        name = rr?.reward || `Défi ${r.points} pts`;
+      } else {
+        const tier = prog?.tiers.find((t) => t.points === r.points);
+        name = tier?.reward || `Récompense ${r.points} pts`;
+      }
+      result.push({ _id: r._id.toString(), name });
+    }
+    return result;
+  }
+
+  async markRewardsNotified(clientId: string) {
+    await this.rewardModel.updateMany(
+      { client: clientId, delivered: true, notified: false },
+      { notified: true }
+    );
   }
 
   async availableForClient(clientId: string) {
