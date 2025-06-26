@@ -16,6 +16,7 @@ interface Reward {
   points: number;
   type: "points" | "spend" | "repeat";
   amount?: number;
+   rewardName?: string;
 }
 interface RepeatReward {
   _id: string;
@@ -726,9 +727,9 @@ export default function LoyaltyAdmin() {
                   <div>
                     <span className="client-name">{p.client.nom_client}</span>
                     <span className="client-points">
-                      {p.type === "spend"
+                      {p.rewardName || (p.type === "spend"
                         ? `${p.amount} dépensés`
-                        : `${p.points} pts`}
+                        : `${p.points} pts`)}
                     </span>
                   </div>
                   <button

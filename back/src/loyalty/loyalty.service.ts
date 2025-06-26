@@ -330,10 +330,19 @@ export class LoyaltyService {
   }
 
   async listPending(companyId: string) {
-    return this.rewardModel
+    const rewards = await this.rewardModel
       .find({ company: companyId, delivered: false })
       .populate("client", "nom_client")
-      .lean();
+            .lean<LoyaltyReward[]>();
+
+    const prog = await this.programModel
+      .findOne({ company: companyId })
+      .lean<LoyaltyProgram>();
+
+    return rewards.map((r) => ({
+      ...r,
+      rewardName: this.resolveRewardName(r as any, prog),
+    }));
   }
 
   async deliver(companyId: string, clientId: string, points: number) {
