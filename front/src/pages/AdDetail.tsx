@@ -23,6 +23,7 @@ export default function AdDetail() {
   const baseUrl = import.meta.env.VITE_API_URL || "";
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
+    const [companyName, setCompanyName] = useState("Inconnue");
 
   /* ─────────── Fetch de la pub ─────────── */
   useEffect(() => {
@@ -33,6 +34,21 @@ export default function AdDetail() {
       .catch(() => setAd(null))
       .finally(() => setLoading(false));
   }, [id]);
+    useEffect(() => {
+    if (!ad) return;
+    if (ad.company) {
+      if (typeof ad.company === "object") {
+        setCompanyName(ad.company.nom_company);
+      } else {
+        apiFetch(`/companies/${ad.company}`)
+          .then((r) => r.json())
+          .then((c) => setCompanyName(c.nom_company))
+          .catch(() => setCompanyName("Inconnue"));
+      }
+    } else {
+      setCompanyName("Inconnue");
+    }
+  }, [ad]);
 
   /* ─────────── Loader ─────────── */
   if (loading)
@@ -54,11 +70,6 @@ export default function AdDetail() {
       </>
     );
 
-  const companyName = ad.company
-    ? typeof ad.company === "object"
-      ? ad.company.nom_company
-      : ad.company
-    : "Inconnue";
 
   /* ─────────── Page ─────────── */
   return (

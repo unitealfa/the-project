@@ -6,13 +6,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { ImageIcon, Video, Store, BadgeX } from "lucide-react";
 import Header from "../components/Header";
 import { apiFetch } from "../utils/api";
-import "../pages-css/AdsList.css";          // ← nouveau fichier de style
+import "../pages-css/AdsList.css"; // ← nouveau fichier de style
 
 interface Ad {
-  _id:       string;
-  company:   { _id: string; nom_company: string } | string | null;
-  filePath:  string;
-  type:      "image" | "video";
+  _id: string;
+  company: { _id: string; nom_company: string } | string | null;
+  filePath: string;
+  type: "image" | "video";
   duration?: number;
   createdAt: string;
   expiresAt: string;
@@ -22,28 +22,59 @@ const baseUrl = import.meta.env.VITE_API_URL || "";
 
 export default function AdsList() {
   const [ads, setAds] = useState<Ad[]>([]);
-  const navigate      = useNavigate();
+  const [companyNames, setCompanyNames] = useState<Record<string, string>>({});
+  const navigate = useNavigate();
 
   /* ─── chargement ─── */
   useEffect(() => {
     apiFetch("/ads")
-      .then(r => r.json())
+      .then((r) => r.json())
       .then(setAds)
       .catch(() => setAds([]));
   }, []);
 
+  // Fetch company names when ads are loaded
+  useEffect(() => {
+    const ids = ads
+      .filter(
+        (ad) => typeof ad.company === "string" && !(ad.company in companyNames)
+      )
+      .map((ad) => ad.company as string);
+    if (ids.length === 0) return;
+    Promise.all(
+      ids.map((id) =>
+        apiFetch(`/companies/${id}`)
+          .then((r) => r.json())
+          .then((c) => ({ id, name: c.nom_company as string }))
+          .catch(() => ({ id, name: "Inconnue" }))
+      )
+    ).then((results) => {
+      setCompanyNames((curr) => {
+        const copy = { ...curr };
+        results.forEach((res) => {
+          copy[res.id] = res.name;
+        });
+        return copy;
+      });
+    });
+  }, [ads]);
+
   /* ─── suppression ─── */
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette publicité ?")) {
+    if (
+      !window.confirm("Êtes-vous sûr de vouloir supprimer cette publicité ?")
+    ) {
       return;
     }
     try {
       const res = await apiFetch(`/ads/${id}`, { method: "DELETE" });
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ message: "Une erreur est survenue." }));
+        const errorData = await res
+          .json()
+          .catch(() => ({ message: "Une erreur est survenue." }));
         throw new Error(errorData.message);
       }
-      setAds(curr => curr.filter(a => a._id !== id));
+      setAds((curr) => curr.filter((a) => a._id !== id));
     } catch (error: any) {
       alert(`Erreur lors de la suppression : ${error.message}`);
     }
@@ -77,9 +108,9 @@ export default function AdsList() {
             const companyName =
               typeof ad.company === "object"
                 ? ad.company?.nom_company ?? "Inconnue"
-                : ad.company ?? "Inconnue";
+                : companyNames[ad.company as string] ?? "Inconnue";
 
-            const status  = getStatus(ad.expiresAt);
+            const status = getStatus(ad.expiresAt);
             const expired = status === "Expirée";
 
             return (
@@ -97,7 +128,9 @@ export default function AdsList() {
                     </span>
                   </div>
 
-                  <span className="ad-number">#{String(idx + 1).padStart(2, "0")}</span>
+                  <span className="ad-number">
+                    #{String(idx + 1).padStart(2, "0")}
+                  </span>
                 </header>
 
                 {/* aperçu média */}
@@ -106,7 +139,7 @@ export default function AdsList() {
                     <img
                       src={`${baseUrl}/${ad.filePath}`}
                       className="media-img"
-                      onError={e => {
+                      onError={(e) => {
                         (e.target as HTMLImageElement).src = "/placeholder.svg";
                       }}
                     />
@@ -124,23 +157,31 @@ export default function AdsList() {
                   <span className="meta-item">
                     <Store className="meta-icon" /> {companyName}
                   </span>
-                  <span className={"meta-item " + (expired ? "expired" : "running")}>
+                  <span
+                    className={"meta-item " + (expired ? "expired" : "running")}
+                  >
                     <BadgeX className="meta-icon" /> {status}
                   </span>
                 </div>
 
                 {/* actions */}
                 <div className="ad-actions">
-                  <button className="btn btn-primary btn-sm"
-                          onClick={() => navigate(`/ads/${ad._id}`)}>
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={() => navigate(`/ads/${ad._id}`)}
+                  >
                     Voir
                   </button>
-                  <button className="btn btn-secondary btn-sm"
-                          onClick={() => navigate(`/ads/edit/${ad._id}`)}>
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => navigate(`/ads/edit/${ad._id}`)}
+                  >
                     Modifier
                   </button>
-                  <button className="btn btn-danger btn-sm"
-                          onClick={() => handleDelete(ad._id)}>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => handleDelete(ad._id)}
+                  >
                     Supprimer
                   </button>
                 </div>
