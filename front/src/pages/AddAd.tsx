@@ -1,157 +1,166 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
-import { apiFetch } from '../utils/api';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
+import { apiFetch } from "../utils/api";
+import "../pages-css/AddAd.css";                        /* <-- importe le fichier ci-dessus */
 
 interface Company { _id: string; nom_company: string; }
 
 export default function AddAd() {
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [company, setCompany] = useState('');
+  const [company, setCompany] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [type, setType] = useState<'image' | 'video'>('image');
-  const [duration, setDuration] = useState<number | undefined>(5); // Default duration for images
-  const [expiresAt, setExpiresAt] = useState('');
+  const [type, setType] = useState<"image" | "video">("image");
+  const [duration, setDuration] = useState<number | undefined>(5);
+  const [expiresAt, setExpiresAt] = useState("");
   const navigate = useNavigate();
 
   const minDate = React.useMemo(() => {
     const d = new Date();
     d.setDate(d.getDate() + 1);
-    return d.toISOString().split('T')[0];
+    return d.toISOString().split("T")[0];
   }, []);
 
+  /* --- Chargement entreprises --- */
   useEffect(() => {
-    apiFetch('/companies')
+    apiFetch("/companies")
       .then(res => res.json())
       .then(setCompanies)
       .catch(console.error);
   }, []);
 
+  /* --- Ajuste durée selon type --- */
   useEffect(() => {
-    if (type === 'image') {
-      setDuration(5); // Reset duration for images
-    } else {
-      setDuration(undefined); // Reset duration for videos
-    }
+    setDuration(type === "image" ? 5 : undefined);
   }, [type]);
 
+  /* --- Durée auto pour vidéo --- */
   useEffect(() => {
-    if (type === 'video' && file) {
+    if (type === "video" && file) {
       const url = URL.createObjectURL(file);
-      const video = document.createElement('video');
+      const video = document.createElement("video");
       video.src = url;
-      video.preload = 'metadata';
+      video.preload = "metadata";
       video.onloadedmetadata = () => {
-        setDuration(Math.ceil(video.duration)); // Automatically set duration for videos
+        setDuration(Math.ceil(video.duration));
         URL.revokeObjectURL(url);
       };
     }
   }, [type, file]);
 
+  /* --- Soumission --- */
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return;
 
     const fd = new FormData();
-    fd.append('file', file);
-    fd.append('company', company);
-    fd.append('type', type);
-    fd.append('duration', duration?.toString() || ''); // Always send duration
-    fd.append('expiresAt', expiresAt); // Send ISO date
+    fd.append("file", file);
+    fd.append("company", company);
+    fd.append("type", type);
+    fd.append("duration", duration?.toString() || "");
+    fd.append("expiresAt", expiresAt);
 
-    const res = await fetch('http://localhost:5000/ads', {
-      method: 'POST',
+    const res = await fetch("http://localhost:5000/ads", {
+      method: "POST",
       body: fd,
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     });
 
-    if (res.ok) navigate('/ads');
-    else {
-      const text = await res.text();
-      alert(`Erreur (${res.status}): ${text}`);
-    }
+    if (res.ok) navigate("/ads");
+    else alert(`Erreur (${res.status}) : ${await res.text()}`);
   };
 
+  /* --- Rendu --- */
   return (
     <>
       <Header />
-      <form onSubmit={submit} style={{ padding: '1rem', fontFamily: 'Arial, sans-serif' }}>
-        <h1>Ajouter une publicité</h1>
-        <label>
-          Entreprise:
-          <select value={company} onChange={e => setCompany(e.target.value)} required>
-            <option value="">-- Choisir --</option>
-            {Array.isArray(companies) && companies.length > 0 ? (
-              companies.map(c => (
-                <option key={c._id} value={c._id}>{c.nom_company}</option>
-              ))
-            ) : (
-              <option disabled>– Aucune entreprise disponible –</option>
-            )}
-          </select>
-        </label>
-        <br />
-        <label>
-          Type:
-          <select value={type} onChange={e => setType(e.target.value as 'image' | 'video')}>
-            <option value="image">Image</option>
-            <option value="video">Vidéo</option>
-          </select>
-        </label>
-        <br />
-        <label>
-          Fichier:
-          <input
-            type="file"
-            accept="image/*,video/*"
-            onChange={e => setFile(e.target.files?.[0] || null)}
-            required
-          />
-        </label>
-        <br />
-        {type === 'image' ? (
-          <label>
-            Durée d’affichage (s) :
+      <div className="ad-page">
+        <form className="ad-form" onSubmit={submit}>
+          <h1>Ajouter une publicité</h1>
+
+          {/* Entreprise */}
+          <div className="ad-group">
+            <label className="ad-label" htmlFor="company">Entreprise</label>
             <select
-              value={duration}
-              onChange={e => setDuration(+e.target.value)}
-              style={{ marginLeft: 8 }}
+              id="company"
+              className="ad-select"
+              value={company}
+              onChange={e => setCompany(e.target.value)}
+              required
             >
-              {[15, 30].map(sec => (
-                <option key={sec} value={sec}>{sec} s</option>
-              ))}
+              <option value="">-- Choisir --</option>
+              {companies.length
+                ? companies.map(c => (
+                    <option key={c._id} value={c._id}>{c.nom_company}</option>
+                  ))
+                : <option disabled>— Aucune entreprise —</option>}
             </select>
-          </label>
-        ) : (
-          duration === undefined ? (
-            <p style={{ margin: '0.5rem 0', color: '#888' }}>
-              Chargement durée de la vidéo…
-            </p>
+          </div>
+
+          {/* Type */}
+          <div className="ad-group">
+            <label className="ad-label" htmlFor="type">Type</label>
+            <select
+              id="type"
+              className="ad-select"
+              value={type}
+              onChange={e => setType(e.target.value as "image" | "video")}
+            >
+              <option value="image">Image</option>
+              <option value="video">Vidéo</option>
+            </select>
+          </div>
+
+          {/* Fichier */}
+          <div className="ad-group">
+            <label className="ad-label" htmlFor="file">Fichier</label>
+            <input
+              id="file"
+              type="file"
+              accept="image/*,video/*"
+              className="ad-file"
+              onChange={e => setFile(e.target.files?.[0] || null)}
+              required
+            />
+          </div>
+
+          {/* Durée */}
+          {type === "image" ? (
+            <div className="ad-group">
+              <label className="ad-label">Durée d’affichage (s)</label>
+              <select
+                className="ad-select"
+                value={duration}
+                onChange={e => setDuration(+e.target.value)}
+              >
+                {[15, 30].map(sec => (
+                  <option key={sec} value={sec}>{sec} s</option>
+                ))}
+              </select>
+            </div>
+          ) : duration === undefined ? (
+            <p className="ad-info">Chargement de la durée de la vidéo…</p>
           ) : (
-            <p style={{ margin: '0.5rem 0' }}>
-              Durée (auto) : <strong>{duration} s</strong>
-            </p>
-          )
-        )}
-        <br />
-        <label>
-          Date de fin :
-          <input
-            type="date"
-            value={expiresAt}
-            min={minDate}
-            onChange={e => setExpiresAt(e.target.value)}
-            required
-            style={{ marginLeft: '0.5rem' }}
-          />
-        </label>
-        <br />
-        <button type="submit" style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}>
-          Enregistrer
-        </button>
-      </form>
+            <p className="ad-info"><b>Durée (auto) :</b> {duration} s</p>
+          )}
+
+          {/* Date d’expiration */}
+          <div className="ad-group">
+            <label className="ad-label" htmlFor="date">Date de fin</label>
+            <input
+              id="date"
+              type="date"
+              className="ad-input"
+              value={expiresAt}
+              min={minDate}
+              onChange={e => setExpiresAt(e.target.value)}
+              required
+            />
+          </div>
+
+          <button className="ad-btn" type="submit">Enregistrer</button>
+        </form>
+      </div>
     </>
   );
 }
