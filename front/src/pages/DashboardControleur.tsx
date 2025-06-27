@@ -1,6 +1,4 @@
 // src/pages/DashboardControleur.tsx
-"use client"
-
 import React, { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Header from "../components/Header"
@@ -66,7 +64,10 @@ export default function DashboardControleur() {
 
       <div className="brutalist-container">
         <main>
-          <div className="brutalist-welcome-card brutalist-spacing-large">
+          <div
+            className="brutalist-welcome-card brutalist-spacing-large"
+            style={{ marginTop: "1rem" }}
+          >
             <div className="brutalist-welcome-title">
               <CheckCircle /> Bienvenue {user.prenom} {user.nom}
             </div>

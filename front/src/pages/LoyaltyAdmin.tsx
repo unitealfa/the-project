@@ -725,8 +725,8 @@ export default function LoyaltyAdmin() {
               {pending.map((p) => (
                 <li key={p._id} className="client-item">
                   <div>
-                    <span className="client-name">{p.client.nom_client}</span>
-                    <span className="client-points">
+                    <span className="client-name">{p.client.nom_client } </span>
+                    <span className=" client-points">
                       {p.rewardName || (p.type === "spend"
                         ? `${p.amount} dépensés`
                         : `${p.points} pts`)}
