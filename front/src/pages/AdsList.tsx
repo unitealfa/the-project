@@ -34,9 +34,19 @@ export default function AdsList() {
 
   /* ─── suppression ─── */
   const handleDelete = async (id: string) => {
-    if (!confirm("Supprimer cette publicité ?")) return;
-    await apiFetch(`/ads/${id}`, { method: "DELETE" });
-    setAds(curr => curr.filter(a => a._id !== id));
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette publicité ?")) {
+      return;
+    }
+    try {
+      const res = await apiFetch(`/ads/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ message: "Une erreur est survenue." }));
+        throw new Error(errorData.message);
+      }
+      setAds(curr => curr.filter(a => a._id !== id));
+    } catch (error: any) {
+      alert(`Erreur lors de la suppression : ${error.message}`);
+    }
   };
 
   /* ─── helper statut / couleur ─── */

@@ -20,13 +20,15 @@ export default function EditAd() {
   const [company, setCompany] = useState('');
   const [type, setType] = useState<'image' | 'video'>('image');
   const [duration, setDuration] = useState<number | undefined>(5); // Default duration for images
+  const [initialDuration, setInitialDuration] = useState<number | undefined>();
   const [file, setFile] = useState<File | null>(null);
   const [expiresAt, setExpiresAt] = useState('');
+  const [initialExpiresAt, setInitialExpiresAt] = useState('');
   const [filePath, setFilePath] = useState('');
   const [preview, setPreview] = useState('');
   const [currentUrl, setCurrentUrl] = useState(''); // Media already saved
   const [previewNew, setPreviewNew] = useState(''); // Freshly chosen media
-  const baseUrl = import.meta.env.VITE_API_URL;
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const navigate = useNavigate();
 
   const minDate = React.useMemo(() => {
@@ -50,8 +52,12 @@ export default function EditAd() {
         const compId = typeof ad.company === 'object' ? ad.company._id : ad.company;
         setCompany(compId);
         setType(ad.type);
-        setDuration(ad.duration ?? (ad.type === 'image' ? 5 : undefined));
-        setExpiresAt(ad.expiresAt.split('T')[0]);
+        const dur = ad.duration ?? (ad.type === 'image' ? 5 : undefined);
+        const exp = ad.expiresAt.split('T')[0];
+        setDuration(dur);
+        setExpiresAt(exp);
+        setInitialDuration(dur);
+        setInitialExpiresAt(exp);
         setFilePath(ad.filePath);
         setCurrentUrl(`${baseUrl}/${ad.filePath}`); // Add current URL
       })
@@ -186,6 +192,9 @@ export default function EditAd() {
                 <option key={sec} value={sec}>{sec} s</option>
               ))}
             </select>
+                        <span className="hint" style={{ marginLeft: '0.5rem' }}>
+              (actuelle : {initialDuration ?? 'n/a'} s)
+            </span>
           </label>
         ) : (
           duration === undefined ? (
@@ -209,8 +218,7 @@ export default function EditAd() {
             required
           />
           <span className="hint">
-            (actuelle :{" "}
-            {new Date(currentUrl ? expiresAt : "").toLocaleDateString()})
+            (actuelle : {new Date(initialExpiresAt).toLocaleDateString()})
           </span>
         </label>
         <br/>
