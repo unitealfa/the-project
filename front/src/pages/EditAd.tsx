@@ -1,14 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
-import { apiFetch } from '../utils/api';
-import '../pages-css/EditAd.css'; // Import CSS
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import Header from "../components/Header";
+import { apiFetch } from "../utils/api";
+import "../pages-css/EditAd.css"; // Import CSS
 
-interface Company { _id: string; nom_company: string; }
+interface Company {
+  _id: string;
+  nom_company: string;
+}
 interface Ad {
   _id: string;
-  company: { _id: string; nom_company: string } | string;
-  type: 'image' | 'video';
+  company: { _id: string; nom_company: string } | string | null;
+  type: "image" | "video";
   duration?: number;
   filePath: string;
   expiresAt: string;
@@ -17,29 +20,30 @@ interface Ad {
 export default function EditAd() {
   const { id } = useParams<{ id: string }>();
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [company, setCompany] = useState('');
-  const [type, setType] = useState<'image' | 'video'>('image');
+  const [company, setCompany] = useState("");
+  const [type, setType] = useState<"image" | "video">("image");
   const [duration, setDuration] = useState<number | undefined>(5); // Default duration for images
   const [initialDuration, setInitialDuration] = useState<number | undefined>();
   const [file, setFile] = useState<File | null>(null);
-  const [expiresAt, setExpiresAt] = useState('');
-  const [initialExpiresAt, setInitialExpiresAt] = useState('');
-  const [filePath, setFilePath] = useState('');
-  const [preview, setPreview] = useState('');
-  const [currentUrl, setCurrentUrl] = useState(''); // Media already saved
-  const [previewNew, setPreviewNew] = useState(''); // Freshly chosen media
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const [expiresAt, setExpiresAt] = useState("");
+  const [initialExpiresAt, setInitialExpiresAt] = useState("");
+  const [filePath, setFilePath] = useState("");
+  const [preview, setPreview] = useState("");
+  const [currentUrl, setCurrentUrl] = useState(""); // Media already saved
+  const [previewNew, setPreviewNew] = useState(""); // Freshly chosen media
+  const [loading, setLoading] = useState(true);
+  const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const navigate = useNavigate();
 
   const minDate = React.useMemo(() => {
     const d = new Date();
     d.setDate(d.getDate() + 1);
-    return d.toISOString().split('T')[0];
+    return d.toISOString().split("T")[0];
   }, []);
 
   useEffect(() => {
-    apiFetch('/companies')
-      .then(r => r.json())
+    apiFetch("/companies")
+      .then((r) => r.json())
       .then(setCompanies)
       .catch(() => setCompanies([]));
   }, []);
@@ -47,13 +51,17 @@ export default function EditAd() {
   useEffect(() => {
     if (!id) return;
     apiFetch(`/ads/${id}`)
-      .then(r => r.json())
+      .then((r) => r.json())
       .then((ad: Ad) => {
-        const compId = typeof ad.company === 'object' ? ad.company._id : ad.company;
+        const compId = ad.company
+          ? typeof ad.company === "object"
+            ? ad.company._id
+            : ad.company
+          : "";
         setCompany(compId);
         setType(ad.type);
-        const dur = ad.duration ?? (ad.type === 'image' ? 5 : undefined);
-        const exp = ad.expiresAt.split('T')[0];
+        const dur = ad.duration ?? (ad.type === "image" ? 5 : undefined);
+        const exp = ad.expiresAt.split("T")[0];
         setDuration(dur);
         setExpiresAt(exp);
         setInitialDuration(dur);
@@ -61,15 +69,16 @@ export default function EditAd() {
         setFilePath(ad.filePath);
         setCurrentUrl(`${baseUrl}/${ad.filePath}`); // Add current URL
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [id]);
 
   useEffect(() => {
-    if (type === 'video' && file) {
+    if (type === "video" && file) {
       const url = URL.createObjectURL(file);
-      const video = document.createElement('video');
+      const video = document.createElement("video");
       video.src = url;
-      video.preload = 'metadata';
+      video.preload = "metadata";
       video.onloadedmetadata = () => {
         setDuration(Math.ceil(video.duration)); // Automatically set duration for videos
         URL.revokeObjectURL(url);
@@ -83,7 +92,7 @@ export default function EditAd() {
       setPreview(url);
       return () => URL.revokeObjectURL(url);
     }
-    setPreview(filePath ? `${baseUrl}/${filePath}` : '');
+    setPreview(filePath ? `${baseUrl}/${filePath}` : "");
   }, [file, filePath]);
 
   useEffect(() => {
@@ -98,24 +107,31 @@ export default function EditAd() {
     if (!id) return;
 
     const fd = new FormData();
-    if (file) fd.append('file', file);
-    fd.append('company', company);
-    fd.append('type', type);
-    fd.append('duration', duration?.toString() ?? ''); // Always send duration
-    fd.append('expiresAt', expiresAt);
+    if (file) fd.append("file", file);
+    fd.append("company", company);
+    fd.append("type", type);
+    fd.append("duration", duration?.toString() ?? ""); // Always send duration
+    fd.append("expiresAt", expiresAt);
 
     const res = await fetch(`${baseUrl}/ads/${id}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: fd,
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     });
 
     if (res.ok) navigate(`/ads/${id}`);
-    else alert('Erreur lors de la mise à jour');
+    else alert("Erreur lors de la mise à jour");
   };
-
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <p style={{ textAlign: "center" }}>Chargement…</p>
+      </>
+    );
+  }
   return (
     <>
       <Header />
@@ -123,28 +139,34 @@ export default function EditAd() {
         <h1>Modifier la publicité</h1>
         <label>
           Entreprise:
-          <select value={company} onChange={e => setCompany(e.target.value)} required>
+          <select
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+            required
+          >
             <option value="">-- Choisir --</option>
-            {companies.map(c => (
-              <option key={c._id} value={c._id}>{c.nom_company}</option>
+            {companies.map((c) => (
+              <option key={c._id} value={c._id}>
+                {c.nom_company}
+              </option>
             ))}
           </select>
         </label>
-        <br/>
+        <br />
         <label>
           Type:
-          <select value={type} onChange={e => setType(e.target.value as any)}>
+          <select value={type} onChange={(e) => setType(e.target.value as any)}>
             <option value="image">Image</option>
             <option value="video">Video</option>
           </select>
         </label>
-        <br/>
+        <br />
         <label>
           Nouveau fichier (optionnel):
           <input
             type="file"
             accept="image/*,video/*"
-            onChange={e => {
+            onChange={(e) => {
               const f = e.target.files?.[0] || null;
               setFile(f);
               setPreviewNew(f ? URL.createObjectURL(f) : ""); // Immediate preview
@@ -179,33 +201,33 @@ export default function EditAd() {
           </div>
         )}
 
-        <br/>
-        {type === 'image' ? (
+        <br />
+        {type === "image" ? (
           <label>
             Durée d’affichage (s) :
             <select
               value={duration}
-              onChange={e => setDuration(+e.target.value)}
+              onChange={(e) => setDuration(+e.target.value)}
               style={{ marginLeft: 8 }}
             >
-              {[5, 15, 30].map(sec => (
-                <option key={sec} value={sec}>{sec} s</option>
+              {[5, 15, 30].map((sec) => (
+                <option key={sec} value={sec}>
+                  {sec} s
+                </option>
               ))}
             </select>
-                        <span className="hint" style={{ marginLeft: '0.5rem' }}>
-              (actuelle : {initialDuration ?? 'n/a'} s)
+            <span className="hint" style={{ marginLeft: "0.5rem" }}>
+              (actuelle : {initialDuration ?? "n/a"} s)
             </span>
           </label>
+        ) : duration === undefined ? (
+          <p style={{ margin: "0.5rem 0", color: "#888" }}>
+            Chargement durée de la vidéo…
+          </p>
         ) : (
-          duration === undefined ? (
-            <p style={{ margin: '0.5rem 0', color: '#888' }}>
-              Chargement durée de la vidéo…
-            </p>
-          ) : (
-            <p style={{ margin: '0.5rem 0' }}>
-              Durée (auto) : <strong>{duration} s</strong>
-            </p>
-          )
+          <p style={{ margin: "0.5rem 0" }}>
+            Durée (auto) : <strong>{duration} s</strong>
+          </p>
         )}
         <br />
         <label className="date-field">
@@ -214,14 +236,14 @@ export default function EditAd() {
             type="date"
             value={expiresAt}
             min={minDate}
-            onChange={e => setExpiresAt(e.target.value)}
+            onChange={(e) => setExpiresAt(e.target.value)}
             required
           />
           <span className="hint">
             (actuelle : {new Date(initialExpiresAt).toLocaleDateString()})
           </span>
         </label>
-        <br/>
+        <br />
         <div className="btn-row">
           <button className="btn btn-primary" type="submit">
             Enregistrer

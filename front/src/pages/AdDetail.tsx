@@ -5,11 +5,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ImageIcon, Video, Loader2 } from "lucide-react";
 import Header from "../components/Header";
 import { apiFetch } from "../utils/api";
-import "../pages-css/AdDetail.css";          // ← nouveau fichier de style
+import "../pages-css/AdDetail.css"; // ← nouveau fichier de style
 
 interface Ad {
   _id: string;
-  company: { _id: string; nom_company: string } | string;
+  company: { _id: string; nom_company: string } | string | null;
   filePath: string;
   type: "image" | "video";
   duration?: number;
@@ -20,7 +20,7 @@ interface Ad {
 export default function AdDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const baseUrl  = import.meta.env.VITE_API_URL || "";
+  const baseUrl = import.meta.env.VITE_API_URL || "";
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +28,7 @@ export default function AdDetail() {
   useEffect(() => {
     if (!id) return;
     apiFetch(`/ads/${id}`)
-      .then(r => r.json())
+      .then((r) => r.json())
       .then(setAd)
       .catch(() => setAd(null))
       .finally(() => setLoading(false));
@@ -54,8 +54,11 @@ export default function AdDetail() {
       </>
     );
 
-  const companyName =
-    typeof ad.company === "object" ? ad.company.nom_company : ad.company;
+  const companyName = ad.company
+    ? typeof ad.company === "object"
+      ? ad.company.nom_company
+      : ad.company
+    : "Inconnue";
 
   /* ─────────── Page ─────────── */
   return (
@@ -85,7 +88,7 @@ export default function AdDetail() {
               <img
                 src={`${baseUrl}/${ad.filePath}`}
                 alt="Publicité"
-                onError={e =>
+                onError={(e) =>
                   ((e.target as HTMLImageElement).src = "/placeholder.svg")
                 }
               />
@@ -124,7 +127,7 @@ export default function AdDetail() {
               className="btn btn-primary"
               onClick={() => navigate(`/ads/edit/${ad._id}`)}
             >
-               Modifier
+              Modifier
             </button>
             <button className="btn btn-secondary" onClick={() => navigate(-1)}>
               ⬅ Retour
