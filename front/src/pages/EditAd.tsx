@@ -3,11 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { apiFetch } from "../utils/api";
 import "../pages-css/EditAd.css"; // Import CSS
-
-interface Company {
-  _id: string;
-  nom_company: string;
-}
 interface Ad {
   _id: string;
   company: { _id: string; nom_company: string } | string | null;
@@ -19,18 +14,13 @@ interface Ad {
 
 export default function EditAd() {
   const { id } = useParams<{ id: string }>();
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [company, setCompany] = useState("");
   const [type, setType] = useState<"image" | "video">("image");
-  const [duration, setDuration] = useState<number | undefined>(5); // Default duration for images
+  const [duration, setDuration] = useState<number | undefined>(5);
   const [initialDuration, setInitialDuration] = useState<number | undefined>();
-  const [file, setFile] = useState<File | null>(null);
   const [expiresAt, setExpiresAt] = useState("");
   const [initialExpiresAt, setInitialExpiresAt] = useState("");
   const [filePath, setFilePath] = useState("");
-  const [preview, setPreview] = useState("");
-  const [currentUrl, setCurrentUrl] = useState(""); // Media already saved
-  const [previewNew, setPreviewNew] = useState(""); // Freshly chosen media
+  const [currentUrl, setCurrentUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const navigate = useNavigate();
@@ -41,24 +31,12 @@ export default function EditAd() {
     return d.toISOString().split("T")[0];
   }, []);
 
-  useEffect(() => {
-    apiFetch("/companies")
-      .then((r) => r.json())
-      .then(setCompanies)
-      .catch(() => setCompanies([]));
-  }, []);
 
   useEffect(() => {
     if (!id) return;
     apiFetch(`/ads/${id}`)
       .then((r) => r.json())
       .then((ad: Ad) => {
-        const compId = ad.company
-          ? typeof ad.company === "object"
-            ? ad.company._id
-            : ad.company
-          : "";
-        setCompany(compId);
         setType(ad.type);
         const dur = ad.duration ?? (ad.type === "image" ? 5 : undefined);
         const exp = ad.expiresAt.split("T")[0];
@@ -73,44 +51,16 @@ export default function EditAd() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  useEffect(() => {
-    if (type === "video" && file) {
-      const url = URL.createObjectURL(file);
-      const video = document.createElement("video");
-      video.src = url;
-      video.preload = "metadata";
-      video.onloadedmetadata = () => {
-        setDuration(Math.ceil(video.duration)); // Automatically set duration for videos
-        URL.revokeObjectURL(url);
-      };
-    }
-  }, [type, file]);
-
-  useEffect(() => {
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setPreview(url);
-      return () => URL.revokeObjectURL(url);
-    }
-    setPreview(filePath ? `${baseUrl}/${filePath}` : "");
-  }, [file, filePath]);
-
-  useEffect(() => {
-    // Cleanup for previewNew
-    return () => {
-      if (previewNew) URL.revokeObjectURL(previewNew);
-    };
-  }, [previewNew]);
+  // No media modification: only track existing filePath for preview
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id) return;
 
     const fd = new FormData();
-    if (file) fd.append("file", file);
-    fd.append("company", company);
-    fd.append("type", type);
-    fd.append("duration", duration?.toString() ?? ""); // Always send duration
+    if (type === "image") {
+      fd.append("duration", duration?.toString() ?? "");
+    }
     fd.append("expiresAt", expiresAt);
 
     const res = await fetch(`${baseUrl}/ads/${id}`, {
@@ -137,42 +87,6 @@ export default function EditAd() {
       <Header />
       <form onSubmit={submit} className="edit-wrapper">
         <h1>Modifier la publicité</h1>
-        <label>
-          Entreprise:
-          <select
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            required
-          >
-            <option value="">-- Choisir --</option>
-            {companies.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.nom_company}
-              </option>
-            ))}
-          </select>
-        </label>
-        <br />
-        <label>
-          Type:
-          <select value={type} onChange={(e) => setType(e.target.value as any)}>
-            <option value="image">Image</option>
-            <option value="video">Video</option>
-          </select>
-        </label>
-        <br />
-        <label>
-          Nouveau fichier (optionnel):
-          <input
-            type="file"
-            accept="image/*,video/*"
-            onChange={(e) => {
-              const f = e.target.files?.[0] || null;
-              setFile(f);
-              setPreviewNew(f ? URL.createObjectURL(f) : ""); // Immediate preview
-            }}
-          />
-        </label>
 
         {/* ---- APERÇUS -------------------------------------------------- */}
         {currentUrl && (
@@ -187,17 +101,6 @@ export default function EditAd() {
               )}
             </figure>
 
-            {/* média NOUVEAU : rendu UNIQUEMENT si previewNew existe */}
-            {previewNew && (
-              <figure>
-                <figcaption>Nouveau</figcaption>
-                {type === "image" ? (
-                  <img src={previewNew} alt="Nouveau" />
-                ) : (
-                  <video src={previewNew} controls />
-                )}
-              </figure>
-            )}
           </div>
         )}
 
