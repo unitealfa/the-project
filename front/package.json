@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:testpresentation": "vite --mode testpresentation --host",
     "build": "vite build",
     "start": "vite preview --port 3000",
     "lint": "eslint .",

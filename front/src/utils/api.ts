@@ -4,7 +4,10 @@ export async function apiFetch(
   options: RequestInit = {}
 ) {
   const token   = localStorage.getItem('token') || '';
-  const baseUrl = import.meta.env.VITE_API_URL;
+    const baseUrl =
+    import.meta.env.MODE === 'testpresentation'
+      ? `http://${window.location.hostname}:5000`
+      : import.meta.env.VITE_API_URL;
 
   /* merge headers --------------------------------------------------- */
   const headers = {
