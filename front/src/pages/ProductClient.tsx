@@ -52,15 +52,16 @@ export default function ProductClient() {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         const data: Product[] = await res.json();
-        // Transform image paths into absolute URLs
+                const base = API_BASE_URL;
+        // Transform image paths into absolute URLs and fix localhost references
         const withFullPaths = data.map((p) => ({
           ...p,
-          images: p.images.map(
-            (imgPath) =>
-              imgPath.startsWith("http")
-                ? imgPath
-                : `${API_BASE_URL}/${imgPath.replace(/^\//, "")}`
-          ),
+          images: p.images.map((imgPath) => {
+            const cleaned = imgPath.replace(/^http:\/\/localhost:5000/i, base);
+            return cleaned.startsWith("http")
+              ? cleaned
+              : `${base}/${cleaned.replace(/^\//, "")}`;
+          }),
         }));
         setProduits(withFullPaths);
 
@@ -177,7 +178,7 @@ export default function ProductClient() {
               onChange={(e) => setSelectedType(e.target.value)}
               className="filter-select"
             >
-              <option value="">Tous les types</option>
+              <option value="" key="all-types">Tous les types</option>
               {availableTypes.map((t) => (
                 <option key={t} value={t}>
                   {t}
@@ -189,7 +190,7 @@ export default function ProductClient() {
               onChange={(e) => setSelectedCompany(e.target.value)}
               className="filter-select"
             >
-              <option value="">Toutes les entreprises</option>
+              <option value="" key="all-companies">Toutes les entreprises</option>
               {availableCompanies.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nom_company}

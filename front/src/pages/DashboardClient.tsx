@@ -188,11 +188,16 @@ function AdvertisementFrame({ companyIds }: { companyIds: string[] }) {
           )
         );
         const all = lists.flat();
+        const base = import.meta.env.VITE_API_URL || "";
+        const fixedAds = all.map(ad => ({
+          ...ad,
+          filePath: ad.filePath.replace(/^http:\/\/localhost:5000/i, base)
+        }));
         if (!cancelled) {
-          console.log("Ads finales:", all);
-          setAds(all);
+          console.log("Ads finales:", fixedAds);
+          setAds(fixedAds);
           setIdx(0);
-        }
+        } 
       } catch (e: any) {
         if (!cancelled) {
           setError("Erreur lors de la récupération des publicités");

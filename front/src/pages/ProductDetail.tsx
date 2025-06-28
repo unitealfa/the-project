@@ -16,7 +16,11 @@ export default function ProductDetail() {
       try {
         setLoading(true);
         const res = await axios.get(`/api/products/${id}`);
-        setProduct(res.data);
+               const base = import.meta.env.VITE_API_URL || "";
+        const fixedImages = (res.data.images || []).map((img: string) =>
+          img.replace(/^http:\/\/localhost:5000/i, base)
+        );
+        setProduct({ ...res.data, images: fixedImages });
         setLoading(false);
       } catch (err) {
         console.error("Error fetching product:", err);
