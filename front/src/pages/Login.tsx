@@ -51,20 +51,24 @@ const Login: React.FC = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+const [error, setError] = useState<string | null>(null);
+  // L'utilisateur peut choisir de "skip" l'intro via un cookie, mais on ignore
+  // cette préférence sur mobile pour ne pas masquer l'animation par défaut.
   const [skipIntro, setSkipIntro] = useState<boolean>(() => {
-    return getCookie("skipIntro") === "true";
+    const saved = getCookie("skipIntro") === "true";
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+    return isMobile ? false : saved;
   });
   const [introDone, setIntroDone] = useState(false);
   const [showAnimation, setShowAnimation] = useState(true);
   const timerRef = useRef<number | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
 
-  // Détecte si l'animation doit être lancée (mobile ou préférences d'accessibilité)
+  // Détecte si l'animation doit être lancée (en fonction des préférences d'accessibilité)
+  // Désormais l'animation est aussi visible sur mobile
   useEffect(() => {
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const shouldShow = !isMobile && !prefersReduced;
+    const shouldShow = !prefersReduced;
     setShowAnimation(shouldShow);
     if (!shouldShow) {
       setIntroDone(true);
