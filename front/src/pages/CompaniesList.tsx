@@ -2,6 +2,7 @@ import React, { useEffect, useState, ChangeEvent } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import { PaginationSearch } from '../components/PaginationSearch';
+import { Eye, Edit, Trash2, Plus } from 'lucide-react';
 import '../pages-css/CompaniesList.css';
 
 interface Company {
@@ -82,7 +83,8 @@ export default function CompaniesList() {
         <div className="card header-card">
           <h1>Liste des entreprises</h1>
           <Link to="/create-company" className="btn btn-add">
-           Nouvelle entreprise
+            <Plus size={18} />
+            Nouvelle entreprise
           </Link>
         </div>
 
@@ -133,13 +135,26 @@ export default function CompaniesList() {
                       <td>{c.admin ? `${c.admin.nom} ${c.admin.prenom}` : '—'}</td>
                       <td>{c.admin?.email ?? '—'}</td>
                       <td className="cell-actions">
-                        <Link to={`/companies/${c._id}`} className="icon-btn">👁️</Link>
-                        <Link to={`/companies/${c._id}/edit`} className="icon-btn">✏️</Link>
+                        <Link 
+                          to={`/companies/${c._id}`} 
+                          className="action-btn action-view"
+                          title="Voir les détails"
+                        >
+                          <Eye size={16} />
+                        </Link>
+                        <Link 
+                          to={`/companies/${c._id}/edit`} 
+                          className="action-btn action-edit"
+                          title="Modifier"
+                        >
+                          <Edit size={16} />
+                        </Link>
                         <button
                           onClick={() => handleDelete(c._id)}
-                          className="icon-btn danger"
+                          className="action-btn action-delete"
+                          title="Supprimer"
                         >
-                          🗑️
+                          <Trash2 size={16} />
                         </button>
                       </td>
                     </tr>
