@@ -14,8 +14,9 @@ async function bootstrap() {
   });
 
   // CORS pour React
+    const allowedOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: allowedOrigin,
     credentials: true,
   });
 
