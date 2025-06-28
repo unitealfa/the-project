@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import axios from '../utils/axios';
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { API_URL } from '../constants';
 import Header from '../components/Header';
 
 export default function ProductEdit() {
@@ -74,7 +75,7 @@ export default function ProductEdit() {
 
       setFormData(prev => ({
         ...prev,
-        images: [...prev.images, `http://localhost:5000${response.data.path}`]
+        images: [...prev.images, `${API_URL}${response.data.path}`],
       }));
     } catch (error) {
       console.error('Error uploading image:', error);

@@ -17,7 +17,7 @@ interface Product {
   company_id: string; // ajouté
 }
 
-const baseUrl = import.meta.env.VITE_API_URL; // e.g., "http://localhost:5000"
+const baseUrl = import.meta.env.VITE_API_URL; // base API URL
 
 export default function ProductClient() {
   const [produits, setProduits] = useState<Product[]>([]);

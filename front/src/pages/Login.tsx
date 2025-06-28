@@ -46,7 +46,11 @@ function setCookie(name: string, value: string, days = 365) {
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const apiBase: string = import.meta.env.VITE_API_URL;
+  const API_BASE_URL =
+  import.meta.env.MODE === "testpresentation"
+    ? `http://${window.location.hostname}:5000`
+    : import.meta.env.VITE_API_URL;
+
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -104,19 +108,21 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError(null);
     try {
-      let res = await fetch(`${apiBase}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      let res = await fetch(`${API_BASE_URL}/auth/login`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email, password }),
+});
+
       let payload = await res.json();
 
       if (!res.ok) {
-        res = await fetch(`${apiBase}/auth/login-client`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
+        res = await fetch(`${API_BASE_URL}/auth/login-client`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email, password }),
+});
+
         payload = await res.json();
         if (!res.ok) {
           throw new Error(payload.message || "Échec de la connexion");

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "../utils/axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import { read, utils } from "xlsx";
+import { API_URL } from "../constants";
 import JSZip from "jszip";
 import Header from '../components/Header';
 
@@ -68,9 +69,9 @@ export default function AddProduct() {
           Authorization: `Bearer ${token}`,
         },
       });
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
-        images: [...prev.images, `http://localhost:5000${res.data.path}`],
+        images: [...prev.images, `${API_URL}${res.data.path}`],
       }));
     } catch (err) {
       console.error(err);
@@ -179,7 +180,7 @@ export default function AddProduct() {
         },
       });
 
-      uploadedImageUrls.push(`http://localhost:5000${uploadRes.data.path}`);
+      uploadedImageUrls.push(`${API_URL}${uploadRes.data.path}`);
     }
 
     return uploadedImageUrls;

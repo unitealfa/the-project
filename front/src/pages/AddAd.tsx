@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { apiFetch } from "../utils/api";
+import { API_URL } from "../constants";
 import "../pages-css/AddAd.css";                        /* <-- importe le fichier ci-dessus */
 
 interface Company { _id: string; nom_company: string; }
@@ -60,7 +61,7 @@ export default function AddAd() {
     fd.append("duration", duration?.toString() || "");
     fd.append("expiresAt", expiresAt);
 
-    const res = await fetch("http://localhost:5000/ads", {
+    const res = await fetch(`${API_URL}/ads`, {
       method: "POST",
       body: fd,
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

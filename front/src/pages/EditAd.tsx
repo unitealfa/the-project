@@ -22,7 +22,8 @@ export default function EditAd() {
   const [filePath, setFilePath] = useState("");
   const [currentUrl, setCurrentUrl] = useState("");
   const [loading, setLoading] = useState(true);
-  const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    const baseUrl =
+    import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
   const navigate = useNavigate();
 
   const minDate = React.useMemo(() => {

@@ -15,7 +15,7 @@ export default function AdvertisementFrame({ companyIds }: { companyIds: string[
   const [index, setIndex] = useState(0);
   const [aspectRatio, setAspectRatio] = useState<string>("16/9");
   const [isPortrait, setIsPortrait] = useState<boolean>(false);
-  const baseUrl = import.meta.env.VITE_API_URL;  // e.g. http://localhost:5000
+  const baseUrl = import.meta.env.VITE_API_URL;
 
   // 1) Load ads for all companies
   useEffect(() => {
