@@ -9,6 +9,7 @@ import React, {
 import { useNavigate } from "react-router-dom";
 import "../pages-css/login/Login.css";
 import LogoAnimation from "../pages-css/login/LogoAnimation";
+import { API_BASE_URL } from "../constants";
 
 const Hyperspeed = lazy(() => import("../pages-css/login/Hyperspeed"));
 
@@ -46,10 +47,6 @@ function setCookie(name: string, value: string, days = 365) {
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const API_BASE_URL =
-  import.meta.env.MODE === "testpresentation"
-    ? `http://${window.location.hostname}:5000`
-    : import.meta.env.VITE_API_URL;
 
 
   const [email, setEmail] = useState("");

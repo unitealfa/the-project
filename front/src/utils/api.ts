@@ -1,13 +1,12 @@
 // front/src/utils/api.ts
+import { API_BASE_URL } from '../constants'
+
 export async function apiFetch(
   endpoint: string,
   options: RequestInit = {}
 ) {
   const token   = localStorage.getItem('token') || '';
-    const baseUrl =
-    import.meta.env.MODE === 'testpresentation'
-      ? `http://${window.location.hostname}:5000`
-      : import.meta.env.VITE_API_URL;
+  const baseUrl = API_BASE_URL;
 
   /* merge headers --------------------------------------------------- */
   const headers = {

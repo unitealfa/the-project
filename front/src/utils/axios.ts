@@ -1,11 +1,9 @@
 // front/src/utils/axios.ts
 import axios from 'axios'
+import { API_BASE_URL } from '../constants'
 
 const api = axios.create({
-    baseURL:
-    import.meta.env.MODE === 'testpresentation'
-      ? `http://${window.location.hostname}:5000`
-      : import.meta.env.VITE_API_URL,
+    baseURL: API_BASE_URL,
 })
 
 api.interceptors.request.use(cfg => {

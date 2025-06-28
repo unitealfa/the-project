@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
+import { API_BASE_URL } from "../constants";
 import { apiFetch } from "../utils/api";
 import "../pages-css/EditAd.css"; // Import CSS
 interface Ad {
@@ -22,8 +23,7 @@ export default function EditAd() {
   const [filePath, setFilePath] = useState("");
   const [currentUrl, setCurrentUrl] = useState("");
   const [loading, setLoading] = useState(true);
-    const baseUrl =
-    import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
+  const baseUrl = API_BASE_URL;
   const navigate = useNavigate();
 
   const minDate = React.useMemo(() => {
