@@ -1,5 +1,4 @@
-"use client"
-
+import { API_BASE_URL } from "../constants"
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import Header from "../components/Header"
@@ -43,7 +42,7 @@ interface RepeatReward {
 /* ─────────── PAGE ─────────── */
 export default function LoyaltyClient() {
   const { companyId } = useParams<{ companyId: string }>()
-  const api   = import.meta.env.VITE_API_URL
+  const api = API_BASE_URL
   const token = localStorage.getItem("token") || ""
 
   /* state */
@@ -58,6 +57,7 @@ export default function LoyaltyClient() {
   /* ─────────── Chargement des données ─────────── */
   useEffect(() => {
     if (!companyId) return
+    const base = api || ""
 
     /* programme + points client */
     fetch(`${api}/loyalty/${companyId}/client-data`, {
@@ -72,9 +72,10 @@ export default function LoyaltyClient() {
         const enhanced: Tier[] = (data.tiers || []).map(
           (t: Tier, i: number) => ({
             ...t,
+            image: t.image ? t.image.replace(/^http:\/\/localhost:5000/i, base) : t.image,
             color: colors[i % colors.length],
             icon : icons[i % icons.length],
-          }),
+          })
         )
         setTiers(enhanced)
         setPoints(data.points || 0)
@@ -100,6 +101,7 @@ export default function LoyaltyClient() {
 
         const enhanced = rewards.map((rr, i) => ({
           ...rr,
+          image: rr.image ? rr.image.replace(/^http:\/\/localhost:5000/i, base) : rr.image,
           color: colors[i % colors.length],
           icon : icons[i % icons.length],
         }))

@@ -5,10 +5,9 @@ import { cartService } from "@/services/cartService";
 import { orderService } from "@/services/orderService";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { API_BASE_URL } from "../constants";
 import { Pencil, Trash2, ShoppingCart } from "lucide-react";
 import "./Cart.css";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
 interface Product {
   _id: string;
@@ -68,44 +67,31 @@ export default function Cart() {
     try {
       const data = await cartService.getCart();
       console.log("Données du panier:", data);
-      // ------------------------------------------------------------------
-      // 1) on « nettoie » toutes les URLs d’images qui viennent du backend
-      // ------------------------------------------------------------------
-      const rawItems = data?.items ?? [];
-
-      const fixedItems: CartItem[] = rawItems.map((it) => {
-        if (!it.product) return it;
-
-        const fixedImages = (it.product.images || []).map((img) => {
-          // a) déjà absolu → on remplace simplement le host localhost
-          if (/^https?:\/\/localhost:5000/i.test(img)) {
-            return img.replace(/^https?:\/\/localhost:5000/i, API_BASE_URL);
-          }
-          // b) chemin relatif :  "/uploads/…”  ou  "uploads/…"
-          if (img.startsWith("/")) {
-            return `${API_BASE_URL}${img}`; // ➜  http://IP:5000/uploads/…
-          }
-          return `${API_BASE_URL}/${img}`; // ➜  http://IP:5000/uploads/…
-        });
-
-        return {
-          ...it,
-          product: { ...it.product, images: fixedImages },
-        };
-      });
-
-      setCart(fixedItems); // ⬅️  on sauve la version corrigée
+            const base = API_BASE_URL || "";
+      const cleaned = (data?.items ?? []).map((it) => ({
+        ...it,
+        product: it.product
+          ? {
+              ...it.product,
+              images: (it.product.images || []).map((img) =>
+                img.replace(/^http:\/\/localhost:5000/i, base)
+              ),
+            }
+          : null,
+      }));
+      setCart(cleaned);
 
       // Récupérer les informations de stock pour chaque produit
       const stockData: Record<string, number> = {};
-      for (const item of fixedItems) {
+      for (const item of data?.items ?? []) {
         if (item.product?.disponibilite) {
           const depotId = user?.affectations?.[0]?.depot;
           const depotStock = item.product.disponibilite.find(
             (d: DepotStock) => d.depot_id === depotId
           );
-          if (depotStock)
+          if (depotStock) {
             stockData[item.productId] = depotStock.quantite;
+          }
         }
       }
       setStockInfo(stockData);
@@ -121,16 +107,14 @@ export default function Cart() {
     newQuantity: number
   ) => {
     if (newQuantity < 1) return;
-
+    
     // Vérifier le stock disponible
     const availableStock = stockInfo[productId];
     if (availableStock && newQuantity > availableStock) {
-      alert(
-        `Stock insuffisant. Il ne reste que ${availableStock} unité(s) disponible(s).`
-      );
+      alert(`Stock insuffisant. Il ne reste que ${availableStock} unité(s) disponible(s).`);
       return;
     }
-
+    
     try {
       await cartService.updateCartItem(productId, newQuantity);
       fetchCart();
@@ -266,21 +250,16 @@ export default function Cart() {
                           </p>
                           <p className="item-qty">Qté : {item.quantity}</p>
                           {/* Affichage de l'alerte de stock limité */}
-                          {stockInfo[item.productId] &&
-                            stockInfo[item.productId] <= 10 && (
-                              <p
-                                className="stock-warning"
-                                style={{
-                                  color: "#dc2626",
-                                  fontSize: "0.85rem",
-                                  margin: "4px 0 0 0",
-                                  fontWeight: "500",
-                                }}
-                              >
-                                ⚠️ Plus que {stockInfo[item.productId]} dispo en
-                                stock
-                              </p>
-                            )}
+                          {stockInfo[item.productId] && stockInfo[item.productId] <= 10 && (
+                            <p className="stock-warning" style={{ 
+                              color: '#dc2626', 
+                              fontSize: '0.85rem', 
+                              margin: '4px 0 0 0',
+                              fontWeight: '500'
+                            }}>
+                              ⚠️ Plus que {stockInfo[item.productId]} dispo en stock
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -306,19 +285,11 @@ export default function Cart() {
                               item.quantity + 1
                             )
                           }
-                          disabled={
-                            stockInfo[item.productId]
-                              ? item.quantity >= stockInfo[item.productId]
-                              : false
-                          }
+                          disabled={stockInfo[item.productId] ? item.quantity >= stockInfo[item.productId] : false}
                           className="quantity-btn"
-                          title={
-                            stockInfo[item.productId] &&
-                            item.quantity >= stockInfo[item.productId]
-                              ? `Stock limité : ${
-                                  stockInfo[item.productId]
-                                } disponible(s)`
-                              : "Augmenter la quantité"
+                          title={stockInfo[item.productId] && item.quantity >= stockInfo[item.productId] ? 
+                            `Stock limité : ${stockInfo[item.productId]} disponible(s)` : 
+                            "Augmenter la quantité"
                           }
                         >
                           +

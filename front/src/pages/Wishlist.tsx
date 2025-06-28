@@ -6,6 +6,7 @@ import { wishlistService } from '@/services/wishlistService';
 import { AddToCartButton } from '@/components/AddToCartButton/AddToCartButton';
 import { AddToWishlistButton } from '@/components/AddToWishlistButton/AddToWishlistButton';
 import { Trash2 } from 'lucide-react';
+import { API_BASE_URL } from '../constants';
 
 interface Product {
   _id: string;
@@ -29,8 +30,15 @@ export default function Wishlist() {
     const fetchWishlist = async () => {
       try {
         const data = await wishlistService.getWishlist();
-        setProducts(data.products);
-        setFilteredProducts(data.products);
+        const base = API_BASE_URL || "";
+        const cleaned = (data.products || []).map((p: Product) => ({
+          ...p,
+          images: (p.images || []).map((img: string) =>
+            img.replace(/^http:\/\/localhost:5000/i, base)
+          )
+        }));
+        setProducts(cleaned);
+        setFilteredProducts(cleaned);
       } catch (error) {
         console.error('Erreur lors du chargement de la wishlist:', error);
         setError('Impossible de charger votre liste de souhaits');
