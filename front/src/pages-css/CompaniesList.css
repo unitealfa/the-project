@@ -63,6 +63,14 @@ body {
   border-color: #000;
 }
 
+.btn-add svg {
+  vertical-align: middle;
+  margin-right: 0.5rem;
+  margin-bottom: 2px;
+  width: 1.2em;
+  height: 1.2em;
+}
+
 /* Error card */
 .error-card {
   border-color: #ef4444;
