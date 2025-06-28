@@ -14,9 +14,11 @@ async function bootstrap() {
   });
 
   // CORS pour React
-    const allowedOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+  // FRONTEND_ORIGIN peut contenir plusieurs origines séparées par des virgules
+  const allowedOriginEnv = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+  const allowedOrigins = allowedOriginEnv.split(',').map(o => o.trim());
   app.enableCors({
-    origin: allowedOrigin,
+    origin: allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins,
     credentials: true,
   });
 
