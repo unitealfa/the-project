@@ -5,7 +5,7 @@
 export const API_BASE_URL =
   import.meta.env.MODE === 'testpresentation'
     ? `http://${window.location.hostname}:5000`
-    : import.meta.env.VITE_API_URL;
+    : import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
 
 // Backwards compatibility: some modules still import API_URL
 // Use API_BASE_URL until they are updated

@@ -13,12 +13,17 @@ async function bootstrap() {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
   });
 
-  // CORS pour React
-  // FRONTEND_ORIGIN peut contenir plusieurs origines séparées par des virgules
+  
   const allowedOriginEnv = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
-  const allowedOrigins = allowedOriginEnv.split(',').map(o => o.trim());
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://172.20.10.2:3000',
+    'http://192.168.1.75:3000',
+    ...allowedOriginEnv.split(',').map(o => o.trim())
+  ];
+  
   app.enableCors({
-    origin: allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins,
+    origin: allowedOrigins,
     credentials: true,
   });
 
