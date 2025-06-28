@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
+import { API_BASE_URL } from "../constants";
 import "../pages-css/LoyaltyChooseCompany.css";
 
 interface Company {
@@ -13,19 +14,18 @@ interface Company {
 
 export default function LoyaltyChooseCompany() {
   const [companies, setCompanies] = useState<Company[]>([]);
-  const api   = import.meta.env.VITE_API_URL || "";
   const token = localStorage.getItem("token") || "";
   const nav   = useNavigate();
 
   /* ─── Récupération des sociétés affiliées ─── */
   useEffect(() => {
-    fetch(`${api}/loyalty/available`, {
+      fetch(`${API_BASE_URL}/loyalty/available`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
       .then(setCompanies)
       .catch(console.error);
-  }, [api, token]);
+    }, [token]);
 
   /* ─── RENDER ─── */
   return (
@@ -48,7 +48,7 @@ export default function LoyaltyChooseCompany() {
                 {/* Logo ou placeholder */}
                 <div className="company-logo">
                   {c.pfp ? (
-                    <img src={`${api}/${c.pfp}`} alt={c.nom_company} />
+                    <img src={`${API_BASE_URL}/${c.pfp}`} alt={c.nom_company} />
                   ) : (
                     <span className="company-placeholder">🏢</span>
                   )}

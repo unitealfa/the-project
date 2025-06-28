@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { apiFetch } from "../utils/api";
+import { API_BASE_URL } from "../constants";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import Button from "@/components/ui/button";
 import {
@@ -253,10 +254,12 @@ function AdvertisementFrame({ companyIds }: { companyIds: string[] }) {
     setTouchEnd(null);
   };
 
-  const base = import.meta.env.VITE_API_URL || "";
   const mediaUrl = ads && ads[idx].filePath.startsWith("http")
     ? ads[idx].filePath
-    : ads ? `${base}/${ads[idx].filePath}` : "";
+        : ads
+    ? `${API_BASE_URL}/${ads[idx].filePath}`
+    : "";
+
 
   const backgroundStyle = ads && ads[idx].color
     ? { background: ads[idx].color }

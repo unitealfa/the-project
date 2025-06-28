@@ -5,6 +5,7 @@ import { AddToCartButton } from "@/components/AddToCartButton/AddToCartButton";
 import { AddToWishlistButton } from "@/components/AddToWishlistButton/AddToWishlistButton";
 import { cartService } from "@/services/cartService";
 import { Heart, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
+import { API_BASE_URL } from "../constants";
 import "./ProductClient.css";
 
 interface Product {
@@ -17,7 +18,6 @@ interface Product {
   company_id: string; // ajouté
 }
 
-const baseUrl = import.meta.env.VITE_API_URL; // base API URL
 
 export default function ProductClient() {
   const [produits, setProduits] = useState<Product[]>([]);
@@ -48,7 +48,7 @@ export default function ProductClient() {
   useEffect(() => {
     const fetchProduits = async () => {
       try {
-        const res = await fetch(`${baseUrl}/products/clients`, {
+        const res = await fetch(`${API_BASE_URL}/products/clients`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         const data: Product[] = await res.json();
@@ -59,7 +59,7 @@ export default function ProductClient() {
             (imgPath) =>
               imgPath.startsWith("http")
                 ? imgPath
-                : `${baseUrl}/${imgPath.replace(/^\//, "")}` // remove leading slash if present
+                : `${API_BASE_URL}/${imgPath.replace(/^\//, "")}`
           ),
         }));
         setProduits(withFullPaths);
@@ -72,7 +72,7 @@ export default function ProductClient() {
         );
         setAvailableTypes(types);
         try {
-          const cRes = await fetch(`${baseUrl}/loyalty/available`, {
+          const cRes = await fetch(`${API_BASE_URL}/loyalty/available`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
@@ -231,8 +231,8 @@ export default function ProductClient() {
                       className="product-image"
                       onError={(e) => {
                         const target = e.currentTarget;
-                        if (target.src.startsWith(baseUrl)) {
-                          target.src = target.src.replace(baseUrl + "/", "/");
+                        if (target.src.startsWith(API_BASE_URL)) {
+                          target.src = target.src.replace(API_BASE_URL + "/", "/");
                         }
                       }}
                     />

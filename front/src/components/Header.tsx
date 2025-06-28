@@ -3,6 +3,7 @@ import { Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "../utils/cropImage";
+import { API_BASE_URL } from "../constants";
 import "../pages-css/header/header.css"; // <-- Import du CSS brutalist
 
 const ACCENT = "#4f46e5";
@@ -91,7 +92,7 @@ export default function Header() {
       const endpoint = user.role.toLowerCase().includes("client")
         ? `/clients/${user.id}/pfp`
         : `/api/teams/members/${user.id}/pfp`;
-      const res = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, {
+       const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: form,
@@ -125,9 +126,7 @@ export default function Header() {
   const displayName = isClient
     ? user.nom_client || ""
     : `${user.nom ?? ""} ${user.prenom ?? ""}`.trim();
-  const pfpSrc = user.pfp
-    ? `${import.meta.env.VITE_API_URL}/${user.pfp}`
-    : null;
+  const pfpSrc = user.pfp ? `${API_BASE_URL}/${user.pfp}` : null;
   const phone = user.contact?.telephone ?? "";
 
   return (
@@ -277,7 +276,7 @@ export async function uploadMemberPfp(memberId: string, file: File) {
   form.append("pfp", file);
   const token = localStorage.getItem("token") || "";
   const res = await fetch(
-    `${import.meta.env.VITE_API_URL}/api/teams/members/${memberId}/pfp`,
+    `${API_BASE_URL}/api/teams/members/${memberId}/pfp`,
     {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}` },

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { orderService } from "../services/orderService";
+import { API_BASE_URL } from "../constants";
 import { reclamationService, Reclamation } from "../services/reclamationService";
 import { CheckCircle } from "lucide-react";
 
@@ -51,7 +52,7 @@ export default function OrderDetails() {
   const [newReclamationTitre, setNewReclamationTitre] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const apiBase = import.meta.env.VITE_API_URL;
+   const apiBase = API_BASE_URL;
 
   useEffect(() => {
     const raw = localStorage.getItem('user');
