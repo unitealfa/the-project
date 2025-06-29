@@ -276,8 +276,6 @@ export default function HistoriqueOrders() {
                   <br />
                   <b>Dépôt&nbsp;:</b> {selectedOrder.depot_name || "-"}
                   <br />
-                  <b>Entreprise&nbsp;:</b>{" "}
-                  {selectedOrder.entreprise?.nom_company || "-"}
                 </p>
                 <table className="ho-table" style={{ marginBottom: 8 }}>
                   <thead>

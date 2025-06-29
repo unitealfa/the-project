@@ -92,7 +92,7 @@ export default function Header() {
       const endpoint = user.role.toLowerCase().includes("client")
         ? `/clients/${user.id}/pfp`
         : `/api/teams/members/${user.id}/pfp`;
-       const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: form,
@@ -140,6 +140,10 @@ export default function Header() {
         ></a>
 
         <div className="brutalist-header__content">
+          {displayName && (
+            <span className="brutalist-header__username">{displayName}</span>
+          )}
+
           {/* Si l'utilisateur a une photo de profil */}
           {pfpSrc && (
             <div
@@ -157,11 +161,6 @@ export default function Header() {
                 }}
               />
             </div>
-          )}
-
-          {/* Affiche simplement le nom (sans "Bonjour") */}
-          {displayName && (
-            <span className="brutalist-header__username">{displayName}</span>
           )}
         </div>
       </header>
@@ -275,14 +274,11 @@ export async function uploadMemberPfp(memberId: string, file: File) {
   const form = new FormData();
   form.append("pfp", file);
   const token = localStorage.getItem("token") || "";
-  const res = await fetch(
-    `${API_BASE_URL}/api/teams/members/${memberId}/pfp`,
-    {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}` },
-      body: form,
-    }
-  );
+  const res = await fetch(`${API_BASE_URL}/api/teams/members/${memberId}/pfp`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
   if (!res.ok) throw new Error("Erreur lors de la mise à jour");
   return res.json();
 }
