@@ -234,7 +234,7 @@ export default function ClientsList() {
       <>
         <Header />
         <main className="container mt-20 py-8 px-4">
-          <h1>🗺️ Récupération de votre position…</h1>
+          <h1>Récupération de votre position…</h1>
         </main>
       </>
     );

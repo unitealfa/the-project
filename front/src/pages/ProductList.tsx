@@ -4,6 +4,8 @@ import Header from '../components/Header';
 import { apiFetch } from '../utils/api';
 import { cartService } from '../services/cartService';
 import { PaginationSearch } from '../components/PaginationSearch';
+import Toast from '../components/Toast';
+import '../pages-css/Toast.css';
 
 interface Product {
   _id: string;
@@ -123,13 +125,7 @@ export default function ProductList() {
   return (
     <>
       <Header />
-      <main style={{ 
-        padding: '2rem',
-        maxWidth: '1400px',
-        margin: '0 auto',
-        background: '#ffffff',
-        minHeight: '100vh'
-      }}>
+      <main className="product-list-main">
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -174,20 +170,6 @@ export default function ProductList() {
             boxShadow: '0 1px 4px 0 rgba(220,38,38,0.03)'
           }}>
             {error}
-          </div>
-        )}
-
-        {successMessage && (
-          <div style={{
-            padding: '1rem 1.5rem',
-            backgroundColor: '#f0fdf4',
-            color: '#16a34a',
-            borderRadius: '14px',
-            marginBottom: '1.5rem',
-            border: '1px solid #bbf7d0',
-            boxShadow: '0 1px 4px 0 rgba(22,163,74,0.03)'
-          }}>
-            {successMessage}
           </div>
         )}
 
@@ -384,6 +366,9 @@ export default function ProductList() {
           })}
         </div>
       </main>
+      {successMessage && (
+        <Toast message={successMessage} onClose={() => setSuccessMessage(null)} />
+      )}
     </>
   );
-} 
+}
