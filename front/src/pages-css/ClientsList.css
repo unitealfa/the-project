@@ -577,3 +577,66 @@ main {
   border-radius: inherit;
 }
 
+/* Overlay while geolocating */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.85);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 400;
+}
+
+.loading-overlay .loading-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 4px solid #000;
+  border-top-color: transparent;
+  border-radius: 9999px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 0.5rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Dossier/pages-css/ProductList.css */
+
+/* --- desktop / tablette --- */
+.client-selected {
+  padding: 1rem 1.5rem;
+  background-color: #fafafa;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  border: 1px solid #e0e0e0;
+
+  /* pour éviter que ça soit trop large */
+  max-width: 100%;
+}
+
+/* --- mobile (≤640px) --- */
+@media (max-width: 640px) {
+  .product-header {
+    flex-direction: column;       /* empile Titre + Client */
+    align-items: flex-start;
+  }
+
+  .client-selected {
+    width: 100%;                  /* prend toute la largeur */
+    justify-content: space-between;
+    margin-top: 1rem;             /* un peu d’espacement */
+    padding: 0.75rem 1rem;        /* moins de padding */
+  }
+
+  .client-selected span,
+  .client-selected strong {
+    font-size: 0.9rem;            /* textes plus petits */
+  }
+}

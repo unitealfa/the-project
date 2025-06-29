@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import '../pages-css/ClientDetail.css';
 
 interface Client {
   _id: string;
@@ -83,7 +84,7 @@ export default function ClientDetail() {
   return (
     <>
       <Header />
-      <div style={{
+      <div className="client-detail-container" style={{
         padding: '2rem',
         fontFamily: 'Arial, sans-serif',
         maxWidth: '800px',
@@ -91,7 +92,7 @@ export default function ClientDetail() {
         backgroundColor: '#ffffff',
         minHeight: '100vh'
       }}>
-        <div style={{
+        <div className="client-detail-card" style={{
           backgroundColor: '#ffffff',
           padding: '2rem',
           borderRadius: '8px',
@@ -177,7 +178,7 @@ export default function ClientDetail() {
             </div>
           </div>
 
-          <div style={{
+         <div className="client-detail-grid" style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
             gap: '2rem',
