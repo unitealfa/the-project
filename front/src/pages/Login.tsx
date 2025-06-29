@@ -3,15 +3,11 @@ import React, {
   useState,
   useEffect,
   useRef,
-  lazy,
-  Suspense,
 } from "react";
 import { useNavigate } from "react-router-dom";
 import "../pages-css/login/Login.css";
 import LogoAnimation from "../pages-css/login/LogoAnimation";
 import { API_BASE_URL } from "../constants";
-
-const Hyperspeed = lazy(() => import("../pages-css/login/Hyperspeed"));
 
 interface LoginResponse {
   access_token: string;
@@ -146,12 +142,6 @@ const [error, setError] = useState<string | null>(null);
 
       {introDone && (
         <>
-          {showAnimation && (
-            <Suspense fallback={null}>
-              <Hyperspeed />
-            </Suspense>
-          )}
-
           <form className="form" ref={formRef} onSubmit={handleSubmit}>
             <div className="title">
               Welcome to
@@ -184,7 +174,7 @@ const [error, setError] = useState<string | null>(null);
             {error && <div className="error-message">{error}</div>}
 
             <button className="button-confirm" type="submit">
-              Let’s go →
+              Let's go →
             </button>
           </form>
         </>
