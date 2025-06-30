@@ -78,7 +78,9 @@ The frontend uses Vite and several libraries. If you want to install them manual
 ```bash
 npm install react-scripts --save
 npm audit fix --force
+npm install typescript --save-dev
 npm install @vitejs/plugin-react --save-dev
+npm install @vitejs/plugin-react
 npm install lucide-react
 npm install --save-dev @types/node
 npm install react-router-dom
@@ -90,7 +92,12 @@ npm install --save-dev @types/Leaflet
 npm install jszip
 npm install --save-dev @types/jszip
 npm install react-easy-crop
-npm install
+npm install three postprocessing
+npm uninstall three
+npm install three@0.176.0
+npm install --save-dev @types/three
+npm install react-swipeable
+npm i framer-motion
 ```
 
 Launch the development server:
